@@ -42,6 +42,7 @@ def init():
 # Main Control Loop
 def loop():
     phase_timeout = 0
+    stats_timeout = 0
     logged_queue = False
     while True:
         r = connection.request('get', '/lol-gameflow/v1/gameflow-phase')
@@ -55,6 +56,10 @@ def loop():
         phase = r.json()
         log.debug("Phase: {}".format(phase))
 
+
+        if stats_timeout == 15:
+            log.warning("Waiting for stats taking too long.")
+            raise ClientError
         if phase != 'Matchmaking':
             logged_queue = False
         match phase:
@@ -74,7 +79,7 @@ def loop():
                 game.play_game()
             case 'WaitingForStats':
                 log.info('Waiting for Stats')
-                phase_timeout += 1
+                stats_timeout += 1
                 sleep(2)
                 continue
             case 'PreEndOfGame':
@@ -86,6 +91,7 @@ def loop():
                 phase_timeout += 1
                 continue
         phase_timeout = 0
+        stats_timeout = 0
         sleep(3)
 
 
@@ -227,7 +233,7 @@ def start_app(username, password):
             else:
                 log.info("Game Successfully Launched")
                 output = subprocess.check_output(KILL_RIOT_CLIENT, shell=False)
-                log.info(str(output, 'utf-8'))
+                log.info(str(output, 'utf-8').rstrip())
             sleep(5)
             return
         if utils.exists(RIOT_CLIENT_WINNAME):
