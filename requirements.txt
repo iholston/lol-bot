@@ -1,0 +1,6 @@
+keyboard
+mouse
+pywin32
+pyautogui
+requests
+urllib3
