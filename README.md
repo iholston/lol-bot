@@ -22,7 +22,7 @@
 - Loop 🥡🧋
 
 ## Requirements
-- [League of Legends](https://www.leagueoflegends.com/en-us/)
+- [League of Legends](https://signup.leagueoflegends.com/en-us/signup/download)
 - [League of Legends Account](https://signup.leagueoflegends.com/en-us/signup/index)
 - [Python 3](https://www.python.org/downloads/)
 
