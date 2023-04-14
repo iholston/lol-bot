@@ -2,6 +2,7 @@ import requests
 import urllib3
 import os
 import logging
+import client
 
 from base64 import b64encode
 from time import sleep
@@ -10,9 +11,6 @@ from constants import *
 log = logging.getLogger(__name__)
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-
-class RequestTimeout(Exception):
-    pass
 
 class Connection:
     def __init__(self):
@@ -35,7 +33,7 @@ class Connection:
             if not os.path.isfile(LOCKFILE_PATH):
                 if timeout == 30:
                     log.warning("League startup timeout. Cannot connect to LCU")
-                    raise RequestTimeout
+                    raise client.ClientError
                 else:
                     sleep(1)
             else:
