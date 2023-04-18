@@ -42,6 +42,8 @@ def play_game():
                     log.info("Game State: INITIAL FOUNTAIN. Game Time: {}. Action: Buying starter items and heading to mid lane.".format(formatted_game_time))
                     sleep(2)
                     utils.press('p', LEAGUE_GAME_CLIENT_WINNAME)
+                    sleep(1)
+                    utils.click(GAME_ALL_ITEMS_RATIO, LEAGUE_GAME_CLIENT_WINNAME, 1)
                     for _ in range(2):  # just in case tbh, don't need for loop
                         scale = tuple([random.randint(1, STARTER_ITEMS_TO_BUY) * x for x in
                                        GAME_BUY_ITEM_RATIO_INCREASE])  # there are less starter items

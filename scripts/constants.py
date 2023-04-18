@@ -40,6 +40,7 @@ ASK_4_MID_DIALOG = [
 ]
 
 # GAME BUTTON RATIOS
+GAME_ALL_ITEMS_RATIO = (0.4019, 0.2349)
 GAME_BUY_STARTER_ITEM_RATIO = (0.2490, 0.3903)  # Based on the default shop open position on the all items tab
 GAME_BUY_EPIC_ITEM_RATIO = (0.2519, 0.5923)  # Based on the default shop open position on the all items tab
 GAME_BUY_LEGENDARY_ITEM_RATIO = (0.2875, 0.7571)
@@ -50,7 +51,7 @@ GAME_MINI_MAP_CENTER_MID = (0.8981, 0.8674)
 GAME_MINI_MAP_ENEMY_NEXUS = (0.9628, 0.7852)
 GAME_ULT_RATIO = (0.7298, 0.2689)
 GAME_AFK_OK_RATIO = (0.4981, 0.4647)
-GAME_CENTER_OF_SCREEN = (.5, .5)
+GAME_CENTER_OF_SCREEN = (0.5, 0.5)
 
 # CLIENT BUTTON RATIOS - ideally these would be unnecessary but idk the endpoints to clear rewards post game
 POST_GAME_OK_RATIO = (0.4996, 0.9397)

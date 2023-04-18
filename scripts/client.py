@@ -190,16 +190,21 @@ def handle_game_lobby():
 def pre_end_of_game():
     log.info("Honoring teammates and accepting rewards.")
     sleep(3)
-    utils.click(POPUP_SEND_EMAIL_X_RATIO, LEAGUE_CLIENT_WINNAME, 1)
-    sleep(1)
-    honor_player()
-    sleep(2)
-    utils.click(POPUP_SEND_EMAIL_X_RATIO, LEAGUE_CLIENT_WINNAME, 1)
-    sleep(1)
-    for i in range(3):
-        utils.click(POST_GAME_SELECT_CHAMP_RATIO, LEAGUE_CLIENT_WINNAME, 1)
-        utils.click(POST_GAME_OK_RATIO, LEAGUE_CLIENT_WINNAME, 1)
-    utils.click(POPUP_SEND_EMAIL_X_RATIO, LEAGUE_CLIENT_WINNAME, 1)
+    # occasionally the lcu-api will be ready before the actual client window appears
+    # in this instance, the utils.click will throw an exception. just catch and wait
+    try:
+        utils.click(POPUP_SEND_EMAIL_X_RATIO, LEAGUE_CLIENT_WINNAME, 1)
+        sleep(1)
+        honor_player()
+        sleep(2)
+        utils.click(POPUP_SEND_EMAIL_X_RATIO, LEAGUE_CLIENT_WINNAME, 1)
+        sleep(1)
+        for i in range(3):
+            utils.click(POST_GAME_SELECT_CHAMP_RATIO, LEAGUE_CLIENT_WINNAME, 1)
+            utils.click(POST_GAME_OK_RATIO, LEAGUE_CLIENT_WINNAME, 1)
+        utils.click(POPUP_SEND_EMAIL_X_RATIO, LEAGUE_CLIENT_WINNAME, 1)
+    except:
+        sleep(3)
 
 # Checks account level before returning to lobby
 def end_of_game():

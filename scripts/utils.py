@@ -124,9 +124,15 @@ def write(keys, expected_window='', wait=1):
 def seconds_to_min_sec(seconds):
     try:
         if isinstance(seconds, int) or isinstance(seconds, float):
-            return str(int(seconds / 60)) + ":" + str(int(seconds % 60))
+            if len(str(int(seconds % 60))) == 1:
+                return str(int(seconds / 60)) + ":0" + str(int(seconds % 60))
+            else:
+                return str(int(seconds / 60)) + ":" + str(int(seconds % 60))
         elif isinstance(seconds, str):
             seconds = float(seconds)
-            return str(int(seconds / 60)) + ":" + str(int(seconds % 60))
-    except Exception as e:
-        return e
+            if len(str(int(seconds % 60))) == 1:
+                return str(int(seconds / 60)) + ":0" + str(int(seconds % 60))
+            else:
+                return str(int(seconds / 60)) + ":" + str(int(seconds % 60))
+    except:
+        return "XX:XX"
