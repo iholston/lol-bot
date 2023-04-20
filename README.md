@@ -7,7 +7,7 @@
 ## Welcome to Another LoL Bot
 - This is a python bot that uses the local League Client API to start games and plays them with a simple but effective game loop.
 - The bot sets the league game client to be a certain size to prevent the need for pixel botting and/or image recognition.
-- This bot has leveled up well over a thousand league accounts and is still going strong.
+- This bot has leveled up well over [a thousand league accounts](https://www.playerauctions.com/lol-account/) and is still going strong.
 
 </br>
 <p align="left">
