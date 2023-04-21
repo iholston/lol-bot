@@ -1,9 +1,11 @@
+import os
+
 # PATHS
 LEAGUE_DIR = 'C:/Riot Games/League of Legends'
 LEAGUE_PATH = LEAGUE_DIR + '/LeagueClient'
 LOCKFILE_PATH = LEAGUE_DIR + "/lockfile"
 LEAGUE_GAME_CONFIG_PATH = LEAGUE_DIR + '/Config/game.cfg'
-LOCAL_GAME_CONFIG_PATH = '/../../Another-LoL-Bot/resources/game.cfg'
+LOCAL_GAME_CONFIG_PATH = os.path.dirname(os.getcwd()) + '/resources/game.cfg'
 
 # LCU API INFO
 LCU_HOST = '127.0.0.1'
@@ -58,3 +60,5 @@ POST_GAME_OK_RATIO = (0.4996, 0.9397)
 POST_GAME_SELECT_CHAMP_RATIO = (0.4977, 0.5333)
 POPUP_SEND_EMAIL_X_RATIO = (0.6960, 0.1238)
 CLIENT_RECONNECT_BUTTON = (0.4116, 0.4985)
+
+print(LOCAL_GAME_CONFIG_PATH)

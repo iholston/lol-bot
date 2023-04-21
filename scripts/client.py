@@ -26,9 +26,9 @@ def init():
     # Ensure game config file is correct
     log.info("Overwriting/creating game config")
     if os.path.exists(LEAGUE_GAME_CONFIG_PATH):
-        shutil.copyfile(os.getcwd() + LOCAL_GAME_CONFIG_PATH, LEAGUE_GAME_CONFIG_PATH)
+        shutil.copyfile(LOCAL_GAME_CONFIG_PATH, LEAGUE_GAME_CONFIG_PATH)
     else:
-        shutil.copy2(os.getcwd() + LOCAL_GAME_CONFIG_PATH, LEAGUE_GAME_CONFIG_PATH)
+        shutil.copy2(LOCAL_GAME_CONFIG_PATH, LEAGUE_GAME_CONFIG_PATH)
 
     # Get account username and password
     username = account.get_username()
