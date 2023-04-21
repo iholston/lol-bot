@@ -2,6 +2,8 @@ import logging
 import random
 import requests
 import utils
+import subprocess
+from datetime import datetime, timedelta
 from time import sleep
 from constants import *
 
@@ -17,6 +19,7 @@ def play_game():
         data = get_game_data()
     game_time = int(data['gameData']['gameTime'])
     loading_screen_logged = False
+    loading_screen_time = datetime.now()
     in_lane = False
     initial_items = False
     screen_locked = False
@@ -27,12 +30,31 @@ def play_game():
     # Main Loop
     while True:
         formatted_game_time = utils.seconds_to_min_sec(game_time)
+
+        # Connection errors can cause league games to never exit
+        if game_time > 2400:
+            log.warning("Game exceeded max time limit. Exiting.")
+            try:
+                output = subprocess.check_output(KILL_LEAGUE, shell=False)
+                log.info(str(output, 'utf-8').rstrip())
+            except:
+                pass
+            return
+
         try:
             # Loading Screen
             if game_time < 3:
                 if not loading_screen_logged:
                     log.info("Game State: LOADING SCREEN. Game Time: NULL. Action: Wait.")
                     loading_screen_logged = True
+                if datetime.now() - loading_screen_time > timedelta(minutes=10):
+                    log.warning("Load Screen exceeded max time limit. Exiting.")
+                    try:
+                        output = subprocess.check_output(KILL_LEAGUE, shell=False)
+                        log.info(str(output, 'utf-8').rstrip())
+                    except:
+                        pass
+                    return
                 sleep(2)
 
             # Game Start

@@ -1,8 +1,8 @@
-import client
-import game
 import logging
 import sys
 import traceback
+import client
+import game
 import account
 
 log = logging.getLogger(__name__)

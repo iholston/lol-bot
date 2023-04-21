@@ -8,6 +8,7 @@ import game
 import account
 import utils
 import api
+
 from time import sleep
 from constants import *
 
@@ -68,9 +69,6 @@ def loop():
                 pre_end_of_game()
             case 'EndOfGame':
                 end_of_game()
-            case 'Error':
-                log.warning("Error phase detected.")
-                raise ClientError
             case _:
                 log.warning("Unknown phase: {}".format(phase))
                 raise ClientError
@@ -221,7 +219,7 @@ def pre_end_of_game():
 def end_of_game():
     account_level = get_account_level()
     if account_level < ACCOUNT_MAX_LEVEL:
-        log.info("ACCOUNT LEVEL: {}. Returning to game lobby.".format(account_level))
+        log.info("ACCOUNT LEVEL: {}. Returning to game lobby.\n".format(account_level))
         connection.request('post', '/lol-lobby/v2/play-again')
         sleep(2)
 
@@ -229,7 +227,6 @@ def end_of_game():
         post = True
         for i in range(15):
             if get_phase() != 'EndOfGame':
-                log.info("\n")
                 return
             if post:
                 connection.request('post', '/lol-lobby/v2/play-again')
@@ -237,6 +234,7 @@ def end_of_game():
                 create_default_lobby(GAME_LOBBY_ID)
             post = not post
             sleep(1)
+        log.warning("Could not exit play-again screen.")
         raise ClientError
     else:
         log.info("SUCCESS: Account Leveled")
