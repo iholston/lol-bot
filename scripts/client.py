@@ -34,6 +34,7 @@ def init():
     password = account.get_password()
 
     # Start league
+    log.info("Opening League of Legends")
     start_app(username, password)
 
     # Connect to API
@@ -41,59 +42,38 @@ def init():
 
 # Main Control Loop
 def loop():
-    phase_timeout = 0
-    stats_timeout = 0
-    logged_queue = False
     while True:
-        r = connection.request('get', '/lol-gameflow/v1/gameflow-phase')
-        if r.status_code != 200:
-            phase_timeout += 1
-            if phase_timeout == 15:
-                log.warning("Phase Timeout.")
-                raise ClientError
-            sleep(1)
-            continue
-        phase = r.json()
+        sleep(2)
+        phase = get_phase()
         log.debug("Phase: {}".format(phase))
 
-
-        if stats_timeout == 15:
-            log.warning("Waiting for stats taking too long.")
-            raise ClientError
-        if phase != 'Matchmaking':
-            logged_queue = False
         match phase:
             case 'None':
                 create_default_lobby(GAME_LOBBY_ID)
             case 'Lobby':
                 start_matchmaking(GAME_LOBBY_ID)
             case 'Matchmaking':
-                if not logged_queue:
-                    log.info("In queue. Waiting for match to accept...")
-                logged_queue = True
+                queue()
             case 'ReadyCheck':
                 accept_match()
             case 'ChampSelect':
                 handle_game_lobby()
             case 'InProgress':
                 game.play_game()
+            case 'Reconnect':
+                reconnect()
             case 'WaitingForStats':
-                log.info('Waiting for Stats')
-                stats_timeout += 1
-                sleep(2)
-                continue
+                wait_for_stats()
             case 'PreEndOfGame':
                 pre_end_of_game()
             case 'EndOfGame':
                 end_of_game()
+            case 'Error':
+                log.warning("Error phase detected.")
+                raise ClientError
             case _:
                 log.warning("Unknown phase: {}".format(phase))
-                phase_timeout += 1
-                continue
-        phase_timeout = 0
-        stats_timeout = 0
-        sleep(3)
-
+                raise ClientError
 
 # GAME FLOW FUNCS
 
@@ -118,14 +98,21 @@ def start_matchmaking(lobby_id):
     if r.status_code == 200 and len(r.json()['errors']) != 0:
         dodge_timer = int(r.json()['errors'][0]['penaltyTimeRemaining'])
         log.info("Dodge Timer. Time Remaining: {}".format(utils.seconds_to_min_sec(dodge_timer)))
-        sleep(dodge_timer / 4)
+        sleep(dodge_timer)
+
+def queue():
+    log.info("In queue. Waiting for match.")
+    while True:
+        if get_phase() != 'Matchmaking':
+            return
+        sleep(1)
 
 def accept_match():
     log.info("Accepting match")
     connection.request('post', '/lol-matchmaking/v1/ready-check/accept')
 
 def handle_game_lobby():
-    log.info("Lobby State: INITIAL. Time Left in Lobby: 90s. Action: Initialize.")
+    log.debug("Lobby State: INITIAL. Time Left in Lobby: 90s. Action: Initialize.")
     r = connection.request('get', '/lol-champ-select/v1/session')
     if r.status_code != 200:
         return
@@ -184,6 +171,30 @@ def handle_game_lobby():
             cs = r.json()
             sleep(3)
 
+def reconnect():
+    log.info("Attempting to reconnect to live game.")
+    for i in range(15):
+        try:
+            utils.click(POPUP_SEND_EMAIL_X_RATIO, LEAGUE_CLIENT_WINNAME, 1)
+            sleep(1)
+            utils.click(CLIENT_RECONNECT_BUTTON, LEAGUE_CLIENT_WINNAME)
+        except:
+            pass
+        sleep(3)
+        if utils.exists(LEAGUE_GAME_CLIENT_WINNAME):
+            return
+    raise ClientError
+
+# Often times disconnects will happen after a game finishes. The client will indefinitely return
+# the phase 'WaitingForStats'
+def wait_for_stats():
+    log.info("Waiting for stats.")
+    for i in range(15):
+        sleep(2)
+        if get_phase() != 'WaitingForStats':
+            return
+    raise ClientError
+
 # Handles game client reopening, honoring teammates, clearing level up rewards and mission rewards
 # This func should hopefully be updated to not include any clicking, but im not sure of any endpoints that clear
 # the 'send email' popup or mission/level rewards
@@ -212,6 +223,21 @@ def end_of_game():
     if account_level < ACCOUNT_MAX_LEVEL:
         log.info("ACCOUNT LEVEL: {}. Returning to game lobby.".format(account_level))
         connection.request('post', '/lol-lobby/v2/play-again')
+        sleep(2)
+
+        # Occasionally, posting to the play-again endpoint just does not work
+        post = True
+        for i in range(15):
+            if get_phase() != 'EndOfGame':
+                log.info("\n")
+                return
+            if post:
+                connection.request('post', '/lol-lobby/v2/play-again')
+            else:
+                create_default_lobby(GAME_LOBBY_ID)
+            post = not post
+            sleep(1)
+        raise ClientError
     else:
         log.info("SUCCESS: Account Leveled")
         raise AccountLeveled
@@ -250,7 +276,7 @@ def start_app(username, password):
 
                 # Login -> when login screen starts username field has focus
                 pyautogui.getWindowsWithTitle(RIOT_CLIENT_WINNAME)
-                sleep(2)
+                sleep(3)
                 pyautogui.typewrite(username)
                 sleep(.5)
                 pyautogui.press('tab')
@@ -261,6 +287,8 @@ def start_app(username, password):
                 sleep(5)
             else:
                 log.debug("Waiting for league to open...")
+                sleep(1)
+                pyautogui.press('enter')  # sometimes the riot client will force you to press 'play'
         sleep(1)
         time_out += 1
 
@@ -291,7 +319,6 @@ def honor_player():
         sleep(2)
     log.info('Honor Failure. Player -1, Champ: NULL. Summoner: NULL. ID: -1')
     connection.request('post', '/lol-honor-v2/v1/honor-player', data={"summonerId": 0})  # will clear honor screen
-
 
 def chat(msg, calling_func_name=''):
     chat_id = ''
@@ -324,9 +351,17 @@ def chat(msg, calling_func_name=''):
             log.warning('Could not send message. HTTP STATUS: {} - {}'.format(r.status_code, r.json()))
     else:
         if calling_func_name != '':
-            log.info("{}, message success. Msg: {}".format(calling_func_name, msg))
+            log.debug("{}, message success. Msg: {}".format(calling_func_name, msg))
         else:
-            log.info("Message Success. Msg: {}".format(msg))
+            log.debug("Message Success. Msg: {}".format(msg))
+
+def get_phase():
+    for i in range(15):
+        r = connection.request('get', '/lol-gameflow/v1/gameflow-phase')
+        if r.status_code == 200:
+            return r.json()
+        sleep(1)
+    raise ClientError
 
 def get_account_level():
     for i in range(3):
@@ -336,8 +371,3 @@ def get_account_level():
             return int(level)
     log.warning('Could not reach endpoint')
 
-def get_phase():
-    r = connection.request('get', '/lol-gameflow/v1/gameflow-phase')
-    if r.status_code == 200:
-        return r.json()
-    return ''

@@ -60,7 +60,7 @@ class Connection:
         # Create Session
         self.lcu_session = requests.session()
 
-        while True:
+        for i in range(15):
             sleep(1)
             r = self.request('get', '/lol-login/v1/session')
             if r.status_code != 200:
@@ -69,10 +69,12 @@ class Connection:
 
             if r.json()['state'] == 'SUCCEEDED':
                 log.debug(r.json())
-                log.info("Connection Successful")
-                break
+                log.info("Connection Successful\n")
+                return
             else:
                 log.info("Connection status failure: {}".format(r.json()['state']))
+
+        raise client.ClientError
 
     def request(self, method, path, query='', data=''):
         if not query:

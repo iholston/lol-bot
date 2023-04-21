@@ -4,7 +4,6 @@ import logging
 import sys
 import traceback
 import account
-import utils
 
 log = logging.getLogger(__name__)
 
@@ -13,7 +12,7 @@ def main():
         stream=sys.stdout,
         # filename=os.path.join(os.path.join(os.path.expanduser('~')), 'Desktop') + "/log.txt",
         level=logging.INFO,
-        format='[%(asctime)s] [%(levelname)-7s] [%(funcName)-19s] %(message)s',
+        format='[%(asctime)s] [%(levelname)-7s] [%(funcName)-21s] %(message)s',
         datefmt='%d %b %Y %H:%M:%S',
     )
 
