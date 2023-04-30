@@ -20,7 +20,7 @@ def main():
             ───▄▄██▌█ BEEP BEEP
             ▄▄▄▌▐██▌█ -15 LP DELIVERY
             ███████▌█▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▌
-            ▀(⊙)▀▀▀▀▀▀▀(⊙)(⊙)▀▀▀▀▀▀▀▀▀▀(⊙)\n\n\t\t\tAnother LoL Bot\n\n""")
+            ▀(⊙)▀▀▀▀▀▀▀(⊙)(⊙)▀▀▀▀▀▀▀▀▀▀(⊙)\n\n\t\t\tLoL Bot\n\n""")
 
     errno = 0
     while True:
@@ -29,7 +29,7 @@ def main():
             client.loop()
         except client.AccountLeveled:
             client.close()
-            account.refresh()
+            account.set_account_as_leveled()
         except client.ClientError:
             errno += 1
             if errno == 3:
