@@ -22,8 +22,8 @@ PROCESS_NAMES = ["LeagueClient.exe", "League of Legends.exe"]
 
 # COMMANDS
 KILL_LEAGUE_CLIENT = 'TASKKILL /F /IM LeagueClient.exe'
-KILL_LEAGUE = 'TASKKILL /F /IM "League of Legends.exe"'
-KILL_RIOT_CLIENT = 'TASKKILL /F /IM "RiotClientUx.exe"'
+KILL_LEAGUE = 'TASKKILL /F /IM League of Legends.exe'
+KILL_RIOT_CLIENT = 'TASKKILL /F /IM RiotClientUx.exe'
 
 # GAME DATA
 ACCOUNT_MAX_LEVEL = 30

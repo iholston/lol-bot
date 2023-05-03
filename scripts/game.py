@@ -12,8 +12,14 @@ log = logging.getLogger(__name__)
 def play_game():
     log.info("Game State: NONE. Game Time: NULL. Action: Initializing...")
 
+    connection_err = 0
     while not utils.exists(LEAGUE_GAME_CLIENT_WINNAME):
+        if connection_err == 15:
+            close_game()
+            return
         sleep(2)
+        if get_game_data() == {}:
+            connection_err += 1
     data = []
     while len(data) == 0:
         data = get_game_data()
@@ -41,6 +47,7 @@ def play_game():
                 pass
             return
 
+        # All clicks and button presses are expecting the game window, if it does not exist the game is over
         try:
             # Loading Screen
             if game_time < 3:
@@ -67,10 +74,8 @@ def play_game():
                     sleep(1)
                     utils.click(GAME_ALL_ITEMS_RATIO, LEAGUE_GAME_CLIENT_WINNAME, 1)
                     for _ in range(2):  # just in case tbh, don't need for loop
-                        scale = tuple([random.randint(1, STARTER_ITEMS_TO_BUY) * x for x in
-                                       GAME_BUY_ITEM_RATIO_INCREASE])  # there are less starter items
-                        positions = tuple(sum(x) for x in zip(GAME_BUY_STARTER_ITEM_RATIO,
-                                                              scale))  # add tuple to default item position ratio https://stackoverflow.com/questions/1169725/adding-values-from-tuples-of-same-length
+                        scale = tuple([random.randint(1, STARTER_ITEMS_TO_BUY) * x for x in GAME_BUY_ITEM_RATIO_INCREASE])  # there are less starter items
+                        positions = tuple(sum(x) for x in zip(GAME_BUY_STARTER_ITEM_RATIO, scale))  # add tuple to default item position ratio https://stackoverflow.com/questions/1169725/adding-values-from-tuples-of-same-length
                         utils.click(positions, LEAGUE_GAME_CLIENT_WINNAME, 1)
                         utils.click(GAME_BUY_PURCHASE_RATIO, LEAGUE_GAME_CLIENT_WINNAME, 1)
                     utils.press('p', LEAGUE_GAME_CLIENT_WINNAME)
@@ -142,7 +147,7 @@ def play_game():
                     sleep(8)
                     # De-aggro or Ult and Back
                     if i != loops - 1:
-                        utils.right_click(backup_location)
+                        utils.right_click(backup_location, LEAGUE_GAME_CLIENT_WINNAME)
                         sleep(1)
                     else:
                         # Ult
@@ -150,7 +155,7 @@ def play_game():
                         utils.attack_move_click(GAME_ULT_RATIO)
                         utils.press('r', LEAGUE_GAME_CLIENT_WINNAME)
                         sleep(3)
-                        utils.right_click(GAME_MINI_MAP_UNDER_TURRET)
+                        utils.right_click(GAME_MINI_MAP_UNDER_TURRET, LEAGUE_GAME_CLIENT_WINNAME)
                         sleep(5)
                         utils.press('b', LEAGUE_GAME_CLIENT_WINNAME)
                         sleep(9)
@@ -172,3 +177,7 @@ def get_game_data():
     except Exception as e:
         log.warning("get_game_data error {}".format(e))
         return {}
+
+def close_game():
+    os.system(KILL_LEAGUE_CLIENT)
+    sleep(5)

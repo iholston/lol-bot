@@ -1,6 +1,5 @@
 import logging
 import pyautogui
-import os
 import subprocess
 import random
 import shutil
@@ -8,7 +7,6 @@ import game
 import account
 import utils
 import api
-
 from time import sleep
 from constants import *
 

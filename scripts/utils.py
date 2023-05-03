@@ -2,7 +2,6 @@ import keyboard
 import pyautogui
 import mouse
 import logging
-import os
 from time import sleep
 from win32gui import FindWindow, GetWindowRect
 from constants import *
