@@ -15,7 +15,9 @@ def play_game():
     connection_err = 0
     while not utils.exists(LEAGUE_GAME_CLIENT_WINNAME):
         if connection_err == 15:
+            log.warning("Could not connect to game.")
             close_game()
+            sleep(10)
             return
         sleep(2)
         if get_game_data() == {}:
@@ -41,8 +43,8 @@ def play_game():
         if game_time > 2400:
             log.warning("Game exceeded max time limit. Exiting.")
             try:
-                output = subprocess.check_output(KILL_LEAGUE, shell=False)
-                log.info(str(output, 'utf-8').rstrip())
+                close_game()
+                sleep(10)
             except:
                 pass
             return
