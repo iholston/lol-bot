@@ -3,7 +3,8 @@ import urllib3
 import os
 import logging
 import client
-
+import subprocess
+import re
 from base64 import b64encode
 from time import sleep
 from constants import *
@@ -11,6 +12,7 @@ from constants import *
 log = logging.getLogger(__name__)
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
 
 class Connection:
     def __init__(self):
@@ -28,32 +30,18 @@ class Connection:
     def init(self):
         log.info("Connecting to LCU API")
 
-        # Get Lockfile Data
-        for timeout in range(31):
-            if not os.path.isfile(LOCKFILE_PATH):
-                if timeout == 30:
-                    log.warning("League startup timeout. Cannot connect to LCU")
-                    raise client.ClientError
-                else:
-                    sleep(1)
-            else:
-                lockfile = open(LOCKFILE_PATH, 'r')
+        res = get_league_client_commandline()
 
-        lockfile_data = lockfile.read()
-        log.debug(lockfile_data)
-        lockfile.close()
-
-        # Parse data for pwd
-        lock = lockfile_data.split(':')
-        self.lcu_procname = lock[0]
-        self.lcu_pid = lock[1]
-        self.lcu_port = lock[2]
-        self.lcu_password = lock[3]
-        self.lcu_protocol = lock[4]
+        self.lcu_procname = 0
+        self.lcu_pid = 0
+        self.lcu_port = res[0]
+        self.lcu_password = res[1]
+        self.lcu_protocol = 'https'
 
         # Prepare Requests
         log.debug('{}:{}'.format(self.lcu_username, self.lcu_password))
-        userpass = b64encode(bytes('{}:{}'.format(self.lcu_username, self.lcu_password), 'utf-8')).decode('ascii')
+        userpass = b64encode(bytes('{}:{}'.format(
+            self.lcu_username, self.lcu_password), 'utf-8')).decode('ascii')
         self.lcu_headers = {'Authorization': 'Basic {}'.format(userpass)}
         log.debug(self.lcu_headers['Authorization'])
 
@@ -72,15 +60,18 @@ class Connection:
                 log.info("Connection Successful\n")
                 return
             else:
-                log.info("Connection status failure: {}".format(r.json()['state']))
+                log.info("Connection status failure: {}".format(
+                    r.json()['state']))
 
         raise client.ClientError
 
     def request(self, method, path, query='', data=''):
         if not query:
-            url = "{}://{}:{}{}".format(self.lcu_protocol, self.lcu_host, self.lcu_port, path)
+            url = "{}://{}:{}{}".format(self.lcu_protocol,
+                                        self.lcu_host, self.lcu_port, path)
         else:
-            url = "{}://{}:{}{}?{}".format(self.lcu_protocol, self.lcu_host, self.lcu_port, path, query)
+            url = "{}://{}:{}{}?{}".format(self.lcu_protocol,
+                                           self.lcu_host, self.lcu_port, path, query)
 
         log.debug("{} {} {}".format(method.upper(), url, data))
 
@@ -91,3 +82,18 @@ class Connection:
         else:
             r = fn(url, verify=False, headers=self.lcu_headers, json=data)
         return r
+
+
+def get_league_client_commandline():
+    command = "powershell.exe"
+    args = ["Get-CimInstance", "Win32_Process", "-Filter", '"name = \'LeagueClientUx.exe\'"', "|",
+            "Select-Object", "-ExpandProperty", "CommandLine"]
+    process = subprocess.Popen([command] + args, stdout=subprocess.PIPE)
+    result = process.communicate()[0].decode("utf-8")
+    pattern = re.compile(r"""--app-port=(?P<app_port>\d+)""")
+    match = pattern.search(result)
+    app_port = match.group("app_port")  
+    pattern = re.compile(r"""--remoting-auth-token=(?P<token>\w+)""") 
+    match = pattern.search(result)
+    remoting_auth_token = match.group("token") 
+    return app_port, remoting_auth_token
