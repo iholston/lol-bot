@@ -22,9 +22,19 @@ def play_game():
         sleep(2)
         if get_game_data() == {}:
             connection_err += 1
-    data = []
+
+    data = {}
+    connection_err = 0
     while len(data) == 0:
+        if connection_err == 10:
+            log.warning("Window open but cannot connect to game.")
+            close_game()
+            sleep(10)
+            return
+        sleep(1)
         data = get_game_data()
+        connection_err += 1
+
     game_time = int(data['gameData']['gameTime'])
     loading_screen_logged = False
     loading_screen_time = datetime.now()
