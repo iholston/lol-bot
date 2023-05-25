@@ -168,18 +168,12 @@ def handle_game_lobby():
             sleep(3)
 
 def reconnect():
-    log.info("Attempting to reconnect to live game.")
-    for i in range(15):
-        try:
-            utils.click(POPUP_SEND_EMAIL_X_RATIO, LEAGUE_CLIENT_WINNAME, 1)
-            sleep(1)
-            utils.click(CLIENT_RECONNECT_BUTTON, LEAGUE_CLIENT_WINNAME)
-        except:
-            pass
-        sleep(3)
-        if utils.exists(LEAGUE_GAME_CLIENT_WINNAME):
+    for i in range(3):
+        r = connection.request('post', '/lol-gameflow/v1/reconnect')
+        if r.status_code == 200:
             return
-    raise ClientError
+        sleep(2)
+    log.warning('Could not reconnect to game')
 
 # Often times disconnects will happen after a game finishes. The client will indefinitely return
 # the phase 'WaitingForStats'
@@ -365,5 +359,5 @@ def get_account_level():
         if r.status_code == 200:
             level = r.json()['lol']['level']
             return int(level)
+        sleep(1)
     log.warning('Could not reach endpoint')
-

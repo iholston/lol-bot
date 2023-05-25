@@ -23,7 +23,7 @@ def play_game():
         if get_game_data() == {}:
             connection_err += 1
 
-    data = {}
+    data = get_game_data()
     connection_err = 0
     while len(data) == 0:
         if connection_err == 10:
@@ -31,7 +31,7 @@ def play_game():
             close_game()
             sleep(10)
             return
-        sleep(1)
+        sleep(2)
         data = get_game_data()
         connection_err += 1
 
@@ -191,5 +191,5 @@ def get_game_data():
         return {}
 
 def close_game():
-    os.system(KILL_LEAGUE_CLIENT)
+    os.system(KILL_LEAGUE)
     sleep(5)
