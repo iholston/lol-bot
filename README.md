@@ -24,7 +24,7 @@
 ## Requirements
 - [League of Legends](https://signup.leagueoflegends.com/en-us/signup/download)
 - [League of Legends Account](https://signup.leagueoflegends.com/en-us/signup/index)
-- [Python 3](https://www.python.org/downloads/)
+- [Python >= 3.10](https://www.python.org/downloads/)
 
 ## Setup
 - Ensure Python is added to your PATH, check "Add Python to PATH" when installing
