@@ -26,7 +26,7 @@ def play_game():
     data = get_game_data()
     connection_err = 0
     while len(data) == 0:
-        if connection_err == 10:
+        if connection_err == 120:
             log.warning("Window open but cannot connect to game.")
             close_game()
             sleep(10)
