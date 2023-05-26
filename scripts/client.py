@@ -170,7 +170,7 @@ def handle_game_lobby():
 def reconnect():
     for i in range(3):
         r = connection.request('post', '/lol-gameflow/v1/reconnect')
-        if r.status_code == 200:
+        if r.status_code == 204:
             return
         sleep(2)
     log.warning('Could not reconnect to game')
@@ -179,10 +179,11 @@ def reconnect():
 # the phase 'WaitingForStats'
 def wait_for_stats():
     log.info("Waiting for stats.")
-    for i in range(15):
+    for i in range(60):
         sleep(2)
         if get_phase() != 'WaitingForStats':
             return
+    log.warning("Waiting for stats timeout.")
     raise ClientError
 
 # Handles game client reopening, honoring teammates, clearing level up rewards and mission rewards
@@ -287,7 +288,7 @@ def close():
     os.system(KILL_LEAGUE)
     os.system(KILL_LEAGUE_CLIENT)
     os.system(KILL_RIOT_CLIENT)
-    sleep(2)
+    sleep(5)
 
 def is_league_running():
     res = subprocess.check_output(["TASKLIST"], creationflags=0x08000000)
@@ -351,6 +352,7 @@ def get_phase():
         if r.status_code == 200:
             return r.json()
         sleep(1)
+    log.warning("Could not get phase.")
     raise ClientError
 
 def get_account_level():

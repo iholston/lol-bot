@@ -4,17 +4,19 @@ import traceback
 import client
 import game
 import account
+import os
+import constants
 
 log = logging.getLogger(__name__)
 
 def main():
     logging.basicConfig(
-        stream=sys.stdout,
-        # filename=os.path.join(os.path.join(os.path.expanduser('~')), 'Desktop') + "/log.txt",
+        filename=os.path.join(os.path.join(os.path.expanduser('~')), 'Desktop') + "/log.txt",
         level=logging.INFO,
         format='[%(asctime)s] [%(levelname)-7s] [%(funcName)-21s] %(message)s',
         datefmt='%d %b %Y %H:%M:%S',
     )
+    logging.getLogger().addHandler(logging.StreamHandler(sys.stdout))
 
     print("""\n\n            ──────▄▌▐▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▌
             ───▄▄██▌█ BEEP BEEP
@@ -32,7 +34,7 @@ def main():
             account.set_account_as_leveled()
         except client.ClientError:
             errno += 1
-            if errno == 3:
+            if errno == constants.MAX_ERRORS:
                 log.info("Max errors reached. Exiting.")
                 sys.exit()
             client.close()

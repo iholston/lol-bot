@@ -14,7 +14,7 @@ def play_game():
 
     connection_err = 0
     while not utils.exists(LEAGUE_GAME_CLIENT_WINNAME):
-        if connection_err == 15:
+        if connection_err == 60:
             log.warning("Could not connect to game.")
             close_game()
             sleep(10)
@@ -191,5 +191,6 @@ def get_game_data():
         return {}
 
 def close_game():
+    log.warning("Terminating Game.")
     os.system(KILL_LEAGUE)
     sleep(5)
