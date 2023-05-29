@@ -41,10 +41,21 @@ def init():
 
 # Main Control Loop
 def loop():
+    previous_phase = ''
+    errno = 0
+
     while True:
-        sleep(2)
         phase = get_phase()
         log.debug("Phase: {}".format(phase))
+
+        if phase == previous_phase:
+            errno += 1
+            log.debug("Phase same as previous. Errno {}".format(errno))
+            if errno == 15:
+                log.warning("Transition error. Phase will not change.")
+                raise ClientError
+        else:
+            errno = 0
 
         match phase:
             case 'None':
@@ -71,6 +82,9 @@ def loop():
                 log.warning("Unknown phase: {}".format(phase))
                 raise ClientError
 
+        previous_phase = phase
+        sleep(2)
+
 # GAME FLOW FUNCS
 
 def create_default_lobby(lobby_id):
@@ -80,12 +94,10 @@ def create_default_lobby(lobby_id):
 
 def start_matchmaking(lobby_id):
     log.info("Starting queue for lobby_id: {}".format(lobby_id))
-
     r = connection.request('get', '/lol-lobby/v2/lobby')
     if r.json()['gameConfig']['queueId'] != lobby_id:
         create_default_lobby(lobby_id)
         sleep(1)
-
     connection.request('post', '/lol-lobby/v2/lobby/matchmaking/search')
     sleep(1.5)
 

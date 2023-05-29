@@ -16,7 +16,9 @@ def main():
         format='[%(asctime)s] [%(levelname)-7s] [%(funcName)-21s] %(message)s',
         datefmt='%d %b %Y %H:%M:%S',
     )
-    logging.getLogger().addHandler(logging.StreamHandler(sys.stdout))
+    ch = logging.StreamHandler(sys.stdout)
+    ch.setFormatter(logging.Formatter('[%(asctime)s] [%(levelname)-7s] [%(funcName)-21s] %(message)s'))
+    logging.getLogger().addHandler(ch)
 
     print("""\n\n            ──────▄▌▐▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▌
             ───▄▄██▌█ BEEP BEEP
