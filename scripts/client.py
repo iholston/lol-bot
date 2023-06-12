@@ -39,6 +39,9 @@ def init():
     # Connect to API
     connection.init()
 
+    # Disable Failsafe
+    pyautogui.FAILSAFE = False
+
 # Main Control Loop
 def loop():
     previous_phase = ''
