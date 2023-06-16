@@ -38,9 +38,10 @@ def init():
 
     # Connect to API
     connection.init()
+    sleep(3)
 
-    # Disable Failsafe
-    pyautogui.FAILSAFE = False
+    # Client Update
+    patcher()
 
 # Main Control Loop
 def loop():
@@ -297,6 +298,21 @@ def start_app(username, password):
                 pyautogui.press('enter')  # sometimes the riot client will force you to press 'play'
         sleep(1)
         time_out += 1
+
+def patcher():
+    log.info("Checking for Client Updates")
+    r = connection.request('get', '/patcher/v1/products/league_of_legends/state')
+    if r.status_code != 200:
+        return
+    logged = False
+    while not r.json()['isUpToDate']:
+        if not logged:
+            log.info("Client is patching...")
+        sleep(3)
+        r = connection.request('get', '/patcher/v1/products/league_of_legends/state')
+        log.debug('Status Code: {}, Percent Patched: {}%'.format(r.status_code, r.json()['percentPatched']))
+        log.debug(r.json())
+    log.info("Client is up to date!")
 
 def close():
     log.info("Terminating league related processes.")

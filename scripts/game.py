@@ -1,5 +1,7 @@
 import logging
 import random
+
+import pyautogui
 import requests
 import utils
 import subprocess
@@ -177,6 +179,9 @@ def play_game():
 
         except utils.WindowNotFound:
             log.info("Game State: COMPLETE. Game Length: {}. Action: Exit.".format(utils.seconds_to_min_sec(game_time)))
+            return
+        except pyautogui.FailSafeException:  # unlikely but possible
+            log.warning("FailSafeException. Game State: Considered COMPLETE. Game Length: {}. Action: Exit.".format(utils.seconds_to_min_sec(game_time)))
             return
 
 def get_game_data():
