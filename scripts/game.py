@@ -1,6 +1,5 @@
 import logging
 import random
-
 import pyautogui
 import requests
 import utils
