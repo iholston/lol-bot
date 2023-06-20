@@ -308,6 +308,7 @@ def patcher():
     while not r.json()['isUpToDate']:
         if not logged:
             log.info("Client is patching...")
+            logged = True
         sleep(3)
         r = connection.request('get', '/patcher/v1/products/league_of_legends/state')
         log.debug('Status Code: {}, Percent Patched: {}%'.format(r.status_code, r.json()['percentPatched']))
