@@ -44,7 +44,11 @@ def play_game():
     screen_locked = False
     logged_early_game = False
     logged_mid_late_game = False
-    utils.click(GAME_CENTER_OF_SCREEN, LEAGUE_GAME_CLIENT_WINNAME)
+    try:
+        sleep(1.5)
+        utils.click(GAME_CENTER_OF_SCREEN, LEAGUE_GAME_CLIENT_WINNAME)
+    except pyautogui.FailSafeException:
+        log.warning("Error attempting to click center of screen")
 
     # Main Loop
     while True:
