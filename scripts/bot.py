@@ -3,11 +3,14 @@ import sys
 import traceback
 import os
 import constants
+import launcher
 import client
+import utils
 import account
 from datetime import datetime
 
 log = logging.getLogger(__name__)
+
 
 def main():
     log_dir = os.path.join(os.path.normpath(os.getcwd() + os.sep + os.pardir), 'logs')
@@ -32,24 +35,26 @@ def main():
     errno = 0
     while True:
         try:
+            launcher.launch_league()
             client.init()
             client.loop()
         except client.AccountLeveled:
-            client.close()
+            utils.close_processes()
             account.set_account_as_leveled()
             errno = 0
-        except client.ClientError:
+        except (client.ClientError, launcher.LauncherError):
             errno += 1
             if errno == constants.MAX_ERRORS:
                 log.info("Max errors reached. Exiting.")
                 sys.exit()
-            client.close()
+            utils.close_processes()
         except KeyboardInterrupt:
             log.warning("Keyboard Interrupt.")
             sys.exit()
         except:
             log.warning("Unexpected Error: {}".format(traceback.format_exc()))
             sys.exit()
+
 
 if __name__ == '__main__':
     main()

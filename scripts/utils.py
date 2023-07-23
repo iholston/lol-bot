@@ -2,6 +2,7 @@ import keyboard
 import pyautogui
 import mouse
 import logging
+import subprocess
 from time import sleep
 from win32gui import FindWindow, GetWindowRect
 from constants import *
@@ -11,6 +12,21 @@ log = logging.getLogger(__name__)
 # Window
 class WindowNotFound(Exception):
     pass
+
+def is_league_running():
+    res = subprocess.check_output(["TASKLIST"], creationflags=0x08000000)
+    output = str(res)
+    for name in PROCESS_NAMES:
+        if name in output:
+            return True
+    return False
+
+def close_processes():
+    log.info("Terminating league related processes.")
+    os.system(KILL_LEAGUE)
+    os.system(KILL_LEAGUE_CLIENT)
+    os.system(KILL_RIOT_CLIENT)
+    sleep(5)
 
 def screenshot(img_name, path=''):
     im = pyautogui.screenshot()
