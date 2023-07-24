@@ -1,10 +1,10 @@
 <p align="center">
-  <a href="https://github.com/iholston/Another-LoL-Bot">
-    <img src="https://user-images.githubusercontent.com/32341824/231304640-dede1e69-231a-47f6-ace6-8a48f83750f7.png" alt="Logo" width="80" height="80">
+  <a href="https://github.com/iholston/lol-bot">
+    <img src="https://github.com/iholston/lol-bot/assets/32341824/71f35164-c8a6-42ca-a254-68d8be92780e" alt="Logo" width="533" height="300">
   </a>
 </p>
 
-## Welcome to lol bot
+## Welcome to LoL Bot
 - This is a python bot that uses the local League Client API to start games and plays them with a simple but effective game loop.
 - This bot has leveled up [thousands of league accounts](https://www.playerauctions.com/lol-account/) and is still going strong.
 - No pixel botting and/or image recognition makes it easy to run on any setup.
