@@ -1,7 +1,7 @@
 import os
 
 # PATHS
-LEAGUE_DIR = 'C:/Riot Games/League of Legends'
+LEAGUE_DIR = 'C:/Riot Games/League of Legends'  # Make sure to use forward slashes
 LEAGUE_PATH = LEAGUE_DIR + '/LeagueClient'
 LOCKFILE_PATH = LEAGUE_DIR + "/lockfile"
 LEAGUE_GAME_CONFIG_PATH = LEAGUE_DIR + '/Config/game.cfg'
@@ -38,7 +38,10 @@ ASK_4_MID_DIALOG = [
     "mid ples",
     "plannin on goin mid team",
     "mid por favor",
-    "bienvenidos, mid"
+    "bienvenidos, mid",
+    "howdy, mid",
+    "goin mid",
+    "mid"
 ]
 
 # GAME BUTTON RATIOS
