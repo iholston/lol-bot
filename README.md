@@ -39,6 +39,7 @@
   - Make sure that "stay signed in" is not checked when league of legends starts. 
   - This allows the bot to log out of league by closing it, get new account credentials, restart league, log in with the new credentials, and start another leveling loop, cycling indefinitely
 - To level accounts past level 30 or play in different game types update game data variables in constants.py
+- For Virtual Machines, I recommend starting with [this forum](https://www.unknowncheats.me/forum/league-of-legends/480977-run-league-legends-virtual-machine-vmware.html). *Please Note*, I will not be fixing/troubleshooting VM related issues as there are far too many VM implementation/platform specific issues. 
 
 ## Disclaimer
 Another LoL Bot isn’t endorsed by Riot Games and doesn’t reflect the views or opinions of Riot Games or anyone officially involved in producing or managing League of Legends. League of Legends and Riot Games are trademarks or registered trademarks of Riot Games, Inc. League of Legends © Riot Games, Inc.
