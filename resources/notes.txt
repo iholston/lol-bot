@@ -1,5 +1,7 @@
 My random notes on the endpoints used in the script in gameflow order
 
+This guys repo is super helpful: https://github.com/XHXIAIEIN/LeagueCustomLobby
+
 URL: GET '/lol-gameflow/v1/gameflow-phase'
 Example Return: Lobby
 Notes: Returns single word representing gameflow phase. For more info GET '/lol-gameflow/v1/session'
