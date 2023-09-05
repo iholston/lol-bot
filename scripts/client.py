@@ -153,7 +153,10 @@ def handle_game_lobby():
                     # Ask for mid
                     if not requested:
                         sleep(1)
-                        chat(random.choice(ASK_4_MID_DIALOG), 'handle_game_lobby')
+                        try:  # if the ASK_4_MID_DIALOG is empty this will error
+                            chat(random.choice(ASK_4_MID_DIALOG), 'handle_game_lobby')
+                        except:
+                            pass
                         requested = True
             else:
                 log.debug("Lobby State: {}. Time Left in Lobby: {}s. Action: Waiting".format(lobby_state, lobby_time_left))
