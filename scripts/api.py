@@ -3,6 +3,7 @@ import urllib3
 import logging
 import client
 
+from enum import Enum
 from base64 import b64encode
 from time import sleep
 from constants import *
@@ -11,12 +12,17 @@ log = logging.getLogger(__name__)
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
+# LCU API INFO
+class Client(Enum):
+    LEAGUE_CLIENT = 1
+    RIOT_CLIENT = 2
+
 class Connection:
     def __init__(self):
-        # LCU Vars
+        self.client = ''
         self.lcu_host = LCU_HOST
         self.lcu_port = ''
-        self.lcu_protocol = DEFAULT_PROTOCOL
+        self.lcu_protocol = LCU_DEFAULT_PROTOCOL
         self.lcu_username = LCU_USERNAME
         self.lcu_password = ''
         self.lcu_session = ''
@@ -29,14 +35,14 @@ class Connection:
 
         # Get Lockfile Data
         for timeout in range(31):
-            if not os.path.isfile(LOCKFILE_PATH):
+            if not os.path.isfile(LEAGUE_CLIENT_LOCKFILE_PATH):
                 if timeout == 30:
                     log.warning("League startup timeout. Cannot connect to LCU")
                     raise client.ClientError
                 else:
                     sleep(1)
             else:
-                lockfile = open(LOCKFILE_PATH, 'r')
+                lockfile = open(LEAGUE_CLIENT_LOCKFILE_PATH, 'r')
 
         lockfile_data = lockfile.read()
         log.debug(lockfile_data)
@@ -68,7 +74,8 @@ class Connection:
 
             if r.json()['state'] == 'SUCCEEDED':
                 log.debug(r.json())
-                log.info("Connection Successful\n")
+                log.info("Connection Successful")
+                self.request('post', '/lol-login/v1/delete-rso-on-close')  # ensures logout after close
                 return
             else:
                 log.info("Connection status failure: {}".format(r.json()['state']))

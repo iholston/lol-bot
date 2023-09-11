@@ -39,7 +39,7 @@ def start_app(username, password):
         log.info("League is already running...")
         return
     log.info("Starting League of Legends")
-    subprocess.run([LEAGUE_PATH])
+    subprocess.run([LEAGUE_CLIENT_PATH])
     sleep(10)
     time_out = 0
     prior_login = True

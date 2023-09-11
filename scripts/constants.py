@@ -1,16 +1,20 @@
 import os
 
 # PATHS
-LEAGUE_DIR = 'C:/Riot Games/League of Legends'  # Make sure to use forward slashes
-LEAGUE_PATH = LEAGUE_DIR + '/LeagueClient'
-LOCKFILE_PATH = LEAGUE_DIR + "/lockfile"
-LEAGUE_GAME_CONFIG_PATH = LEAGUE_DIR + '/Config/game.cfg'
+LEAGUE_CLIENT_DIR = 'D:/Riot Games/League of Legends'  # Make sure to use forward slashes
+LEAGUE_CLIENT_PATH = LEAGUE_CLIENT_DIR + '/LeagueClient'
+LEAGUE_CLIENT_LOCKFILE_PATH = LEAGUE_CLIENT_DIR + "/lockfile"
+LEAGUE_GAME_CONFIG_PATH = LEAGUE_CLIENT_DIR + '/Config/game.cfg'
 LOCAL_GAME_CONFIG_PATH = os.path.dirname(os.getcwd()) + '/resources/game.cfg'
+RIOT_CLIENT_LOCKFILE_PATH = os.getenv('LOCALAPPDATA') + '/Riot Games/Riot Client/Config/lockfile'
 
-# LCU API INFO
+# API INFO
 LCU_HOST = '127.0.0.1'
+RCU_HOST = '127.0.0.1'
 LCU_USERNAME = 'riot'
-DEFAULT_PROTOCOL = 'https'
+RCU_USERNAME = 'riot'
+LCU_DEFAULT_PROTOCOL = 'https'
+RCU_DEFAULT_PROTOCOL = 'https'
 
 # WINDOW NAMES
 RIOT_CLIENT_WINNAME = "Riot Client Main"
@@ -18,7 +22,8 @@ LEAGUE_CLIENT_WINNAME = "League of Legends"
 LEAGUE_GAME_CLIENT_WINNAME = "League of Legends (TM) Client"
 
 # PROCESS NAMES
-PROCESS_NAMES = ["LeagueClient.exe", "League of Legends.exe"]
+LEAGUE_PROCESS_NAMES = ["LeagueClient.exe", "League of Legends.exe"]
+RIOT_CLIENT_PROCESS_NAMES = "RiotClientUx.exe"
 
 # COMMANDS
 KILL_LEAGUE_CLIENT = 'TASKKILL /F /IM LeagueClient.exe'
