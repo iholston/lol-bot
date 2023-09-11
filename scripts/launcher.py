@@ -4,7 +4,6 @@ import shutil
 import account
 import utils
 import subprocess
-
 from time import sleep
 from constants import *
 
@@ -26,7 +25,7 @@ def launch_league():
     username = account.get_username()
     password = account.get_password()
 
-    # If league is already running, check to make sure it is running the correct account
+    # Check league already running
     if utils.is_league_running():
         log.info("League is already running...")
         if verify_account(username):
@@ -38,10 +37,9 @@ def launch_league():
 
     # Launch League
     log.info("Launching League of Legends")
+    subprocess.run([LEAGUE_CLIENT_PATH])
+    sleep(5)
     while True:
-        subprocess.run([LEAGUE_CLIENT_PATH])
-        sleep(10)
-
         if utils.exists(LEAGUE_CLIENT_WINNAME):
             log.info("League Client opened with Prior Login")
             if verify_account(username):
@@ -70,32 +68,18 @@ def launch_league():
     raise LauncherError
 
 def login(username, password):
-
-    # Login
     conn = api.Connection()
     conn.init(api.Client.RIOT_CLIENT)
     body = {"clientId": "riot-client", 'trustLevels': ['always_trusted']}
     r = conn.request("post", "/rso-auth/v2/authorizations", data=body)
     if r.status_code != 200:
-        log.warning(r.status_code)
-        log.warning(r.json())
-        log.error("Failed Authorization Request")
+        log.error("Failed Authorization Request. Response: {}".format(r.status_code))
         raise LauncherError
-    else:
-        log.debug(r.status_code)
-        log.debug(r.json())
-
     body = {"username": username, "password": password, "persistLogin": False}
     r = conn.request("put", '/rso-auth/v1/session/credentials', data=body)
     if r.status_code != 201:
-        log.warning(r.status_code)
-        log.warning(r.json())
-        log.error("Failed Authentication Request")
+        log.error("Failed Authentication Request. Response: {}".format(r.status_code))
         raise LauncherError
-    else:
-        log.debug(r.status_code)
-        log.debug(r.json())
-
 
 def verify_account(username):
     log.info("Verifying logged-in account credentials")

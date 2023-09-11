@@ -1,21 +1,17 @@
 import requests
 import urllib3
 import logging
-import client
-
 from enum import Enum
 from base64 import b64encode
 from time import sleep
 from constants import *
 
 log = logging.getLogger(__name__)
-
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 class ConnError(Exception):
     pass
 
-# LCU API INFO
 class Client(Enum):
     LEAGUE_CLIENT = 1
     RIOT_CLIENT = 2
@@ -25,7 +21,7 @@ class Connection:
         self.client_type = ''
         self.client_username = ''
         self.client_password = ''
-        self.proc = ''
+        self.procname = ''
         self.pid = ''
         self.host = ''
         self.port = ''
@@ -35,15 +31,15 @@ class Connection:
 
     def init(self, client_type: Client):
         self.client_type = client_type
-
         if self.client_type == Client.LEAGUE_CLIENT:
             self.connect_lcu()
         else:
-            log.info("Connecting to Riot Client")
             self.connect_rc()
 
     def connect_lcu(self):
         log.info("Connecting to LCU API")
+        self.host = LCU_HOST
+        self.client_username = LCU_USERNAME
 
         # lockfile
         lockfile = open(LEAGUE_CLIENT_LOCKFILE_PATH, 'r')
@@ -51,7 +47,7 @@ class Connection:
         log.debug(data)
         lockfile.close()
         data = data.split(':')
-        self.proc = data[0]
+        self.procname = data[0]
         self.pid = data[1]
         self.port = data[2]
         self.client_password = data[3]
@@ -79,6 +75,8 @@ class Connection:
 
     def connect_rc(self):
         log.info("Connecting to Riot Client")
+        self.host = RCU_HOST
+        self.client_username = RCU_USERNAME
 
         # lockfile
         lockfile = open(RIOT_CLIENT_LOCKFILE_PATH, 'r')
@@ -86,7 +84,7 @@ class Connection:
         log.debug(data)
         lockfile.close()
         data = data.split(':')
-        self.proc = data[0]
+        self.procname = data[0]
         self.pid = data[1]
         self.port = data[2]
         self.client_password = data[3]
