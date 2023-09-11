@@ -25,7 +25,7 @@ def main():
     ch = logging.StreamHandler(sys.stdout)
     ch.setFormatter(logging.Formatter('[%(asctime)s] [%(levelname)-7s] [%(funcName)-21s] %(message)s'))
     logging.getLogger().addHandler(ch)
-    return
+
     print("""\n\n            ──────▄▌▐▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▌
             ───▄▄██▌█ BEEP BEEP
             ▄▄▄▌▐██▌█ -15 LP DELIVERY
@@ -57,7 +57,5 @@ def main():
 
 if __name__ == '__main__':
     main()
-    import launcher2
-    launcher2.launch_league()
 
 
