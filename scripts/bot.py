@@ -17,7 +17,7 @@ def main():
         os.makedirs(log_dir)
     logging.basicConfig(
         filename=os.path.join(log_dir, datetime.now().strftime('%d%m%Y_%H%M_log.log')),
-        level=logging.DEBUG,
+        level=logging.INFO,
         format='[%(asctime)s] [%(levelname)-7s] [%(funcName)-21s] %(message)s',
         datefmt='%d %b %Y %H:%M:%S',
     )

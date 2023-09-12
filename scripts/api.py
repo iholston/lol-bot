@@ -9,9 +9,6 @@ from constants import *
 log = logging.getLogger(__name__)
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-class ConnError(Exception):
-    pass
-
 class Client(Enum):
     LEAGUE_CLIENT = 1
     RIOT_CLIENT = 2
@@ -71,10 +68,10 @@ class Connection:
                 self.request('post', '/lol-login/v1/delete-rso-on-close')  # ensures logout after close
                 return
 
-        raise ConnError
+        log.error("Could not connect to League Client")
 
     def connect_rc(self):
-        log.info("Connecting to Riot Client")
+        log.info("Initializing Riot Client session")
         self.host = RCU_HOST
         self.client_username = RCU_USERNAME
 
@@ -104,7 +101,10 @@ class Connection:
         else:
             url = "{}://{}:{}{}?{}".format(self.protocol, self.host, self.port, path, query)
 
-        log.debug("{} {} {}".format(method.upper(), url, data))
+        if 'username' not in data:
+            log.debug("{} {} {}".format(method.upper(), url, data))
+        else:
+            log.debug("{} {}".format(method.upper(), url))
 
         fn = getattr(self.session, method)
 
