@@ -7,7 +7,6 @@ from time import sleep
 from constants import *
 
 log = logging.getLogger(__name__)
-
 connection = api.Connection()
 
 class ClientError(Exception):
@@ -18,7 +17,7 @@ class AccountLeveled(Exception):
 
 def init():
     # Connect to API
-    connection.init()
+    connection.init(api.Client.LEAGUE_CLIENT)
     sleep(3)
 
     # Client Update

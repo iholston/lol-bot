@@ -11,7 +11,6 @@ from datetime import datetime
 
 log = logging.getLogger(__name__)
 
-
 def main():
     log_dir = os.path.join(os.path.normpath(os.getcwd() + os.sep + os.pardir), 'logs')
     if not os.path.exists(log_dir):
@@ -55,6 +54,7 @@ def main():
             log.warning("Unexpected Error: {}".format(traceback.format_exc()))
             sys.exit()
 
-
 if __name__ == '__main__':
     main()
+
+

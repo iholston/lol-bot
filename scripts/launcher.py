@@ -1,15 +1,9 @@
-"""
-As far as I am aware there is no api that deals with the riot client
-making this implementation a little jenky. If there are api endpoints
-to log in through the riot client let me know
-"""
-
 import logging
+import api
 import shutil
 import account
 import utils
 import subprocess
-import pyautogui
 from time import sleep
 from constants import *
 
@@ -27,57 +21,77 @@ def launch_league():
         shutil.copy2(LOCAL_GAME_CONFIG_PATH, LEAGUE_GAME_CONFIG_PATH)
 
     # Get account username and password
+    log.info("Retrieving account credentials")
     username = account.get_username()
     password = account.get_password()
 
-    # Start league
-    log.info("Opening League of Legends")
-    start_app(username, password)
-
-def start_app(username, password):
+    # Check league already running
     if utils.is_league_running():
         log.info("League is already running...")
-        return
-    log.info("Starting League of Legends")
-    subprocess.run([LEAGUE_PATH])
-    sleep(10)
-    time_out = 0
-    prior_login = True
-    waiting = False
+        if verify_account(username):
+            return
+        else:
+            log.warning("The currently logged-in account is incorrect. Closing.")
+            utils.close_processes()
+            sleep(3)
+
+    # Launch League
+    log.info("Launching League of Legends")
+    subprocess.run([LEAGUE_CLIENT_PATH])
+    sleep(5)
     while True:
-        if time_out == 30:
-            log.error("Application failed to launch")
-            raise LauncherError
         if utils.exists(LEAGUE_CLIENT_WINNAME):
-            if prior_login:
-                log.info("League Client opened with Prior Login")
+            log.info("League Client opened with Prior Login")
+            if verify_account(username):
+                return
             else:
-                log.info("Game Successfully Launched")
+                log.warning("The currently logged-in account is incorrect. Closing.")
+                utils.close_processes()
+                sleep(3)
+        elif utils.exists(RIOT_CLIENT_WINNAME):
+            log.info("Riot Client opened. Logging in")
+            login(username, password)
+            break
+
+    for i in range(30):
+        sleep(1)
+        if utils.exists(LEAGUE_CLIENT_WINNAME):
+            log.info("Game Successfully Launched")
+            try:
                 output = subprocess.check_output(KILL_RIOT_CLIENT, shell=False)
                 log.info(str(output, 'utf-8').rstrip())
-            sleep(5)
+            except:
+                log.warning("Could not kill riot client")
             return
-        if utils.exists(RIOT_CLIENT_WINNAME):
-            if not waiting:
-                log.info("Riot Client opened. Logging in")
-                prior_login = False
-                waiting = True
-                time_out = 0
 
-                # Login -> when login screen starts username field has focus
-                pyautogui.getWindowsWithTitle(RIOT_CLIENT_WINNAME)
-                sleep(3)
-                pyautogui.typewrite(username)
-                sleep(.5)
-                pyautogui.press('tab')
-                sleep(.5)
-                pyautogui.typewrite(password)
-                sleep(.5)
-                pyautogui.press('enter')
-                sleep(5)
-            else:
-                log.debug("Waiting for league to open...")
-                sleep(1)
-                pyautogui.press('enter')  # sometimes the riot client will force you to press 'play'
-        sleep(1)
-        time_out += 1
+    log.error("Application failed to launch after successful login")
+    raise LauncherError
+
+def login(username, password):
+    conn = api.Connection()
+    conn.init(api.Client.RIOT_CLIENT)
+    body = {"clientId": "riot-client", 'trustLevels': ['always_trusted']}
+    r = conn.request("post", "/rso-auth/v2/authorizations", data=body)
+    if r.status_code != 200:
+        log.error("Failed Authorization Request. Response: {}".format(r.status_code))
+        raise LauncherError
+    body = {"username": username, "password": password, "persistLogin": False}
+    r = conn.request("put", '/rso-auth/v1/session/credentials', data=body)
+    if r.status_code != 201:
+        log.error("Failed Authentication Request. Response: {}".format(r.status_code))
+        raise LauncherError
+    elif r.json()['error'] == 'auth_failure':
+        log.error("Invalid Credentials. Please ensure username/password is correct")
+        raise LauncherError
+
+def verify_account(username):
+    log.info("Verifying logged-in account credentials")
+    connection = api.Connection()
+    connection.init(api.Client.LEAGUE_CLIENT)
+    r = connection.request('get', '/lol-login/v1/session')
+    if r.json()['username'] != username:
+        log.info("Incorrect Account")
+        return False
+    else:
+        log.info("Account Verified")
+        return True

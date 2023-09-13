@@ -16,7 +16,7 @@ class WindowNotFound(Exception):
 def is_league_running():
     res = subprocess.check_output(["TASKLIST"], creationflags=0x08000000)
     output = str(res)
-    for name in PROCESS_NAMES:
+    for name in LEAGUE_PROCESS_NAMES:
         if name in output:
             return True
     return False
