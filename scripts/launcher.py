@@ -80,6 +80,9 @@ def login(username, password):
     if r.status_code != 201:
         log.error("Failed Authentication Request. Response: {}".format(r.status_code))
         raise LauncherError
+    elif r.json()['error'] == 'auth_failure':
+        log.error("Invalid Credentials. Please ensure username/password is correct")
+        raise LauncherError
 
 def verify_account(username):
     log.info("Verifying logged-in account credentials")

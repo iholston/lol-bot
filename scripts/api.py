@@ -71,7 +71,7 @@ class Connection:
         log.error("Could not connect to League Client")
 
     def connect_rc(self):
-        log.info("Initializing Riot Client session")
+        log.debug("Initializing Riot Client session")
         self.host = RCU_HOST
         self.client_username = RCU_USERNAME
 
