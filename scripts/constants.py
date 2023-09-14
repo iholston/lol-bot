@@ -21,7 +21,7 @@ LEAGUE_GAME_CLIENT_WINNAME = "League of Legends (TM) Client"
 
 # PROCESS NAMES
 LEAGUE_PROCESS_NAMES = ["LeagueClient.exe", "League of Legends.exe"]
-RIOT_CLIENT_PROCESS_NAMES = "RiotClientUx.exe"
+RIOT_CLIENT_PROCESS_NAMES = ["RiotClientUx.exe"]
 
 # COMMANDS
 KILL_LEAGUE_CLIENT = 'TASKKILL /F /IM LeagueClient.exe'

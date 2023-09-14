@@ -21,6 +21,14 @@ def is_league_running():
             return True
     return False
 
+def is_rc_running():
+    res = subprocess.check_output(["TASKLIST"], creationflags=0x08000000)
+    output = str(res)
+    for name in RIOT_CLIENT_PROCESS_NAMES:
+        if name in output:
+            return True
+    return False
+
 def close_processes():
     log.info("Terminating league related processes.")
     os.system(KILL_LEAGUE)
