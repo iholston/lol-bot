@@ -26,15 +26,18 @@ class Connection:
         self.session = ''
         self.headers = ''
 
-    def init(self, client_type: Client):
+    def init(self, client_type: Client, verbose=True):
         self.client_type = client_type
         if self.client_type == Client.LEAGUE_CLIENT:
-            self.connect_lcu()
+            self.connect_lcu(verbose)
         else:
             self.connect_rc()
 
-    def connect_lcu(self):
-        log.info("Connecting to LCU API")
+    def connect_lcu(self, verbose):
+        if verbose:
+            log.info("Connecting to LCU API")
+        else:
+            log.debug("Connecting to LCU API")
         self.host = LCU_HOST
         self.client_username = LCU_USERNAME
 
@@ -64,7 +67,10 @@ class Connection:
             r = self.request('get', '/lol-login/v1/session')
             if r.json()['state'] == 'SUCCEEDED':
                 log.debug(r.json())
-                log.info("Connection Successful")
+                if verbose:
+                    log.info("Connection Successful")
+                else:
+                    log.debug("Connection Successful")
                 self.request('post', '/lol-login/v1/delete-rso-on-close')  # ensures logout after close
                 return
 
