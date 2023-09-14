@@ -28,12 +28,8 @@ def launch_league():
     # Check league already running
     if utils.is_league_running():
         log.info("League is already running...")
-        if verify_account(username):
-            return
-        else:
-            log.warning("The currently logged-in account is incorrect. Closing.")
-            utils.close_processes()
-            sleep(3)
+        verify_account(username)
+        return
 
     # Launch League
     log.info("Launching League of Legends")
@@ -42,12 +38,8 @@ def launch_league():
     while True:
         if utils.exists(LEAGUE_CLIENT_WINNAME):
             log.info("League Client opened with Prior Login")
-            if verify_account(username):
-                return
-            else:
-                log.warning("The currently logged-in account is incorrect. Closing.")
-                utils.close_processes()
-                sleep(3)
+            verify_account(username)
+            return
         elif utils.exists(RIOT_CLIENT_WINNAME):
             log.info("Riot Client opened. Logging in")
             login(username, password)
@@ -90,7 +82,7 @@ def verify_account(username):
     connection.init(api.Client.LEAGUE_CLIENT)
     r = connection.request('get', '/lol-login/v1/session')
     if r.json()['username'] != username:
-        log.info("Incorrect Account")
+        log.warning("Incorrect Account")
         return False
     else:
         log.info("Account Verified")
