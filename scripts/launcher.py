@@ -8,6 +8,7 @@ from time import sleep
 from constants import *
 
 log = logging.getLogger(__name__)
+conn = api.Connection()
 
 class LauncherError(Exception):
     pass
@@ -25,51 +26,59 @@ def launch_league():
     username = account.get_username()
     password = account.get_password()
 
-    # Check league already running
-    if utils.is_league_running():
-        log.info("League is already running...")
-        if verify_account(username):
+    # Assess game state and launch
+    launch_handler(username, password)
+
+def launch_handler(username, password):
+    conn.init(api.Client.RIOT_CLIENT)
+    logged_in = False
+
+    for i in range(100):
+        # League is running
+        if utils.is_league_running():
+            log.info("League is already running...")
+            verify_account(username)
             return
-        else:
-            log.warning("The currently logged-in account is incorrect. Closing.")
-            utils.close_processes()
+
+        # League is not running but Riot Client is running
+        elif not utils.is_league_running() and utils.is_rc_running():
+
+            # Not logged in
+            r = conn.request("get", "/rso-auth/v1/authorization/userinfo")
+            if r.status_code == 404 and not logged_in:
+                login(username, password)
+                logged_in = True
+                sleep(3)
+
+            # Somehow randomly logged in
+            elif r.status_code == 200 and not logged_in:
+                conn.request("delete", "/rso-auth/v1/session")  # log out
+                sleep(3)
+
+            # Logged in
+            elif r.status_code == 200 and logged_in:
+
+                # Patching
+                r = conn.request("get", "/patch-proxy/v1/active-updates")
+                while len(r.json()) != 0:
+                    sleep(2)
+                    log.info("Riot Client is patching...")
+                    log.debug(r.json())
+                    r = conn.request("get", "/patch-proxy/v1/active-updates")
+
+                # Not patching (can choose a game to launch)
+                subprocess.run([LEAGUE_CLIENT_PATH])
+                sleep(3)
+
+        # Nothing is running
+        elif not utils.is_league_running() and not utils.is_rc_running():
+            subprocess.run([LEAGUE_CLIENT_PATH])
             sleep(3)
 
-    # Launch League
-    log.info("Launching League of Legends")
-    subprocess.run([LEAGUE_CLIENT_PATH])
-    sleep(5)
-    while True:
-        if utils.exists(LEAGUE_CLIENT_WINNAME):
-            log.info("League Client opened with Prior Login")
-            if verify_account(username):
-                return
-            else:
-                log.warning("The currently logged-in account is incorrect. Closing.")
-                utils.close_processes()
-                sleep(3)
-        elif utils.exists(RIOT_CLIENT_WINNAME):
-            log.info("Riot Client opened. Logging in")
-            login(username, password)
-            break
-
-    for i in range(30):
-        sleep(1)
-        if utils.exists(LEAGUE_CLIENT_WINNAME):
-            log.info("Game Successfully Launched")
-            try:
-                output = subprocess.check_output(KILL_RIOT_CLIENT, shell=False)
-                log.info(str(output, 'utf-8').rstrip())
-            except:
-                log.warning("Could not kill riot client")
-            return
-
-    log.error("Application failed to launch after successful login")
-    raise LauncherError
+        sleep(2)
 
 def login(username, password):
-    conn = api.Connection()
-    conn.init(api.Client.RIOT_CLIENT)
+    log.info("Logging in")
     body = {"clientId": "riot-client", 'trustLevels': ['always_trusted']}
     r = conn.request("post", "/rso-auth/v2/authorizations", data=body)
     if r.status_code != 200:
@@ -90,7 +99,7 @@ def verify_account(username):
     connection.init(api.Client.LEAGUE_CLIENT)
     r = connection.request('get', '/lol-login/v1/session')
     if r.json()['username'] != username:
-        log.info("Incorrect Account")
+        log.warning("Incorrect Account!")
         return False
     else:
         log.info("Account Verified")
