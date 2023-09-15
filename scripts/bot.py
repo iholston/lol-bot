@@ -47,6 +47,9 @@ def main():
                 log.info("Max errors reached. Exiting.")
                 sys.exit()
             utils.close_processes()
+        except launcher.InvalidCredentials:
+            log.error("Please update username/password and before restart")
+            sys.exit()
         except KeyboardInterrupt:
             log.warning("Keyboard Interrupt.")
             sys.exit()
@@ -56,5 +59,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
-
