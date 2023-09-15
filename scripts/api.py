@@ -64,7 +64,10 @@ class Connection:
         # connect
         for i in range(15):
             sleep(1)
-            r = self.request('get', '/lol-login/v1/session')
+            try:
+                r = self.request('get', '/lol-login/v1/session')
+            except:
+                continue
             if r.json()['state'] == 'SUCCEEDED':
                 log.debug(r.json())
                 if verbose:

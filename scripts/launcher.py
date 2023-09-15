@@ -71,7 +71,7 @@ def launch_handler(username, password):
 
             # Somehow randomly logged in
             elif r.status_code == 200 and not logged_in:
-                log.info("Deleting rso session..")
+                log.info("Deleting RSO session")
                 conn.request("delete", "/rso-auth/v1/session")  # log out
                 sleep(1)
 
