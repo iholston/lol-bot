@@ -48,7 +48,7 @@ def main():
                 sys.exit()
             utils.close_processes()
         except launcher.InvalidCredentials:
-            log.error("Please update username/password and before restart")
+            log.error("Please update username/password before restart")
             sys.exit()
         except KeyboardInterrupt:
             log.warning("Keyboard Interrupt")
