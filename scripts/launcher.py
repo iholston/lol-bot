@@ -56,8 +56,8 @@ def launch_handler(username, password):
         elif not utils.is_league_running() and utils.is_rc_running():
 
             # Get session state
+            conn.init(api.Client.RIOT_CLIENT)
             try:
-                conn.init(api.Client.RIOT_CLIENT)
                 r = conn.request("get", "/rso-auth/v1/session")
             except:
                 log.warning("Could not get session state")

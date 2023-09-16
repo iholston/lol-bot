@@ -50,12 +50,12 @@ def main():
         except launcher.InvalidCredentials:
             log.error("Please update username/password before restart")
             sys.exit()
-        except KeyboardInterrupt:
-            log.warning("Keyboard Interrupt")
-            sys.exit()
         except FileNotFoundError as e:
             log.error(e)
-            log.error("Please update the constants.py file with the correct paths")
+            log.error("Please update the constants.py file with the correct path")
+            sys.exit()
+        except KeyboardInterrupt:
+            log.warning("Keyboard Interrupt")
             sys.exit()
         except:
             log.warning("Unexpected Error: {}".format(traceback.format_exc()))
