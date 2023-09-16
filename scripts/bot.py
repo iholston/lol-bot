@@ -51,7 +51,11 @@ def main():
             log.error("Please update username/password and before restart")
             sys.exit()
         except KeyboardInterrupt:
-            log.warning("Keyboard Interrupt.")
+            log.warning("Keyboard Interrupt")
+            sys.exit()
+        except FileNotFoundError as e:
+            log.error(e)
+            log.error("Please update the constants.py file with the correct paths")
             sys.exit()
         except:
             log.warning("Unexpected Error: {}".format(traceback.format_exc()))
