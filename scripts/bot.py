@@ -62,4 +62,6 @@ def main():
             sys.exit()
 
 if __name__ == '__main__':
+    if not os.path.exists(constants.LEAGUE_CLIENT_DIR):
+        raise ValueError("League Directory is incorrect. Please update the path in constants.py")
     main()
