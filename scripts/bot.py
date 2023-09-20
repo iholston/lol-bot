@@ -1,22 +1,17 @@
 import logging
-import sys
-import traceback
 import os
+import sys
 import constants
-import launcher
-import client
-import utils
-import account
+from client import Client
 from datetime import datetime
 from logging.handlers import RotatingFileHandler
 
-log = logging.getLogger(__name__)
-
-def main():
-    log_dir = os.path.join(os.path.normpath(os.getcwd() + os.sep + os.pardir), 'logs')
+def set_logs(log_dir, level=logging.INFO) -> None:
+    """Sets log output to file and console"""
     filename = os.path.join(log_dir, datetime.now().strftime('%d%m%Y_%H%M_log.log'))
 
-    formatter = logging.Formatter(fmt='[%(asctime)s] [%(levelname)-7s] [%(funcName)-21s] %(message)s', datefmt='%d %b %Y %H:%M:%S')
+    formatter = logging.Formatter(fmt='[%(asctime)s] [%(levelname)-7s] [%(funcName)-21s] %(message)s',
+                                  datefmt='%d %b %Y %H:%M:%S')
 
     ch = logging.StreamHandler(sys.stdout)
     fh = RotatingFileHandler(filename=filename, maxBytes=500000, backupCount=1)
@@ -27,45 +22,16 @@ def main():
     logging.getLogger().addHandler(ch)
     logging.getLogger().addHandler(fh)
 
-    logging.getLogger().setLevel(logging.INFO)
-
-    print("""\n\n            ──────▄▌▐▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▌
-            ───▄▄██▌█ BEEP BEEP
-            ▄▄▄▌▐██▌█ -15 LP DELIVERY
-            ███████▌█▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▌
-            ▀(⊙)▀▀▀▀▀▀▀(⊙)(⊙)▀▀▀▀▀▀▀▀▀▀(⊙)\n\n\t\t\tLoL Bot\n\n""")
-
-    errno = 0
-    while True:
-        try:
-            launcher.launch_league()
-            client.init()
-            client.loop()
-        except client.AccountLeveled:
-            utils.close_processes()
-            account.set_account_as_leveled()
-            errno = 0
-        except (client.ClientError, launcher.LauncherError):
-            errno += 1
-            if errno == constants.MAX_ERRORS:
-                log.info("Max errors reached. Exiting.")
-                sys.exit()
-            utils.close_processes()
-        except launcher.InvalidCredentials:
-            log.error("Please update username/password before restart")
-            sys.exit()
-        except FileNotFoundError as e:
-            log.error(e)
-            log.error("Please update the constants.py file with the correct path")
-            sys.exit()
-        except KeyboardInterrupt:
-            log.warning("Keyboard Interrupt")
-            sys.exit()
-        except:
-            log.warning("Unexpected Error: {}".format(traceback.format_exc()))
-            sys.exit()
+    logging.getLogger().setLevel(level)
 
 if __name__ == '__main__':
     if not os.path.exists(constants.LEAGUE_CLIENT_DIR):
         raise ValueError("League Directory is incorrect. Please update the path in constants.py")
-    main()
+
+    log_dir = os.path.join(os.path.normpath(os.getcwd() + os.sep + os.pardir), 'logs')
+    if not os.path.exists(log_dir):
+        os.makedirs(log_dir)
+    set_logs(log_dir=log_dir)
+
+    client: Client = Client()
+    client.main_loop()

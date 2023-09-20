@@ -15,6 +15,13 @@ class ClientError(Exception):
 class AccountLeveled(Exception):
     pass
 
+class Client:
+    def __init__(self):
+        pass
+
+    def main_loop(self):
+        pass
+
 def init():
     # Connect to API
     connection.init(api.Client.LEAGUE_CLIENT)
