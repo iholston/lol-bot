@@ -1,3 +1,7 @@
+"""
+Handles league client and starts games
+"""
+
 import logging
 import random
 import game
@@ -5,9 +9,8 @@ import utils
 import api
 from time import sleep
 from constants import *
-
-log = logging.getLogger(__name__)
-connection = api.Connection()
+from enum import Enum
+from launcher import Launcher
 
 class ClientError(Exception):
     pass
@@ -16,19 +19,22 @@ class AccountLeveled(Exception):
     pass
 
 class Client:
+    """Client class that handles league client tasks needed to start a game"""
+
     def __init__(self):
-        pass
+        self.connection = api.Connection()
+        self.log = logging.getLogger(__name__)
+        self.launcher = Launcher()
+
+        self.launcher.launch_league()
+        self.connection.init(api.Client.LEAGUE_CLIENT)
+        self.check_patch()
 
     def main_loop(self):
         pass
 
-def init():
-    # Connect to API
-    connection.init(api.Client.LEAGUE_CLIENT)
-    sleep(3)
-
-    # Client Update
-    patcher()
+    def check_patch(self):
+        pass
 
 # Main Control Loop
 def loop():

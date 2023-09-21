@@ -1,19 +1,17 @@
+"""
+Handles Riot Client and League Client HTTP requests
+"""
+
 import requests
 import urllib3
 import logging
-from enum import Enum
 from base64 import b64encode
 from time import sleep
 from constants import *
 
-log = logging.getLogger(__name__)
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-
-class Client(Enum):
-    LEAGUE_CLIENT = 1
-    RIOT_CLIENT = 2
-
 class Connection:
+    """Handles Riot Client and League Client HTTP requests"""
+
     def __init__(self):
         self.client_type = ''
         self.client_username = ''
@@ -23,28 +21,24 @@ class Connection:
         self.host = ''
         self.port = ''
         self.protocol = ''
-        self.session = ''
         self.headers = ''
+        self.session = requests.session()
+        self.log = logging.getLogger(__name__)
+        urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-    def init(self, client_type: Client, verbose=True):
-        self.client_type = client_type
-        if self.client_type == Client.LEAGUE_CLIENT:
-            self.connect_lcu(verbose)
-        else:
-            self.connect_rc()
-
-    def connect_lcu(self, verbose):
+    def connect_lcu(self, verbose) -> None:
+        """Connects to League Client"""
         if verbose:
-            log.info("Connecting to LCU API")
+            self.log.info("Connecting to LCU API")
         else:
-            log.debug("Connecting to LCU API")
+            self.log.debug("Connecting to LCU API")
         self.host = LCU_HOST
         self.client_username = LCU_USERNAME
 
         # lockfile
         lockfile = open(LEAGUE_CLIENT_LOCKFILE_PATH, 'r')
         data = lockfile.read()
-        log.debug(data)
+        self.log.debug(data)
         lockfile.close()
         data = data.split(':')
         self.procname = data[0]
@@ -53,13 +47,10 @@ class Connection:
         self.client_password = data[3]
         self.protocol = data[4]
 
-        # session
-        self.session = requests.session()
-
         # headers
         userpass = b64encode(bytes('{}:{}'.format(self.client_username, self.client_password), 'utf-8')).decode('ascii')
         self.headers = {'Authorization': 'Basic {}'.format(userpass)}
-        log.debug(self.headers['Authorization'])
+        self.log.debug(self.headers['Authorization'])
 
         # connect
         for i in range(15):
@@ -69,25 +60,26 @@ class Connection:
             except:
                 continue
             if r.json()['state'] == 'SUCCEEDED':
-                log.debug(r.json())
+                self.log.debug(r.json())
                 if verbose:
-                    log.info("Connection Successful")
+                    self.log.info("Connection Successful")
                 else:
-                    log.debug("Connection Successful")
-                self.request('post', '/lol-login/v1/delete-rso-on-close')  # ensures logout after close
+                    self.log.debug("Connection Successful")
+                self.request('post', '/lol-login/v1/delete-rso-on-close')  # ensures self.logout after close
+                sleep(2)
                 return
+        self.log.error("Could not connect to League Client")
 
-        log.error("Could not connect to League Client")
-
-    def connect_rc(self):
-        log.debug("Initializing Riot Client session")
+    def connect_rc(self) -> None:
+        """Sets header info for Riot Client"""
+        self.log.debug("Initializing Riot Client session")
         self.host = RCU_HOST
         self.client_username = RCU_USERNAME
 
         # lockfile
         lockfile = open(RIOT_CLIENT_LOCKFILE_PATH, 'r')
         data = lockfile.read()
-        log.debug(data)
+        self.log.debug(data)
         lockfile.close()
         data = data.split(':')
         self.procname = data[0]
@@ -96,24 +88,22 @@ class Connection:
         self.client_password = data[3]
         self.protocol = data[4]
 
-        # session
-        self.session = requests.session()
-
         # headers
         userpass = b64encode(bytes('{}:{}'.format(self.client_username, self.client_password), 'utf-8')).decode('ascii')
         self.headers = {'Authorization': 'Basic {}'.format(userpass), "Content-Type": "application/json"}
-        log.debug(self.headers['Authorization'])
+        self.log.debug(self.headers['Authorization'])
 
     def request(self, method, path, query='', data=''):
+        """Handles HTTP requests to Riot Client or League Client server"""
         if not query:
             url = "{}://{}:{}{}".format(self.protocol, self.host, self.port, path)
         else:
             url = "{}://{}:{}{}?{}".format(self.protocol, self.host, self.port, path, query)
 
         if 'username' not in data:
-            log.debug("{} {} {}".format(method.upper(), url, data))
+            self.log.debug("{} {} {}".format(method.upper(), url, data))
         else:
-            log.debug("{} {}".format(method.upper(), url))
+            self.log.debug("{} {}".format(method.upper(), url))
 
         fn = getattr(self.session, method)
 
