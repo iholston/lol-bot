@@ -1,3 +1,7 @@
+"""
+Handles all tasks necessary to play a game of League of Legends
+"""
+
 import logging
 import random
 import pyautogui
@@ -33,7 +37,7 @@ class Game:
         self.game_state = None
 
     def play_game(self) -> None:
-        """Plays a single game of League of Legends, takes action based on game time"""
+        """Plays a single game of League of Legends, takes actions based on game time"""
         try:
             self.wait_for_game_window()
             self.wait_for_game_connection()
@@ -82,18 +86,21 @@ class Game:
                 self.update_state()
                 sleep(2)
 
-    def game_start(self):
+    def game_start(self) -> None:
         """Buys starter items and waits for minions to clash (minions clash at 90 seconds)"""
         self.buy_items(GAME_BUY_STARTER_ITEM_RATIO)
         utils.press()
 
-    def early_game(self):
+    def early_game(self) -> None:
+        """A set of actions that can be repeatedly taken throughout the early game"""
         pass
 
-    def late_game(self):
+    def late_game(self) -> None:
+        """A set of actions that can be repeatedly taken throughout the mid/late game"""
         pass
 
-    def buy_items(self, ratio):
+    def buy_items(self, ratio) -> None:
+        """Opens the shop and attempts to purchase items"""
         pass
 
     def update_state(self) -> bool:
