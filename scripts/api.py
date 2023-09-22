@@ -26,7 +26,7 @@ class Connection:
         self.log = logging.getLogger(__name__)
         urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-    def connect_lcu(self, verbose) -> None:
+    def connect_lcu(self, verbose=True) -> None:
         """Connects to League Client"""
         if verbose:
             self.log.info("Connecting to LCU API")
