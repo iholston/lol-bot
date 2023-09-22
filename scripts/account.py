@@ -1,11 +1,19 @@
-# db request username where level < 30
-def get_username():
+"""
+Gets an account username and password to level up
+
+Implement this file to connect to your database of league accounts.
+There is an example file in resources that can drop-in replace this for
+those who want a quick and simple option.
+"""
+
+def get_username() -> str:
+    """Gets username from database"""
     return 'account_username'
 
-# db request password where username == username
-def get_password():
+def get_password() -> str:
+    """Gets password from database"""
     return 'account_password'
 
-# db set level to 30 where username == username
-def set_account_as_leveled():
+def set_account_as_leveled() -> None:
+    """Sets account as leveled in database"""
     pass

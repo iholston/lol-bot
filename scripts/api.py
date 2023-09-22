@@ -1,5 +1,5 @@
 """
-Handles Riot Client and League Client HTTP requests
+Handles HTTP Requests for Riot Client and League Client
 """
 
 import requests
@@ -10,7 +10,7 @@ from time import sleep
 from constants import *
 
 class Connection:
-    """Handles Riot Client and League Client HTTP requests"""
+    """Handles HTTP requests for Riot Client and League Client"""
 
     def __init__(self) -> None:
         self.client_type = ''

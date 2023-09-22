@@ -14,16 +14,19 @@ with open(accounts_path, 'r') as f:
     data = json.load(f)
 
 def get_username():
+    """Gets an available account username from JSON file"""
     for account in data['accounts']:
         if not account['leveled']:
             return account['username']
 
 def get_password():
+    """Gets an available account password from JSON file"""
     for account in data['accounts']:
         if not account['leveled']:
             return account['password']
 
 def set_account_as_leveled():
+    """Sets account as leveled in the JSON file"""
     for account in data['accounts']:
         if not account['leveled']:
             account['leveled'] = True
