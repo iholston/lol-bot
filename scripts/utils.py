@@ -36,6 +36,11 @@ def close_processes():
     os.system(KILL_RIOT_CLIENT)
     sleep(5)
 
+def close_game() -> None:
+    log.info("Terminating game instance")
+    os.system(KILL_LEAGUE)
+    sleep(15)
+
 def screenshot(img_name, path=''):
     im = pyautogui.screenshot()
     if not path:
