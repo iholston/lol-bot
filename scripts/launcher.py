@@ -5,7 +5,6 @@ Handles the Riot Client and launches League of Legends
 import logging
 import api
 import shutil
-import account
 import utils
 import os
 import subprocess
@@ -18,13 +17,14 @@ class Launcher:
     def __init__(self):
         self.log = logging.getLogger(__name__)
         self.connection = api.Connection()
-        self.username = ''
-        self.password = ''
+        self.username = ""
+        self.password = ""
 
-    def launch_league(self):
+    def launch_league(self, username, password):
         """Runs setup logic and starts launch sequence"""
         self.set_game_config()
-        self.get_credentials()
+        self.username = username
+        self.password = password
         self.launch_loop()
 
     def set_game_config(self):
@@ -34,12 +34,6 @@ class Launcher:
             shutil.copyfile(LOCAL_GAME_CONFIG_PATH, LEAGUE_GAME_CONFIG_PATH)
         else:
             shutil.copy2(LOCAL_GAME_CONFIG_PATH, LEAGUE_GAME_CONFIG_PATH)
-
-    def get_credentials(self):
-        """Gets account username and password"""
-        self.log.info("Retrieving account credentials")
-        self.username = account.get_username()
-        self.password = account.get_password()
 
     def launch_loop(self):
         """Handles tasks necessary to open the League of Legends client"""
