@@ -35,6 +35,7 @@ class Game:
         self.game_time = -1
         self.formatted_game_time = ''
         self.game_state = None
+        self.screen_locked = False
 
     def play_game(self) -> None:
         """Plays a single game of League of Legends, takes actions based on game time"""
@@ -50,9 +51,9 @@ class Game:
                         case GameState.PRE_MINIONS:
                             self.game_start()
                         case GameState.EARLY_GAME:
-                            self.early_game()
+                            self.play(GAME_MINI_MAP_UNDER_TURRET, GAME_MINI_MAP_UNDER_TURRET, 20)
                         case GameState.LATE_GAME:
-                            self.late_game()
+                            self.play(GAME_MINI_MAP_ENEMY_NEXUS, GAME_MINI_MAP_CENTER_MID, 35)
         except GameError as e:
             self.log.warning(e.__str__())
             utils.close_game()
@@ -88,20 +89,80 @@ class Game:
 
     def game_start(self) -> None:
         """Buys starter items and waits for minions to clash (minions clash at 90 seconds)"""
-        self.buy_items(GAME_BUY_STARTER_ITEM_RATIO)
-        utils.press()
+        sleep(2)
+        utils.press('p', LEAGUE_GAME_CLIENT_WINNAME)  # p opens shop
+        sleep(1)
+        utils.click(GAME_ALL_ITEMS_RATIO, LEAGUE_GAME_CLIENT_WINNAME, 1)
+        for _ in range(2):
+            scale = tuple([random.randint(1, STARTER_ITEMS_TO_BUY) * x for x in GAME_BUY_ITEM_RATIO_INCREASE])
+            positions = tuple(sum(x) for x in zip(GAME_BUY_STARTER_ITEM_RATIO, scale))  # https://stackoverflow.com/questions/1169725/adding-values-from-tuples-of-same-length
+            utils.click(positions, LEAGUE_GAME_CLIENT_WINNAME, 1)
+            utils.click(GAME_BUY_PURCHASE_RATIO, LEAGUE_GAME_CLIENT_WINNAME, 1)
+        utils.press('p', LEAGUE_GAME_CLIENT_WINNAME)
+        sleep(1)
 
-    def early_game(self) -> None:
-        """A set of actions that can be repeatedly taken throughout the early game"""
-        pass
+        utils.press('y', LEAGUE_GAME_CLIENT_WINNAME)  # lock screen on champ
+        self.screen_locked = True
+        utils.press('ctrl+q')  # level up 'q'
+        utils.attack_move_click(GAME_MINI_MAP_UNDER_TURRET)
+        sleep(1)
+        utils.attack_move_click(GAME_MINI_MAP_UNDER_TURRET)
+        while self.game_state == GameState.PRE_MINIONS:
+            sleep(3)
+            self.update_state()
 
-    def late_game(self) -> None:
-        """A set of actions that can be repeatedly taken throughout the mid/late game"""
-        pass
+    def play(self, attack_position: tuple, retreat_position: tuple, time_to_lane: int) -> None:
+        """A set of player actions. Buys items, levels up abilites, heads to lane, attacks, then retreats"""
+        if not self.screen_locked:
+            utils.press('y', LEAGUE_GAME_CLIENT_WINNAME)
+            self.screen_locked = True
+        self.buy_items()
+        self.upgrade_abilities()
 
-    def buy_items(self, ratio) -> None:
+        # Head to lane
+        utils.attack_move_click(attack_position)
+        utils.press('d', LEAGUE_GAME_CLIENT_WINNAME)  # ghost
+        sleep(time_to_lane)
+
+        # Main attack move loop. This sequence attacks and then de-aggros to prevent them from dying 50 times.
+        for i in range(7):
+            utils.attack_move_click(attack_position)
+            sleep(8)
+            utils.right_click(retreat_position, LEAGUE_GAME_CLIENT_WINNAME)
+            sleep(1)
+
+        # Ult and back
+        utils.press('f', LEAGUE_GAME_CLIENT_WINNAME)
+        utils.attack_move_click(GAME_ULT_RATIO)
+        utils.press('r', LEAGUE_GAME_CLIENT_WINNAME)
+        sleep(3)
+        utils.right_click(GAME_MINI_MAP_UNDER_TURRET, LEAGUE_GAME_CLIENT_WINNAME)
+        sleep(5)
+        utils.press('b', LEAGUE_GAME_CLIENT_WINNAME)
+        sleep(9)
+
+    @staticmethod
+    def buy_items() -> None:
         """Opens the shop and attempts to purchase items"""
-        pass
+        utils.press('p', LEAGUE_GAME_CLIENT_WINNAME)
+        for _ in range(ITEMS_TO_BUY):
+            scale = tuple([random.randint(1, ITEMS_TO_BUY) * x for x in GAME_BUY_ITEM_RATIO_INCREASE])  # multiply tuple by scaler https://stackoverflow.com/questions/1781970/multiplying-a-tuple-by-a-scalar
+            positions = tuple(sum(x) for x in zip(GAME_BUY_EPIC_ITEM_RATIO, scale))  # add tuple to default item position ratio https://stackoverflow.com/questions/1169725/adding-values-from-tuples-of-same-length
+            utils.click(positions, LEAGUE_GAME_CLIENT_WINNAME, .5)
+            utils.click(GAME_BUY_PURCHASE_RATIO, LEAGUE_GAME_CLIENT_WINNAME, .5)
+        utils.press('p', LEAGUE_GAME_CLIENT_WINNAME)
+
+    @staticmethod
+    def upgrade_abilities() -> None:
+        """Upgrades abilities"""
+        utils.press('ctrl+r', LEAGUE_GAME_CLIENT_WINNAME)
+        sleep(.3)
+        utils.press('ctrl+q', LEAGUE_GAME_CLIENT_WINNAME)
+        sleep(.3)
+        utils.press('ctrl+w', LEAGUE_GAME_CLIENT_WINNAME)
+        sleep(.3)
+        utils.press('ctrl+e', LEAGUE_GAME_CLIENT_WINNAME)
+        sleep(.3)
 
     def update_state(self) -> bool:
         """Gets game data from local game server and updates game state"""

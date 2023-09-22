@@ -4,13 +4,13 @@ Handles league client and contains leveling loop that runs indefinitely
 
 import logging
 import random
-import game
 import utils
 import api
 import account
 from time import sleep
 from constants import *
 from launcher import Launcher
+from game import Game
 
 class ClientError(Exception):
     """Exception that signals an error has occurred in the League of Legends Client"""
@@ -63,6 +63,7 @@ class Client:
                 case 'ChampSelect':
                     self.game_lobby()
                 case 'InProgress':
+                    game: Game = Game()
                     game.play_game()
                 case 'Reconnect':
                     self.reconnect()
