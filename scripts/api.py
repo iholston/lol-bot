@@ -12,7 +12,7 @@ from constants import *
 class Connection:
     """Handles Riot Client and League Client HTTP requests"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.client_type = ''
         self.client_username = ''
         self.client_password = ''
@@ -27,7 +27,7 @@ class Connection:
         urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
     def connect_lcu(self, verbose=True) -> None:
-        """Connects to League Client"""
+        """Sets header infor and connects to League Client"""
         if verbose:
             self.log.info("Connecting to LCU API")
         else:
@@ -93,7 +93,7 @@ class Connection:
         self.headers = {'Authorization': 'Basic {}'.format(userpass), "Content-Type": "application/json"}
         self.log.debug(self.headers['Authorization'])
 
-    def request(self, method, path, query='', data=''):
+    def request(self, method, path, query='', data='') -> requests.models.Response:
         """Handles HTTP requests to Riot Client or League Client server"""
         if not query:
             url = "{}://{}:{}{}".format(self.protocol, self.host, self.port, path)

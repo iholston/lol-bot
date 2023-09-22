@@ -19,7 +19,7 @@ class ClientError(Exception):
 class Client:
     """Client class that handles league client tasks needed to start a game"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.connection = api.Connection()
         self.log = logging.getLogger(__name__)
         self.launcher = Launcher()
@@ -31,7 +31,7 @@ class Client:
         self.client_errors = 0
         self.phase_errors = 0
 
-    def account_loop(self):
+    def account_loop(self) -> None:
         """Loop that handles the continuous leveling of accounts, takes about 3-4 days of leveling to complete"""
         while True:
             try:
@@ -46,8 +46,10 @@ class Client:
                     raise Exception("Max errors reached.Exiting.")
                 utils.close_processes()
 
-    def leveling_loop(self):
+    def leveling_loop(self) -> None:
         """Main loop that runs the correct function based on the phase of the League Client, continuously starts games"""
+        self.connection.connect_lcu()
+        self.check_patch()
         while not self.account_leveled():
             match self.get_phase():
                 case 'None':
@@ -74,7 +76,7 @@ class Client:
                     self.log.warning("Unknown phase: {}".format(self.phase))
                     raise ClientError
 
-    def get_phase(self):
+    def get_phase(self) -> str:
         """Requests the League Client phase"""
         for i in range(15):
             r = self.connection.request('get', '/lol-gameflow/v1/gameflow-phase')
@@ -97,13 +99,13 @@ class Client:
         self.log.warning("Could not get phase.")
         raise ClientError
 
-    def create_lobby(self, lobby_id):
+    def create_lobby(self, lobby_id) -> None:
         """Creates a lobby for given lobby ID"""
         self.log.info("Creating lobby with lobby_id: {}".format(lobby_id))
         self.connection.request('post', '/lol-lobby/v2/lobby', data={'queueId': lobby_id})
         sleep(1.5)
 
-    def start_matchmaking(self, lobby_id):
+    def start_matchmaking(self, lobby_id) -> None:
         """Starts matchmaking for a given lobby ID, will also wait out dodge timers"""
         self.log.info("Starting queue for lobby_id: {}".format(lobby_id))
         r = self.connection.request('get', '/lol-lobby/v2/lobby')
@@ -120,7 +122,7 @@ class Client:
             self.log.info("Dodge Timer. Time Remaining: {}".format(utils.seconds_to_min_sec(dodge_timer)))
             sleep(dodge_timer)
 
-    def queue(self):
+    def queue(self) -> None:
         """Waits until the League Client Phase changes to something other than 'Matchmaking'"""
         self.log.info("In queue. Waiting for match.")
         while True:
@@ -128,12 +130,12 @@ class Client:
                 return
             sleep(1)
 
-    def accept_match(self):
+    def accept_match(self) -> None:
         """Accepts the Ready Check"""
         self.log.info("Accepting match")
         self.connection.request('post', '/lol-matchmaking/v1/ready-check/accept')
 
-    def game_lobby(self):
+    def game_lobby(self) -> None:
         """Loop that handles tasks associated with the Champion Select Lobby"""
         self.log.debug("Lobby State: INITIAL. Time Left in Lobby: 90s. Action: Initialize.")
         r = self.connection.request('get', '/lol-champ-select/v1/session')
@@ -197,7 +199,7 @@ class Client:
                 cs = r.json()
                 sleep(3)
 
-    def reconnect(self):
+    def reconnect(self) -> None:
         """Attempts to reconnect to an ongoing League of Legends match"""
         for i in range(3):
             r = self.connection.request('post', '/lol-gameflow/v1/reconnect')
@@ -206,7 +208,7 @@ class Client:
             sleep(2)
         self.log.warning('Could not reconnect to game')
 
-    def wait_for_stats(self):
+    def wait_for_stats(self) -> None:
         """
         Waits for the League Client Phase to change to something other than 'WaitingForStats'
         Often times disconnects will happen after a game finishes and the league client will
@@ -220,7 +222,7 @@ class Client:
         self.log.warning("Waiting for stats timeout.")
         raise ClientError
 
-    def pre_end_of_game(self):
+    def pre_end_of_game(self) -> None:
         """
         Handles league of legends client reopening, honoring teamates, and clearing level-up/mission rewards
         This function should hopefully be updated to not include any clicks on the client, but I currently do not know
@@ -295,7 +297,7 @@ class Client:
             self.log.debug(r.json())
         self.log.info("Client is up to date!")
 
-    def honor_player(self):
+    def honor_player(self) -> None:
         """Honors a player in the post game lobby"""
         for i in range(3):
             r = self.connection.request('get', '/lol-honor-v2/v1/ballot')

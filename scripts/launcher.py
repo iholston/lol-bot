@@ -14,20 +14,20 @@ from constants import *
 class Launcher:
     """Handles the Riot Client and launches League of Legends"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.log = logging.getLogger(__name__)
         self.connection = api.Connection()
         self.username = ""
         self.password = ""
 
-    def launch_league(self, username, password):
+    def launch_league(self, username, password) -> None:
         """Runs setup logic and starts launch sequence"""
         self.set_game_config()
         self.username = username
         self.password = password
         self.launch_loop()
 
-    def set_game_config(self):
+    def set_game_config(self) -> None:
         """Overwrites the League of Legends game config"""
         self.log.info("Overwriting/creating game config")
         if os.path.exists(LEAGUE_GAME_CONFIG_PATH):
@@ -35,7 +35,7 @@ class Launcher:
         else:
             shutil.copy2(LOCAL_GAME_CONFIG_PATH, LEAGUE_GAME_CONFIG_PATH)
 
-    def launch_loop(self):
+    def launch_loop(self) -> None:
         """Handles tasks necessary to open the League of Legends client"""
         logged_in = False
 
@@ -95,7 +95,7 @@ class Launcher:
             raise Exception("Could not launch League of legends")
 
 
-    def login(self):
+    def login(self) -> None:
         """Sends account credentials to Riot Client"""
         self.log.info("Logging in.")
         body = {"clientId": "riot-client", 'trustLevels': ['always_trusted']}
@@ -109,7 +109,7 @@ class Launcher:
         elif r.json()['error'] == 'auth_failure':
             raise ValueError("Invalid username or password.")
 
-    def verify_account(self):
+    def verify_account(self) -> None:
         """Checks if account credentials match the account on the League Client"""
         self.log.info("Verifying logged-in account credentials")
         connection = api.Connection()
