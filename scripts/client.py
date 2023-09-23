@@ -7,9 +7,9 @@ import random
 import utils
 import api
 import account
+import launcher
 from time import sleep
 from constants import *
-from launcher import Launcher
 from game import Game
 
 class ClientError(Exception):
@@ -26,7 +26,7 @@ class Client:
     def __init__(self) -> None:
         self.connection = api.Connection()
         self.log = logging.getLogger(__name__)
-        self.launcher = Launcher()
+        self.launcher = launcher.Launcher()
         self.username = ""
         self.password = ""
         self.account_level = 0
@@ -44,12 +44,15 @@ class Client:
                 utils.close_processes()
                 account.set_account_as_leveled()
                 self.client_errors = 0
-            except ClientError as e:
-                self.log.error(e.__str__())
+            except ClientError as ce:
+                self.log.error(ce.__str__())
                 self.client_errors += 1
                 if self.client_errors == MAX_CLIENT_ERRORS:
                     raise ClientError("Max errors reached.Exiting.")
                 utils.close_processes()
+            except launcher.LauncherError as le:
+                self.log.error(le.__str__())
+                return
 
     def leveling_loop(self) -> None:
         """Main loop that runs the correct function based on the phase of the League Client, continuously starts games"""

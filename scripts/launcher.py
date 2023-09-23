@@ -11,6 +11,13 @@ import subprocess
 from time import sleep
 from constants import *
 
+class LauncherError(Exception):
+    def __init__(self, msg=''):
+        self.msg = msg
+
+    def __str__(self):
+        return self.msg
+
 class Launcher:
     """Handles the Riot Client and launches League of Legends"""
 
@@ -90,9 +97,9 @@ class Launcher:
             sleep(2)
 
         if logged_in:
-            raise Exception("Launch Error. Most likely the Riot Client needs an update or League needs an update from within Riot Client")
+            raise LauncherError("Launch Error. Most likely the Riot Client needs an update or League needs an update from within Riot Client")
         else:
-            raise Exception("Could not launch League of legends")
+            raise LauncherError("Could not launch League of legends")
 
 
     def login(self) -> None:
@@ -101,13 +108,13 @@ class Launcher:
         body = {"clientId": "riot-client", 'trustLevels': ['always_trusted']}
         r = self.connection.request("post", "/rso-auth/v2/authorizations", data=body)
         if r.status_code != 200:
-            raise Exception("Failed Authorization Request. Response: {}".format(r.status_code))
+            raise LauncherError("Failed Authorization Request. Response: {}".format(r.status_code))
         body = {"username": self.username, "password": self.password, "persistLogin": False}
         r = self.connection.request("put", '/rso-auth/v1/session/credentials', data=body)
         if r.status_code != 201:
-            raise Exception("Failed Authentication Request. Response: {}".format(r.status_code))
+            raise LauncherError("Failed Authentication Request. Response: {}".format(r.status_code))
         elif r.json()['error'] == 'auth_failure':
-            raise ValueError("Invalid username or password.")
+            raise LauncherError("Invalid username or password.")
 
     def verify_account(self) -> None:
         """Checks if account credentials match the account on the League Client"""
