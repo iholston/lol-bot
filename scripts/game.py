@@ -184,11 +184,13 @@ class Game:
         try:
             response = requests.get('https://127.0.0.1:2999/liveclientdata/allgamedata', timeout=10, verify=False)
         except requests.ConnectionError:
+            self.log.debug("Connection error. Could not get game data")
             self.connection_errors += 1
             if self.connection_errors == 15:
                 raise GameError("Could not connect to game")
             return False
         if response.status_code != 200:
+            self.log.debug("Connection error. Response status code: {}".format(response.status_code))
             self.connection_errors += 1
             if self.connection_errors == 15:
                 raise GameError("Could not connect to game")
@@ -208,4 +210,5 @@ class Game:
         else:
             raise GameError("Game has exceeded the max time limit")
         self.connection_errors = 0
+        self.log.debug("Successfully updated game state")
         return True
