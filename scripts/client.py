@@ -13,8 +13,12 @@ from launcher import Launcher
 from game import Game
 
 class ClientError(Exception):
-    """Exception that signals an error has occurred in the League of Legends Client"""
-    pass
+    """Indicates the client instance should be terminated"""
+    def __init__(self, msg=''):
+        self.msg = msg
+
+    def __str__(self):
+        return self.msg
 
 class Client:
     """Client class that handles league client tasks needed to start a game"""
@@ -27,7 +31,7 @@ class Client:
         self.password = ""
         self.account_level = 0
         self.phase = ""
-        self.prev_phase = ""
+        self.prev_phase = None
         self.client_errors = 0
         self.phase_errors = 0
 
@@ -40,15 +44,16 @@ class Client:
                 utils.close_processes()
                 account.set_account_as_leveled()
                 self.client_errors = 0
-            except ClientError:
+            except ClientError as e:
+                self.log.error(e.__str__())
                 self.client_errors += 1
-                if self.client_errors == MAX_ERRORS:
-                    raise Exception("Max errors reached.Exiting.")
+                if self.client_errors == MAX_CLIENT_ERRORS:
+                    raise ClientError("Max errors reached.Exiting.")
                 utils.close_processes()
 
     def leveling_loop(self) -> None:
         """Main loop that runs the correct function based on the phase of the League Client, continuously starts games"""
-        self.connection.connect_lcu()
+        self.connection.connect_lcu(verbose=False)
         self.check_patch()
         while not self.account_leveled():
             match self.get_phase():
@@ -74,8 +79,7 @@ class Client:
                 case 'EndOfGame':
                     self.end_of_game()
                 case _:
-                    self.log.warning("Unknown phase: {}".format(self.phase))
-                    raise ClientError
+                    raise ClientError("Unknown phase. {}".format(self.phase))
 
     def get_phase(self) -> str:
         """Requests the League Client phase"""
@@ -87,18 +91,16 @@ class Client:
                 self.log.debug("New Phase: {}, Previous Phase: {}".format(self.phase, self.prev_phase))
                 if self.prev_phase == self.phase:
                     self.phase_errors += 1
-                    if self.phase_errors == 15:
-                        self.log.error("Transition error. Phase will not change.")
-                        raise ClientError
+                    if self.phase_errors == MAX_PHASE_ERRORS:
+                        raise ClientError("Transition error. Phase will not change.")
                     else:
-                        self.log.warning("Phase same as previous. Errno {}".format(self.phase_errors))
+                        self.log.debug("Phase same as previous. Phase: {}, Previous Phase: {}, Errno {}".format(self.phase, self.prev_phase, self.phase_errors))
                 else:
                     self.phase_errors = 0
                 sleep(1.5)
                 return self.phase
             sleep(1)
-        self.log.warning("Could not get phase.")
-        raise ClientError
+        raise ClientError("Could not get phase.")
 
     def create_lobby(self, lobby_id) -> None:
         """Creates a lobby for given lobby ID"""
@@ -138,7 +140,7 @@ class Client:
 
     def game_lobby(self) -> None:
         """Loop that handles tasks associated with the Champion Select Lobby"""
-        self.log.debug("Lobby State: INITIAL. Time Left in Lobby: 90s. Action: Initialize.")
+        self.log.info("Lobby State: INITIAL. Time Left in Lobby: 90s. Action: Initialize.")
         r = self.connection.request('get', '/lol-champ-select/v1/session')
         if r.status_code != 200:
             return
@@ -220,8 +222,7 @@ class Client:
             sleep(2)
             if self.get_phase() != 'WaitingForStats':
                 return
-        self.log.warning("Waiting for stats timeout.")
-        raise ClientError
+        raise ClientError("Waiting for stats timeout.")
 
     def pre_end_of_game(self) -> None:
         """
@@ -266,16 +267,15 @@ class Client:
                 self.create_lobby(GAME_LOBBY_ID)
             posted = not posted
             sleep(1)
-        self.log.warning("Could not exit play-again screen.")
-        raise ClientError
+        raise ClientError("Could not exit play-again screen.")
 
     def account_leveled(self) -> bool:
         """Checks if account has reached the constants.MAX_LEVEL (default 30)"""
         r = self.connection.request('get', '/lol-chat/v1/me')
         if r.status_code == 200:
-            self.account_level = r.json()['lol']['level']
+            self.account_level = int(r.json()['lol']['level'])
             if self.account_level < ACCOUNT_MAX_LEVEL:
-                self.log.info("ACCOUNT LEVEL: {}.".format(self.account_level))
+                self.log.debug("Account Level: {}.".format(self.account_level))
                 return False
             else:
                 self.log.info("SUCCESS: Account Leveled")

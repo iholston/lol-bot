@@ -36,12 +36,14 @@ class Game:
         self.formatted_game_time = ''
         self.game_state = None
         self.screen_locked = False
+        self.in_lane = False
+        self.log.info("Game player initialized.")
 
     def play_game(self) -> None:
         """Plays a single game of League of Legends, takes actions based on game time"""
         try:
             self.wait_for_game_window()
-            self.wait_for_game_connection()
+            self.wait_for_connection()
             while True:
                 sleep(1)
                 if self.update_state():
@@ -51,7 +53,7 @@ class Game:
                         case GameState.PRE_MINIONS:
                             self.game_start()
                         case GameState.EARLY_GAME:
-                            self.play(GAME_MINI_MAP_UNDER_TURRET, GAME_MINI_MAP_UNDER_TURRET, 20)
+                            self.play(GAME_MINI_MAP_CENTER_MID, GAME_MINI_MAP_UNDER_TURRET, 20)
                         case GameState.LATE_GAME:
                             self.play(GAME_MINI_MAP_ENEMY_NEXUS, GAME_MINI_MAP_CENTER_MID, 35)
         except GameError as e:
@@ -60,25 +62,29 @@ class Game:
         except (utils.WindowNotFound, pyautogui.FailSafeException):
             self.log.info("Game Complete. Game Length: {}".format(self.formatted_game_time))
 
-    @staticmethod
-    def wait_for_game_window() -> None:
+    def wait_for_game_window(self) -> None:
         """Loop that waits for game window to open"""
+        self.log.debug("Waiting for game window to open")
         for i in range(120):
             sleep(1)
             if utils.exists(LEAGUE_GAME_CLIENT_WINNAME):
+                self.log.info("Game window open")
                 return
         raise GameError("Game window did not open")
 
-    def wait_for_game_connection(self) -> None:
+    def wait_for_connection(self) -> None:
         """Loop that waits for connection to local game server"""
+        self.log.debug("Connecting to game server...")
         for i in range(120):
             sleep(1)
             if self.update_state():
+                self.log.info("Connected to game server")
                 return
         raise GameError("Game window opened but connection failed")
 
     def loading_screen(self) -> None:
         """Loop that waits for loading screen to end"""
+        self.log.info("In loading screen. Waiting for game to start")
         start = datetime.now()
         while self.game_time < 3:
             if datetime.now() - start > timedelta(minutes=10):
@@ -86,9 +92,13 @@ class Game:
             else:
                 self.update_state()
                 sleep(2)
+        utils.click(GAME_CENTER_OF_SCREEN, LEAGUE_GAME_CLIENT_WINNAME)
+        sleep(1)
+        utils.click(GAME_CENTER_OF_SCREEN, LEAGUE_GAME_CLIENT_WINNAME)
 
     def game_start(self) -> None:
         """Buys starter items and waits for minions to clash (minions clash at 90 seconds)"""
+        self.log.info("Game has started, buying starter items and heading to lane. Game Time: {}".format(self.formatted_game_time))
         sleep(2)
         utils.press('p', LEAGUE_GAME_CLIENT_WINNAME)  # p opens shop
         sleep(1)
@@ -105,14 +115,15 @@ class Game:
         self.screen_locked = True
         utils.press('ctrl+q')  # level up 'q'
         utils.attack_move_click(GAME_MINI_MAP_UNDER_TURRET)
-        sleep(1)
-        utils.attack_move_click(GAME_MINI_MAP_UNDER_TURRET)
+        self.in_lane = True
         while self.game_state == GameState.PRE_MINIONS:
             sleep(3)
+            utils.attack_move_click(GAME_MINI_MAP_UNDER_TURRET)  # to prevent afk warning popup
             self.update_state()
 
     def play(self, attack_position: tuple, retreat_position: tuple, time_to_lane: int) -> None:
         """A set of player actions. Buys items, levels up abilites, heads to lane, attacks, then retreats"""
+        self.log.info("Buying items and attacking. Game Time: {}".format(self.formatted_game_time))
         if not self.screen_locked:
             utils.press('y', LEAGUE_GAME_CLIENT_WINNAME)
             self.screen_locked = True
@@ -120,9 +131,11 @@ class Game:
         self.upgrade_abilities()
 
         # Head to lane
-        utils.attack_move_click(attack_position)
-        utils.press('d', LEAGUE_GAME_CLIENT_WINNAME)  # ghost
-        sleep(time_to_lane)
+        if not self.in_lane:
+            utils.attack_move_click(attack_position)
+            utils.press('d', LEAGUE_GAME_CLIENT_WINNAME)  # ghost
+            sleep(time_to_lane)
+            self.in_lane = True
 
         # Main attack move loop. This sequence attacks and then de-aggros to prevent them from dying 50 times.
         for i in range(7):
@@ -140,6 +153,7 @@ class Game:
         sleep(5)
         utils.press('b', LEAGUE_GAME_CLIENT_WINNAME)
         sleep(9)
+        self.in_lane = False
 
     @staticmethod
     def buy_items() -> None:
@@ -186,7 +200,4 @@ class Game:
             self.game_state = GameState.LATE_GAME
         else:
             raise GameError("Game has exceeded the max time limit")
-        self.log.info("Game State: {}, Game Time: {}".format(self.game_state, self.formatted_game_time))
         return True
-
-
