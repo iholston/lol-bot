@@ -13,7 +13,7 @@ from constants import *
 from game import Game
 
 class ClientError(Exception):
-    """Indicates the client instance should be terminated"""
+    """Indicates the client instance should be restarted"""
     def __init__(self, msg=''):
         self.msg = msg
 
@@ -34,6 +34,7 @@ class Client:
         self.prev_phase = None
         self.client_errors = 0
         self.phase_errors = 0
+        utils.print_ascii()
 
     def account_loop(self) -> None:
         """Loop that handles the continuous leveling of accounts, takes about 3-4 days of leveling to complete"""

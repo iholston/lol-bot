@@ -155,7 +155,7 @@ def write(keys, expected_window='', wait=1) -> None:
     pyautogui.typewrite(keys)
     sleep(wait)
 
-def seconds_to_min_sec(seconds):
+def seconds_to_min_sec(seconds) -> str:
     """Converts League of Legends game time to minute:seconds format"""
     try:
         if isinstance(seconds, int) or isinstance(seconds, float):
@@ -171,3 +171,12 @@ def seconds_to_min_sec(seconds):
                 return str(int(seconds / 60)) + ":" + str(int(seconds % 60))
     except:
         return "XX:XX"
+
+def print_ascii() -> None:
+    """Prints some ascii art"""
+    print("""\n\n            
+                ──────▄▌▐▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▌
+                ───▄▄██▌█ BEEP BEEP
+                ▄▄▄▌▐██▌█ -15 LP DELIVERY
+                ███████▌█▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▌
+                ▀(⊙)▀▀▀▀▀▀▀(⊙)(⊙)▀▀▀▀▀▀▀▀▀▀(⊙)\n\n\t\t\tLoL Bot\n\n""")
