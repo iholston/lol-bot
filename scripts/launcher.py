@@ -1,5 +1,5 @@
 """
-Handles the Riot Client and launches League of Legends
+Handles Riot Client and login to launch the League Client
 """
 
 import logging

@@ -1,5 +1,5 @@
 """
-Handles all tasks necessary to play a game of League of Legends
+Plays and monitors the state of a single League of Legends match
 """
 
 import logging

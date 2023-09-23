@@ -1,5 +1,5 @@
 """
-Gets an account username and password to level up
+Gets an account username and password for leveling
 
 Implement this file to connect to your database of league accounts.
 There is an example file in resources that can drop-in replace this for

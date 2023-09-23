@@ -1,5 +1,5 @@
 """
-Handles league client and contains leveling loop that runs indefinitely
+Controls the League Client and continually starts League of Legends games
 """
 
 import logging
@@ -13,7 +13,7 @@ from constants import *
 from game import Game
 
 class ClientError(Exception):
-    """Indicates the client instance should be restarted"""
+    """Indicates the League Client instance should be restarted"""
     def __init__(self, msg=''):
         self.msg = msg
 
@@ -21,7 +21,7 @@ class ClientError(Exception):
         return self.msg
 
 class Client:
-    """Client class that handles league client tasks needed to start a game"""
+    """Client class that handles the League Client and all tasks needed to start a new game"""
 
     def __init__(self) -> None:
         self.connection = api.Connection()
