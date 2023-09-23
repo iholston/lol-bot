@@ -37,6 +37,7 @@ class Game:
         self.game_state = None
         self.screen_locked = False
         self.in_lane = False
+        self.connection_errors = 0
         self.log.info("Game player initialized.")
 
     def play_game(self) -> None:
@@ -183,8 +184,14 @@ class Game:
         try:
             response = requests.get('https://127.0.0.1:2999/liveclientdata/allgamedata', timeout=10, verify=False)
         except requests.ConnectionError:
+            self.connection_errors += 1
+            if self.connection_errors == 15:
+                raise GameError("Could not connect to game")
             return False
         if response.status_code != 200:
+            self.connection_errors += 1
+            if self.connection_errors == 15:
+                raise GameError("Could not connect to game")
             return False
 
         self.game_data = response.json()
@@ -200,4 +207,5 @@ class Game:
             self.game_state = GameState.LATE_GAME
         else:
             raise GameError("Game has exceeded the max time limit")
+        self.connection_errors = 0
         return True
