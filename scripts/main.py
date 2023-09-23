@@ -37,4 +37,4 @@ if __name__ == '__main__':
     set_logs(log_dir=log_dir)
 
     client: Client = Client()
-    #client.account_loop()
+    client.account_loop()

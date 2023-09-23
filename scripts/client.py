@@ -49,7 +49,7 @@ class Client:
                 self.log.error(ce.__str__())
                 self.client_errors += 1
                 if self.client_errors == MAX_CLIENT_ERRORS:
-                    raise ClientError("Max errors reached.Exiting.")
+                    raise ClientError("Max errors reached.Exiting")
                 utils.close_processes()
             except launcher.LauncherError as le:
                 self.log.error(le.__str__())
@@ -96,7 +96,7 @@ class Client:
                 if self.prev_phase == self.phase:
                     self.phase_errors += 1
                     if self.phase_errors == MAX_PHASE_ERRORS:
-                        raise ClientError("Transition error. Phase will not change.")
+                        raise ClientError("Transition error. Phase will not change")
                     else:
                         self.log.debug("Phase same as previous. Phase: {}, Previous Phase: {}, Errno {}".format(self.phase, self.prev_phase, self.phase_errors))
                 else:
@@ -104,7 +104,7 @@ class Client:
                 sleep(1.5)
                 return self.phase
             sleep(1)
-        raise ClientError("Could not get phase.")
+        raise ClientError("Could not get phase")
 
     def create_lobby(self, lobby_id) -> None:
         """Creates a lobby for given lobby ID"""
@@ -131,7 +131,7 @@ class Client:
 
     def queue(self) -> None:
         """Waits until the League Client Phase changes to something other than 'Matchmaking'"""
-        self.log.info("In queue. Waiting for match.")
+        self.log.info("In queue. Waiting for match")
         while True:
             if self.get_phase() != 'Matchmaking':
                 return
@@ -144,7 +144,7 @@ class Client:
 
     def game_lobby(self) -> None:
         """Loop that handles tasks associated with the Champion Select Lobby"""
-        self.log.info("Lobby State: INITIAL. Time Left in Lobby: 90s. Action: Initialize.")
+        self.log.info("Lobby State: INITIAL. Time Left in Lobby: 90s. Action: Initialize")
         r = self.connection.request('get', '/lol-champ-select/v1/session')
         if r.status_code != 200:
             return
@@ -171,7 +171,7 @@ class Client:
                 if not action['completed']:
                     # Select Champ or Lock in champ that has already been selected
                     if action['championId'] == 0:  # no champ selected, attempt to select a champ
-                        self.log.info("Lobby State: {}. Time Left in Lobby: {}s. Action: Hovering champ.".format(lobby_state, lobby_time_left))
+                        self.log.info("Lobby State: {}. Time Left in Lobby: {}s. Action: Hovering champ".format(lobby_state, lobby_time_left))
 
                         if champ_index < len(CHAMPS):
                             champion_id = CHAMPS[champ_index]
@@ -184,7 +184,7 @@ class Client:
                         data = {'championId': champion_id}
                         self.connection.request('patch', url, data=data)
                     else:  # champ selected, lock in
-                        self.log.info("Lobby State: {}. Time Left in Lobby: {}s. Action: Locking in champ.".format(lobby_state, lobby_time_left))
+                        self.log.info("Lobby State: {}. Time Left in Lobby: {}s. Action: Locking in champ".format(lobby_state, lobby_time_left))
                         url = '/lol-champ-select/v1/session/actions/{}'.format(action['id'])
                         data = {'championId': action['championId']}
                         self.connection.request('post', url + '/complete', data=data)
@@ -201,7 +201,7 @@ class Client:
                     self.log.debug("Lobby State: {}. Time Left in Lobby: {}s. Action: Waiting".format(lobby_state, lobby_time_left))
                 r = self.connection.request('get', '/lol-champ-select/v1/session')
                 if r.status_code != 200:
-                    self.log.info('Lobby State: CLOSED. Time Left in Lobby: 0s. Action: Exit.')
+                    self.log.info('Lobby State: CLOSED. Time Left in Lobby: 0s. Action: Exit')
                     return
                 cs = r.json()
                 sleep(3)
@@ -221,12 +221,12 @@ class Client:
         Often times disconnects will happen after a game finishes and the league client will
         only return the phase 'WaitingForStats' which causes a ClientError.
         """
-        self.log.info("Waiting for stats.")
+        self.log.info("Waiting for stats")
         for i in range(60):
             sleep(2)
             if self.get_phase() != 'WaitingForStats':
                 return
-        raise ClientError("Waiting for stats timeout.")
+        raise ClientError("Waiting for stats timeout")
 
     def pre_end_of_game(self) -> None:
         """
@@ -235,7 +235,7 @@ class Client:
         of any endpoints that can clear the 'send email' popup or mission/level rewards
         """
 
-        self.log.info("Honoring teammates and accepting rewards.")
+        self.log.info("Honoring teammates and accepting rewards")
         sleep(3)
 
         # occasionally the lcu-api will be ready before the actual client window appears
@@ -260,7 +260,7 @@ class Client:
         to the play-again endpoint just does not work and the phase must be manually changed to 'Lobby'
         or raise a ClientError
         """
-
+        self.log.info("-------------------------------------------------")
         posted = False
         for i in range(15):
             if self.get_phase() != 'EndOfGame':
@@ -271,7 +271,7 @@ class Client:
                 self.create_lobby(GAME_LOBBY_ID)
             posted = not posted
             sleep(1)
-        raise ClientError("Could not exit play-again screen.")
+        raise ClientError("Could not exit play-again screen")
 
     def account_leveled(self) -> bool:
         """Checks if account has reached the constants.MAX_LEVEL (default 30)"""

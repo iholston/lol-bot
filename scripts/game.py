@@ -38,7 +38,7 @@ class Game:
         self.screen_locked = False
         self.in_lane = False
         self.connection_errors = 0
-        self.log.info("Game player initialized.")
+        self.log.info("Game player initialized")
 
     def play_game(self) -> None:
         """Plays a single game of League of Legends, takes actions based on game time"""

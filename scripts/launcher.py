@@ -50,7 +50,7 @@ class Launcher:
 
             # League is running and there was a successful login attempt
             if utils.is_league_running() and logged_in:
-                self.log.info("Launch Success!")
+                self.log.info("Launch Success")
                 try:
                     output = subprocess.check_output(KILL_RIOT_CLIENT, shell=False)
                     self.log.info(str(output, 'utf-8').rstrip())
@@ -73,7 +73,7 @@ class Launcher:
 
                 # Already logged in
                 if r.status_code == 200 and not logged_in:
-                    self.log.info("Already logged in. Launching League...")
+                    self.log.info("Already logged in. Launching League")
                     subprocess.run([LEAGUE_CLIENT_PATH])
                     sleep(3)
 
@@ -85,13 +85,13 @@ class Launcher:
 
                 # Logged in
                 elif r.status_code == 200 and logged_in:
-                    self.log.info("Authenticated. Attempting to Launch League...")
+                    self.log.info("Authenticated. Attempting to Launch League")
                     subprocess.run([LEAGUE_CLIENT_PATH])
                     sleep(3)
 
             # Nothing is running
             elif not utils.is_league_running() and not utils.is_rc_running():
-                self.log.info("Attempting to Launch League...")
+                self.log.info("Attempting to Launch League")
                 subprocess.run([LEAGUE_CLIENT_PATH])
                 sleep(3)
             sleep(2)
@@ -104,7 +104,7 @@ class Launcher:
 
     def login(self) -> None:
         """Sends account credentials to Riot Client"""
-        self.log.info("Logging in.")
+        self.log.info("Logging into Riot Client")
         body = {"clientId": "riot-client", 'trustLevels': ['always_trusted']}
         r = self.connection.request("post", "/rso-auth/v2/authorizations", data=body)
         if r.status_code != 200:
@@ -114,7 +114,7 @@ class Launcher:
         if r.status_code != 201:
             raise LauncherError("Failed Authentication Request. Response: {}".format(r.status_code))
         elif r.json()['error'] == 'auth_failure':
-            raise LauncherError("Invalid username or password.")
+            raise LauncherError("Invalid username or password")
 
     def verify_account(self) -> None:
         """Checks if account credentials match the account on the League Client"""
@@ -123,7 +123,7 @@ class Launcher:
         connection.connect_lcu(verbose=False)
         r = connection.request('get', '/lol-login/v1/session')
         if r.json()['username'] != self.username:
-            self.log.warning("Incorrect Account! Proceeding anyways..")
+            self.log.warning("Incorrect Account! Proceeding anyways")
             return False
         else:
             self.log.info("Account Verified")
