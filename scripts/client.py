@@ -4,6 +4,9 @@ Controls the League Client and continually starts League of Legends games
 
 import logging
 import random
+
+import pyautogui
+
 import utils
 import api
 import account
@@ -198,7 +201,7 @@ class Client:
                             sleep(1)
                             try:  # if the ASK_4_MID_DIALOG is empty this will error
                                 self.chat(random.choice(ASK_4_MID_DIALOG), 'handle_game_lobby')
-                            except:
+                            except IndexError:
                                 pass
                             requested = True
                 else:
@@ -255,7 +258,7 @@ class Client:
                 utils.click(POST_GAME_SELECT_CHAMP_RATIO, LEAGUE_CLIENT_WINNAME, 1)
                 utils.click(POST_GAME_OK_RATIO, LEAGUE_CLIENT_WINNAME, 1)
             utils.click(POPUP_SEND_EMAIL_X_RATIO, LEAGUE_CLIENT_WINNAME, 1)
-        except:
+        except (utils.WindowNotFound, pyautogui.FailSafeException):
             sleep(3)
 
     def end_of_game(self) -> None:
@@ -304,7 +307,7 @@ class Client:
             r = self.connection.request('get', '/patcher/v1/products/league_of_legends/state')
             self.log.debug('Status Code: {}, Percent Patched: {}%'.format(r.status_code, r.json()['percentPatched']))
             self.log.debug(r.json())
-        self.log.info("Client is up to date!")
+        self.log.info("Client is up to date")
 
     def honor_player(self) -> None:
         """Honors a player in the post game lobby"""
