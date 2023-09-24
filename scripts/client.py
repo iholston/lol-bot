@@ -60,6 +60,7 @@ class Client:
         Loop that runs the correct function based on the phase of the League Client, continuously starts games.
         By default, this loop takes a league account from level 1 to level 30 which can take about 3-4 days...
         """
+
         self.connection.connect_lcu(verbose=False)
         self.check_patch()
         while not self.account_leveled():
