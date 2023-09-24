@@ -97,7 +97,7 @@ class Client:
                 self.prev_phase = self.phase
                 self.phase = r.json()
                 self.log.debug("New Phase: {}, Previous Phase: {}".format(self.phase, self.prev_phase))
-                if self.prev_phase == self.phase:
+                if self.prev_phase == self.phase and self.phase != "Matchmaking":
                     self.phase_errors += 1
                     if self.phase_errors == MAX_PHASE_ERRORS:
                         raise ClientError("Transition error. Phase will not change")
