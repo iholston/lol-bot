@@ -14,9 +14,9 @@ from constants import *
 
 class GameState(Enum):
     LOADING_SCREEN = 0
-    PRE_MINIONS = 1
-    EARLY_GAME = 2
-    LATE_GAME = 3
+    PRE_MINIONS = 1  # 0 -> 90 seconds
+    EARLY_GAME = 2   # 90 seconds -> constants.EARLY_GAME_END_TIME (14 min)
+    LATE_GAME = 3    # 14 min -> end of game
 
 class GameError(Exception):
     """Indicates the game should be terminated"""
