@@ -12,6 +12,7 @@ import api
 import account
 import launcher
 from time import sleep
+from datetime import datetime, timedelta
 from constants import *
 from game import Game
 
@@ -139,9 +140,12 @@ class Client:
     def queue(self) -> None:
         """Waits until the League Client Phase changes to something other than 'Matchmaking'"""
         self.log.info("In queue. Waiting for match")
+        start = datetime.now()
         while True:
             if self.get_phase() != 'Matchmaking':
                 return
+            elif datetime.now() - start > timedelta(minutes=10):
+                self.connection.request('delete', '/lol-lobby/v2/lobby/matchmaking/search')
             sleep(1)
 
     def accept_match(self) -> None:
