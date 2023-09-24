@@ -1,204 +1,214 @@
+"""
+Plays and monitors the state of a single League of Legends match
+"""
+
 import logging
 import random
 import pyautogui
 import requests
 import utils
-import subprocess
+from enum import Enum
 from datetime import datetime, timedelta
 from time import sleep
 from constants import *
 
-log = logging.getLogger(__name__)
+class GameState(Enum):
+    LOADING_SCREEN = 0
+    PRE_MINIONS = 1
+    EARLY_GAME = 2
+    LATE_GAME = 3
 
-def play_game():
-    log.info("Game State: NONE. Game Time: NULL. Action: Initializing...")
+class GameError(Exception):
+    """Indicates the game should be terminated"""
+    def __init__(self, msg=''):
+        self.msg = msg
 
-    connection_err = 0
-    while not utils.exists(LEAGUE_GAME_CLIENT_WINNAME):
-        if connection_err == 60:
-            log.warning("Could not connect to game.")
-            close_game()
-            sleep(10)
-            return
-        sleep(2)
-        if get_game_data() == {}:
-            connection_err += 1
+    def __str__(self):
+        return self.msg
 
-    data = get_game_data()
-    connection_err = 0
-    while len(data) == 0:
-        if connection_err == 120:
-            log.warning("Window open but cannot connect to game.")
-            close_game()
-            sleep(10)
-            return
-        sleep(2)
-        data = get_game_data()
-        connection_err += 1
+class Game:
+    """Game class that handles the tasks needed to play/win a bot game of League of Legends"""
+    
+    def __init__(self) -> None:
+        self.log = logging.getLogger(__name__)
+        self.game_data = {}
+        self.game_time = -1
+        self.formatted_game_time = ''
+        self.game_state = None
+        self.screen_locked = False
+        self.in_lane = False
+        self.connection_errors = 0
+        self.log.info("Game player initialized")
 
-    game_time = int(data['gameData']['gameTime'])
-    loading_screen_logged = False
-    loading_screen_time = datetime.now()
-    in_lane = False
-    initial_items = False
-    screen_locked = False
-    logged_early_game = False
-    logged_mid_late_game = False
-    try:
-        sleep(1.5)
-        utils.click(GAME_CENTER_OF_SCREEN, LEAGUE_GAME_CLIENT_WINNAME)
-    except pyautogui.FailSafeException:
-        log.warning("Error attempting to click center of screen")
-
-    # Main Loop
-    while True:
-        formatted_game_time = utils.seconds_to_min_sec(game_time)
-
-        # Connection errors can cause league games to never exit
-        if game_time > 2400:
-            log.warning("Game exceeded max time limit. Exiting.")
-            try:
-                close_game()
-                sleep(10)
-            except:
-                pass
-            return
-
-        # All clicks and button presses are expecting the game window, if it does not exist the game is over
+    def play_game(self) -> None:
+        """Plays a single game of League of Legends, takes actions based on game time"""
         try:
-            # Loading Screen
-            if game_time < 3:
-                if not loading_screen_logged:
-                    log.info("Game State: LOADING SCREEN. Game Time: NULL. Action: Wait.")
-                    loading_screen_logged = True
-                if datetime.now() - loading_screen_time > timedelta(minutes=10):
-                    log.warning("Load Screen exceeded max time limit. Exiting.")
-                    try:
-                        output = subprocess.check_output(KILL_LEAGUE, shell=False)
-                        log.info(str(output, 'utf-8').rstrip())
-                    except:
-                        pass
-                    return
-                sleep(2)
+            self.wait_for_game_window()
+            self.wait_for_connection()
+            while True:
+                sleep(1)
+                if self.update_state():
+                    match self.game_state:
+                        case GameState.LOADING_SCREEN:
+                            self.loading_screen()
+                        case GameState.PRE_MINIONS:
+                            self.game_start()
+                        case GameState.EARLY_GAME:
+                            self.play(GAME_MINI_MAP_CENTER_MID, GAME_MINI_MAP_UNDER_TURRET, 20)
+                        case GameState.LATE_GAME:
+                            self.play(GAME_MINI_MAP_ENEMY_NEXUS, GAME_MINI_MAP_CENTER_MID, 35)
+        except GameError as e:
+            self.log.warning(e.__str__())
+            utils.close_game()
+        except (utils.WindowNotFound, pyautogui.FailSafeException):
+            self.log.info("Game Complete. Game Length: {}".format(self.formatted_game_time))
 
-            # Game Start
-            elif game_time < 85:  # Minions clash together at 90 seconds
-                # Open shop and buy starter items
-                if not initial_items:
-                    log.info("Game State: INITIAL FOUNTAIN. Game Time: {}. Action: Buying starter items and heading to mid lane.".format(formatted_game_time))
-                    sleep(2)
-                    utils.press('p', LEAGUE_GAME_CLIENT_WINNAME)
-                    sleep(1)
-                    utils.click(GAME_ALL_ITEMS_RATIO, LEAGUE_GAME_CLIENT_WINNAME, 1)
-                    for _ in range(2):  # just in case tbh, don't need for loop
-                        scale = tuple([random.randint(1, STARTER_ITEMS_TO_BUY) * x for x in GAME_BUY_ITEM_RATIO_INCREASE])  # there are less starter items
-                        positions = tuple(sum(x) for x in zip(GAME_BUY_STARTER_ITEM_RATIO, scale))  # add tuple to default item position ratio https://stackoverflow.com/questions/1169725/adding-values-from-tuples-of-same-length
-                        utils.click(positions, LEAGUE_GAME_CLIENT_WINNAME, 1)
-                        utils.click(GAME_BUY_PURCHASE_RATIO, LEAGUE_GAME_CLIENT_WINNAME, 1)
-                    utils.press('p', LEAGUE_GAME_CLIENT_WINNAME)
-                    utils.press('y')
-                    screen_locked = True
-                    initial_items = True
+    def wait_for_game_window(self) -> None:
+        """Loop that waits for game window to open"""
+        self.log.debug("Waiting for game window to open")
+        for i in range(120):
+            sleep(1)
+            if utils.exists(LEAGUE_GAME_CLIENT_WINNAME):
+                self.log.info("Game window open")
+                return
+        raise GameError("Game window did not open")
 
-                # Head to mid lane turret and wait for minions
-                utils.press('ctrl+q')
-                utils.attack_move_click(GAME_MINI_MAP_UNDER_TURRET)
-                in_lane = True
-                sleep(5)
+    def wait_for_connection(self) -> None:
+        """Loop that waits for connection to local game server"""
+        self.log.debug("Connecting to game server...")
+        for i in range(120):
+            sleep(1)
+            if self.update_state():
+                self.log.info("Connected to game server")
+                return
+        raise GameError("Game window opened but connection failed")
 
-            # Game Running
+    def loading_screen(self) -> None:
+        """Loop that waits for loading screen to end"""
+        self.log.info("In loading screen. Waiting for game to start")
+        start = datetime.now()
+        while self.game_time < 3:
+            if datetime.now() - start > timedelta(minutes=10):
+                raise GameError("Loading Screen max time limit exceeded")
             else:
-                if game_time < EARLY_GAME_END_TIME:  # Early Game, don't run it down mid
-                    game_state = 'EARLY GAME'
-                    primary_location = GAME_MINI_MAP_UNDER_TURRET
-                    backup_location = GAME_MINI_MAP_UNDER_TURRET
-                    to_lane_time = 20
-                    if not logged_early_game:
-                        log.info("Game State: {}. Game Time: {}. Action: {} Rotation.".format(game_state, formatted_game_time, game_state))
-                        logged_early_game = True
-                else:
-                    game_state = 'MID/LATE GAME'
-                    primary_location = GAME_MINI_MAP_ENEMY_NEXUS
-                    backup_location = GAME_MINI_MAP_CENTER_MID
-                    to_lane_time = 35
-                    if not logged_mid_late_game:
-                        log.info("Game State: {}. Game Time: {}. Action: {} Rotation.".format(game_state, formatted_game_time, game_state))
-                        logged_mid_late_game = True
+                self.update_state()
+                sleep(2)
+        utils.click(GAME_CENTER_OF_SCREEN, LEAGUE_GAME_CLIENT_WINNAME)
+        sleep(1)
+        utils.click(GAME_CENTER_OF_SCREEN, LEAGUE_GAME_CLIENT_WINNAME)
 
-                if not screen_locked:
-                    utils.press('y', LEAGUE_GAME_CLIENT_WINNAME)
-                    screen_locked = True
+    def game_start(self) -> None:
+        """Buys starter items and waits for minions to clash (minions clash at 90 seconds)"""
+        self.log.info("Game has started, buying starter items and heading to lane. Game Time: {}".format(self.formatted_game_time))
+        sleep(2)
+        utils.press('p', LEAGUE_GAME_CLIENT_WINNAME)  # p opens shop
+        sleep(1)
+        utils.click(GAME_ALL_ITEMS_RATIO, LEAGUE_GAME_CLIENT_WINNAME, 1)
+        for _ in range(2):
+            scale = tuple([random.randint(1, STARTER_ITEMS_TO_BUY) * x for x in GAME_BUY_ITEM_RATIO_INCREASE])
+            positions = tuple(sum(x) for x in zip(GAME_BUY_STARTER_ITEM_RATIO, scale))  # https://stackoverflow.com/questions/1169725/adding-values-from-tuples-of-same-length
+            utils.click(positions, LEAGUE_GAME_CLIENT_WINNAME, 1)
+            utils.click(GAME_BUY_PURCHASE_RATIO, LEAGUE_GAME_CLIENT_WINNAME, 1)
+        utils.press('p', LEAGUE_GAME_CLIENT_WINNAME)
+        sleep(1)
 
-                log.debug("Game State: {}. Game Time: {}. Action: {} Rotation.".format(game_state, formatted_game_time, game_state))
+        utils.press('y', LEAGUE_GAME_CLIENT_WINNAME)  # lock screen on champ
+        self.screen_locked = True
+        utils.press('ctrl+q')  # level up 'q'
+        utils.attack_move_click(GAME_MINI_MAP_UNDER_TURRET)
+        self.in_lane = True
+        while self.game_state == GameState.PRE_MINIONS:
+            sleep(3)
+            utils.attack_move_click(GAME_MINI_MAP_UNDER_TURRET)  # to prevent afk warning popup
+            self.update_state()
 
-                # Open shop and buy items
-                utils.press('p', LEAGUE_GAME_CLIENT_WINNAME)
-                for _ in range(ITEMS_TO_BUY):
-                    scale = tuple([random.randint(1, ITEMS_TO_BUY) * x for x in
-                                   GAME_BUY_ITEM_RATIO_INCREASE])  # multiply tuple by scaler https://stackoverflow.com/questions/1781970/multiplying-a-tuple-by-a-scalar
-                    positions = tuple(sum(x) for x in zip(GAME_BUY_EPIC_ITEM_RATIO,
-                                                          scale))  # add tuple to default item position ratio https://stackoverflow.com/questions/1169725/adding-values-from-tuples-of-same-length
-                    utils.click(positions, LEAGUE_GAME_CLIENT_WINNAME, .5)
-                    utils.click(GAME_BUY_PURCHASE_RATIO, LEAGUE_GAME_CLIENT_WINNAME, .5)
-                utils.press('p', LEAGUE_GAME_CLIENT_WINNAME)
+    def play(self, attack_position: tuple, retreat_position: tuple, time_to_lane: int) -> None:
+        """A set of player actions. Buys items, levels up abilites, heads to lane, attacks, then retreats"""
+        self.log.info("Buying items and attacking. Game Time: {}".format(self.formatted_game_time))
+        if not self.screen_locked:
+            utils.press('y', LEAGUE_GAME_CLIENT_WINNAME)
+            self.screen_locked = True
+        self.buy_items()
+        self.upgrade_abilities()
 
-                # Go to lane
+        # Head to lane
+        if not self.in_lane:
+            utils.attack_move_click(attack_position)
+            utils.press('d', LEAGUE_GAME_CLIENT_WINNAME)  # ghost
+            sleep(time_to_lane)
+            self.in_lane = True
 
-                # Upgrade abilities
-                utils.press('ctrl+r', LEAGUE_GAME_CLIENT_WINNAME)
-                utils.press('ctrl+q', LEAGUE_GAME_CLIENT_WINNAME)
-                utils.press('ctrl+w', LEAGUE_GAME_CLIENT_WINNAME)
-                utils.press('ctrl+e', LEAGUE_GAME_CLIENT_WINNAME)
-                if not in_lane:
-                    utils.attack_move_click(
-                        primary_location)  # if you right utils.click they will walk under turret and die instantly
-                    utils.press('d', LEAGUE_GAME_CLIENT_WINNAME)  # ghost
-                    sleep(to_lane_time)
-                    in_lane = False
+        # Main attack move loop. This sequence attacks and then de-aggros to prevent them from dying 50 times.
+        for i in range(7):
+            utils.attack_move_click(attack_position)
+            sleep(8)
+            utils.right_click(retreat_position, LEAGUE_GAME_CLIENT_WINNAME)
+            sleep(1)
 
-                # Main attack move loop. This sequence de-aggros them and prevents them from dying 50 times. In the early game they are actually positive most games
-                loops = 7
-                for i in range(loops):
-                    # Attack
-                    utils.attack_move_click(GAME_MINI_MAP_ENEMY_NEXUS)
-                    sleep(8)
-                    # De-aggro or Ult and Back
-                    if i != loops - 1:
-                        utils.right_click(backup_location, LEAGUE_GAME_CLIENT_WINNAME)
-                        sleep(1)
-                    else:
-                        # Ult
-                        utils.press('f', LEAGUE_GAME_CLIENT_WINNAME)
-                        utils.attack_move_click(GAME_ULT_RATIO)
-                        utils.press('r', LEAGUE_GAME_CLIENT_WINNAME)
-                        sleep(3)
-                        utils.right_click(GAME_MINI_MAP_UNDER_TURRET, LEAGUE_GAME_CLIENT_WINNAME)
-                        sleep(5)
-                        utils.press('b', LEAGUE_GAME_CLIENT_WINNAME)
-                        sleep(9)
-            data = get_game_data()
-            if len(data) != 0:
-                game_time = int(data['gameData']['gameTime'])
+        # Ult and back
+        utils.press('f', LEAGUE_GAME_CLIENT_WINNAME)
+        utils.attack_move_click(GAME_ULT_RATIO)
+        utils.press('r', LEAGUE_GAME_CLIENT_WINNAME)
+        sleep(3)
+        utils.right_click(GAME_MINI_MAP_UNDER_TURRET, LEAGUE_GAME_CLIENT_WINNAME)
+        sleep(5)
+        utils.press('b', LEAGUE_GAME_CLIENT_WINNAME)
+        sleep(9)
+        self.in_lane = False
 
-        except utils.WindowNotFound:
-            log.info("Game State: COMPLETE. Game Length: {}. Action: Exit.".format(utils.seconds_to_min_sec(game_time)))
-            return
-        except pyautogui.FailSafeException:  # unlikely but possible
-            log.warning("FailSafeException. Game State: Considered COMPLETE. Game Length: {}. Action: Exit.".format(utils.seconds_to_min_sec(game_time)))
-            return
+    @staticmethod
+    def buy_items() -> None:
+        """Opens the shop and attempts to purchase items"""
+        utils.press('p', LEAGUE_GAME_CLIENT_WINNAME)
+        for _ in range(ITEMS_TO_BUY):
+            scale = tuple([random.randint(1, ITEMS_TO_BUY) * x for x in GAME_BUY_ITEM_RATIO_INCREASE])  # multiply tuple by scaler https://stackoverflow.com/questions/1781970/multiplying-a-tuple-by-a-scalar
+            positions = tuple(sum(x) for x in zip(GAME_BUY_EPIC_ITEM_RATIO, scale))  # add tuple to default item position ratio https://stackoverflow.com/questions/1169725/adding-values-from-tuples-of-same-length
+            utils.click(positions, LEAGUE_GAME_CLIENT_WINNAME, .5)
+            utils.click(GAME_BUY_PURCHASE_RATIO, LEAGUE_GAME_CLIENT_WINNAME, .5)
+        utils.press('p', LEAGUE_GAME_CLIENT_WINNAME)
 
-def get_game_data():
-    try:
-        request_game_data = requests.get('https://127.0.0.1:2999/liveclientdata/allgamedata', verify=False)
-        if request_game_data.status_code == 200:
-            return request_game_data.json()
+    @staticmethod
+    def upgrade_abilities() -> None:
+        """Upgrades abilities"""
+        utils.press('ctrl+r', LEAGUE_GAME_CLIENT_WINNAME)
+        sleep(.3)
+        utils.press('ctrl+q', LEAGUE_GAME_CLIENT_WINNAME)
+        sleep(.3)
+        utils.press('ctrl+w', LEAGUE_GAME_CLIENT_WINNAME)
+        sleep(.3)
+        utils.press('ctrl+e', LEAGUE_GAME_CLIENT_WINNAME)
+        sleep(.3)
+
+    def update_state(self) -> bool:
+        """Gets game data from local game server and updates game state"""
+        try:
+            response = requests.get('https://127.0.0.1:2999/liveclientdata/allgamedata', timeout=10, verify=False)
+        except requests.ConnectionError:
+            self.log.debug("Connection error. Could not get game data")
+            self.connection_errors += 1
+            if self.connection_errors == 15:
+                raise GameError("Could not connect to game")
+            return False
+        if response.status_code != 200:
+            self.log.debug("Connection error. Response status code: {}".format(response.status_code))
+            self.connection_errors += 1
+            if self.connection_errors == 15:
+                raise GameError("Could not connect to game")
+            return False
+
+        self.game_data = response.json()
+        self.game_time = int(self.game_data['gameData']['gameTime'])
+        self.formatted_game_time = utils.seconds_to_min_sec(self.game_time)
+        if self.game_time < 3:
+            self.game_state = GameState.LOADING_SCREEN
+        elif self.game_time < 85:
+            self.game_state = GameState.PRE_MINIONS
+        elif self.game_time < EARLY_GAME_END_TIME:
+            self.game_state = GameState.EARLY_GAME
+        elif self.game_time < MAX_GAME_TIME:
+            self.game_state = GameState.LATE_GAME
         else:
-            return {}
-    except Exception as e:
-        log.warning("get_game_data error {}".format(e))
-        return {}
-
-def close_game():
-    log.warning("Terminating Game.")
-    os.system(KILL_LEAGUE)
-    sleep(5)
+            raise GameError("Game has exceeded the max time limit")
+        self.connection_errors = 0
+        self.log.debug("Successfully updated game state")
+        return True

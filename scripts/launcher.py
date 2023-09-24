@@ -1,134 +1,130 @@
+"""
+Handles Riot Client and login to launch the League Client
+"""
+
 import logging
 import api
 import shutil
-import account
 import utils
+import os
 import subprocess
 from time import sleep
 from constants import *
 
-log = logging.getLogger(__name__)
-conn = api.Connection()
-
 class LauncherError(Exception):
-    pass
+    def __init__(self, msg=''):
+        self.msg = msg
 
-class InvalidCredentials(Exception):
-    pass
+    def __str__(self):
+        return self.msg
 
-def launch_league():
-    # Ensure game config file is correct
-    log.info("Overwriting/creating game config")
-    if os.path.exists(LEAGUE_GAME_CONFIG_PATH):
-        shutil.copyfile(LOCAL_GAME_CONFIG_PATH, LEAGUE_GAME_CONFIG_PATH)
-    else:
-        shutil.copy2(LOCAL_GAME_CONFIG_PATH, LEAGUE_GAME_CONFIG_PATH)
+class Launcher:
+    """Handles the Riot Client and launches League of Legends"""
 
-    # Get account username and password
-    log.info("Retrieving account credentials")
-    username = account.get_username()
-    password = account.get_password()
+    def __init__(self) -> None:
+        self.log = logging.getLogger(__name__)
+        self.connection = api.Connection()
+        self.username = ""
+        self.password = ""
 
-    # Assess game state and launch
-    launch_handler(username, password)
+    def launch_league(self, username, password) -> None:
+        """Runs setup logic and starts launch sequence"""
+        self.set_game_config()
+        self.username = username
+        self.password = password
+        self.launch_loop()
 
-def launch_handler(username, password):
-    logged_in = False
+    def set_game_config(self) -> None:
+        """Overwrites the League of Legends game config"""
+        self.log.info("Overwriting/creating game config")
+        if os.path.exists(LEAGUE_GAME_CONFIG_PATH):
+            shutil.copyfile(LOCAL_GAME_CONFIG_PATH, LEAGUE_GAME_CONFIG_PATH)
+        else:
+            shutil.copy2(LOCAL_GAME_CONFIG_PATH, LEAGUE_GAME_CONFIG_PATH)
 
-    for i in range(100):
-        # League is running and there was a successful login attempt
-        if utils.is_league_running() and logged_in:
-            log.info("Launch Success!")
-            try:
-                output = subprocess.check_output(KILL_RIOT_CLIENT, shell=False)
-                log.info(str(output, 'utf-8').rstrip())
-            except:
-                log.warning("Could not kill riot client")
-            return
+    def launch_loop(self) -> None:
+        """Handles tasks necessary to open the League of Legends client"""
+        logged_in = False
 
-        # League is running without a login attempt
-        elif utils.is_league_running() and not logged_in:
-            log.info("League already running")
-            verify_account(username)
-            return
+        for i in range(100):
 
-        # League is not running but Riot Client is running
-        elif not utils.is_league_running() and utils.is_rc_running():
+            # League is running and there was a successful login attempt
+            if utils.is_league_running() and logged_in:
+                self.log.info("Launch Success")
+                try:
+                    output = subprocess.check_output(KILL_RIOT_CLIENT, shell=False)
+                    self.log.info(str(output, 'utf-8').rstrip())
+                except:
+                    self.log.warning("Could not kill riot client")
+                return
 
-            # Get session state
-            conn.init(api.Client.RIOT_CLIENT)
-            try:
-                r = conn.request("get", "/rso-auth/v1/session")
-            except:
-                log.warning("Could not get session state")
-                continue
+            # League is running without a login attempt
+            elif utils.is_league_running() and not logged_in:
+                self.log.warning("League opened with prior login")
+                self.verify_account()
+                return
 
-            # Not logged in and haven't logged in
-            if r.status_code == 404 and not logged_in:
-                login(username, password)
-                logged_in = True
-                sleep(1)
+            # League is not running but Riot Client is running
+            elif not utils.is_league_running() and utils.is_rc_running():
 
-            # Somehow randomly logged in
-            elif r.status_code == 200 and not logged_in:
-                log.info("Deleting RSO session")
-                conn.request("delete", "/rso-auth/v1/session")  # log out
-                sleep(1)
+                # Get session state
+                self.connection.connect_rc()
+                r = self.connection.request("get", "/rso-auth/v1/authorization/access-token")
 
-            # Logged in
-            elif r.status_code == 200 and logged_in:
+                # Already logged in
+                if r.status_code == 200 and not logged_in:
+                    self.log.info("Already logged in. Launching League")
+                    subprocess.run([LEAGUE_CLIENT_PATH])
+                    sleep(3)
 
-                # Patching
-                # r = conn.request("get", "/patch-proxy/v1/active-updates")  # figure out correct endpoint to see if league needs update
-                # while len(r.json()) != 0:
-                #     sleep(2)
-                #     log.info("Riot Client is patching...")
-                #     log.debug(r.json())
-                #     r = conn.request("get", "/patch-proxy/v1/active-updates")
+                # Not logged in and haven't logged in
+                if r.status_code == 404 and not logged_in:
+                    self.login()
+                    logged_in = True
+                    sleep(1)
 
-                # Not patching (can choose a game to launch)
-                log.info("Authenticated. Attempting to Launch League...")
+                # Logged in
+                elif r.status_code == 200 and logged_in:
+                    self.log.info("Authenticated. Attempting to Launch League")
+                    subprocess.run([LEAGUE_CLIENT_PATH])
+                    sleep(3)
+
+            # Nothing is running
+            elif not utils.is_league_running() and not utils.is_rc_running():
+                self.log.info("Attempting to Launch League")
                 subprocess.run([LEAGUE_CLIENT_PATH])
                 sleep(3)
+            sleep(2)
 
-        # Nothing is running
-        elif not utils.is_league_running() and not utils.is_rc_running():
-            log.info("Attempting to Launch League...")
-            subprocess.run([LEAGUE_CLIENT_PATH])
-            sleep(3)
+        if logged_in:
+            raise LauncherError("Launch Error. Most likely the Riot Client needs an update or League needs an update from within Riot Client")
+        else:
+            raise LauncherError("Could not launch League of legends")
 
-        sleep(2)
 
-    if logged_in:
-        log.error("Launch Error. Most likely the Riot Client needs an update or League needs an update from within Riot Client")
-    else:
-        log.error("Could not launch League of legends")
-    raise LauncherError
+    def login(self) -> None:
+        """Sends account credentials to Riot Client"""
+        self.log.info("Logging into Riot Client")
+        body = {"clientId": "riot-client", 'trustLevels': ['always_trusted']}
+        r = self.connection.request("post", "/rso-auth/v2/authorizations", data=body)
+        if r.status_code != 200:
+            raise LauncherError("Failed Authorization Request. Response: {}".format(r.status_code))
+        body = {"username": self.username, "password": self.password, "persistLogin": False}
+        r = self.connection.request("put", '/rso-auth/v1/session/credentials', data=body)
+        if r.status_code != 201:
+            raise LauncherError("Failed Authentication Request. Response: {}".format(r.status_code))
+        elif r.json()['error'] == 'auth_failure':
+            raise LauncherError("Invalid username or password")
 
-def login(username, password):
-    log.info("Logging in.")
-    body = {"clientId": "riot-client", 'trustLevels': ['always_trusted']}
-    r = conn.request("post", "/rso-auth/v2/authorizations", data=body)
-    if r.status_code != 200:
-        log.error("Failed Authorization Request. Response: {}".format(r.status_code))
-        raise LauncherError
-    body = {"username": username, "password": password, "persistLogin": False}
-    r = conn.request("put", '/rso-auth/v1/session/credentials', data=body)
-    if r.status_code != 201:
-        log.error("Failed Authentication Request. Response: {}".format(r.status_code))
-        raise LauncherError
-    elif r.json()['error'] == 'auth_failure':
-        log.error("Invalid Credentials.")
-        raise InvalidCredentials
-
-def verify_account(username):
-    log.info("Verifying logged-in account credentials...")
-    connection = api.Connection()
-    connection.init(api.Client.LEAGUE_CLIENT, verbose=False)
-    r = connection.request('get', '/lol-login/v1/session')
-    if r.json()['username'] != username:
-        log.warning("Incorrect Account! Proceeding anyways..")
-        return False
-    else:
-        log.info("Account Verified")
-        return True
+    def verify_account(self) -> None:
+        """Checks if account credentials match the account on the League Client"""
+        self.log.info("Verifying logged-in account credentials")
+        connection = api.Connection()
+        connection.connect_lcu(verbose=False)
+        r = connection.request('get', '/lol-login/v1/session')
+        if r.json()['username'] != self.username:
+            self.log.warning("Incorrect Account! Proceeding anyways")
+            return False
+        else:
+            self.log.info("Account Verified")
+            return True
