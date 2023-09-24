@@ -37,13 +37,13 @@ class Client:
         utils.print_ascii()
 
     def account_loop(self) -> None:
-        """Loop that handles the continuous leveling of accounts, takes about 3-4 days of leveling to complete"""
+        """Main loop, gets an account, launches league, levels the account, and repeats"""
         while True:
             try:
                 self.launcher.launch_league(account.get_username(), account.get_password())
                 self.leveling_loop()
-                utils.close_processes()
                 account.set_account_as_leveled()
+                utils.close_processes()
                 self.client_errors = 0
             except ClientError as ce:
                 self.log.error(ce.__str__())
@@ -56,7 +56,10 @@ class Client:
                 return
 
     def leveling_loop(self) -> None:
-        """Main loop that runs the correct function based on the phase of the League Client, continuously starts games"""
+        """
+        Loop that runs the correct function based on the phase of the League Client, continuously starts games.
+        By default, this loop takes a league account from level 1 to level 30 which can take about 3-4 days...
+        """
         self.connection.connect_lcu(verbose=False)
         self.check_patch()
         while not self.account_leveled():
@@ -143,7 +146,7 @@ class Client:
         self.connection.request('post', '/lol-matchmaking/v1/ready-check/accept')
 
     def game_lobby(self) -> None:
-        """Loop that handles tasks associated with the Champion Select Lobby"""
+        """Handles the Champ Select Lobby"""
         self.log.info("Lobby State: INITIAL. Time Left in Lobby: 90s. Action: Initialize")
         r = self.connection.request('get', '/lol-champ-select/v1/session')
         if r.status_code != 200:
@@ -230,7 +233,7 @@ class Client:
 
     def pre_end_of_game(self) -> None:
         """
-        Handles league of legends client reopening, honoring teamates, and clearing level-up/mission rewards
+        Handles league of legends client reopening after a game, honoring teamates, and clearing level-up/mission rewards
         This function should hopefully be updated to not include any clicks on the client, but I currently do not know
         of any endpoints that can clear the 'send email' popup or mission/level rewards
         """
@@ -256,9 +259,9 @@ class Client:
 
     def end_of_game(self) -> None:
         """
-        Transitions League Client to 'EndOfGame' OR 'Lobby' phase. Occasionally, posting
-        to the play-again endpoint just does not work and the phase must be manually changed to 'Lobby'
-        or raise a ClientError
+        Transitions League Client to 'Lobby' phase. Occasionally, posting
+        to the play-again endpoint just does not work and the phase must be
+        manually changed to 'Lobby' or raise a ClientError
         """
         self.log.info("-------------------------------------------------")
         posted = False
