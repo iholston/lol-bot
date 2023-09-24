@@ -38,6 +38,7 @@ class Game:
         self.screen_locked = False
         self.in_lane = False
         self.connection_errors = 0
+        self.ability_upgrades = ['ctrl+r', 'ctrl+q', 'ctrl+w', 'ctrl+e']
         self.log.info("Game player initialized")
 
     def play_game(self) -> None:
@@ -172,17 +173,12 @@ class Game:
         utils.click(GAME_SYSTEM_MENU_X, LEAGUE_GAME_CLIENT_WINNAME)
         sleep(1)
 
-    @staticmethod
-    def upgrade_abilities() -> None:
-        """Upgrades abilities"""
-        utils.press('ctrl+r', LEAGUE_GAME_CLIENT_WINNAME)
-        sleep(.3)
-        utils.press('ctrl+q', LEAGUE_GAME_CLIENT_WINNAME)
-        sleep(.3)
-        utils.press('ctrl+w', LEAGUE_GAME_CLIENT_WINNAME)
-        sleep(.3)
-        utils.press('ctrl+e', LEAGUE_GAME_CLIENT_WINNAME)
-        sleep(.3)
+    def upgrade_abilities(self) -> None:
+        """Upgrades abilities and then rotates which ability will be upgraded first next time"""
+        for upgrade in self.ability_upgrades:
+            utils.press(upgrade, LEAGUE_GAME_CLIENT_WINNAME)
+            sleep(.3)
+        self.ability_upgrades = ([self.ability_upgrades[0]] + [self.ability_upgrades[-1]] + self.ability_upgrades[1:-1])  # r is always first
 
     def update_state(self) -> bool:
         """Gets game data from local game server and updates game state"""
