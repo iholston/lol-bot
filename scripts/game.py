@@ -14,9 +14,9 @@ from constants import *
 
 class GameState(Enum):
     LOADING_SCREEN = 0
-    PRE_MINIONS = 1  # 0 -> 90 seconds
-    EARLY_GAME = 2   # 90 seconds -> constants.EARLY_GAME_END_TIME (14 min)
-    LATE_GAME = 3    # 14 min -> end of game
+    PRE_MINIONS = 1  # 10 sec -> 90 sec
+    EARLY_GAME = 2   # 90 sec -> constants.EARLY_GAME_END_TIME
+    LATE_GAME = 3    # constants.EARLY_GAME_END_TIME  -> end of game
 
 class GameError(Exception):
     """Indicates the game should be terminated"""
@@ -103,13 +103,15 @@ class Game:
         sleep(2)
         utils.press('p', LEAGUE_GAME_CLIENT_WINNAME)  # p opens shop
         sleep(1)
-        utils.click(GAME_ALL_ITEMS_RATIO, LEAGUE_GAME_CLIENT_WINNAME, 1)
+        utils.click(GAME_ALL_ITEMS_RATIO, LEAGUE_GAME_CLIENT_WINNAME)
         for _ in range(2):
             scale = tuple([random.randint(1, STARTER_ITEMS_TO_BUY) * x for x in GAME_BUY_ITEM_RATIO_INCREASE])
             positions = tuple(sum(x) for x in zip(GAME_BUY_STARTER_ITEM_RATIO, scale))  # https://stackoverflow.com/questions/1169725/adding-values-from-tuples-of-same-length
-            utils.click(positions, LEAGUE_GAME_CLIENT_WINNAME, 1)
-            utils.click(GAME_BUY_PURCHASE_RATIO, LEAGUE_GAME_CLIENT_WINNAME, 1)
-        utils.press('p', LEAGUE_GAME_CLIENT_WINNAME)
+            utils.click(positions, LEAGUE_GAME_CLIENT_WINNAME)
+            utils.click(GAME_BUY_PURCHASE_RATIO, LEAGUE_GAME_CLIENT_WINNAME)
+        utils.press('esc', LEAGUE_GAME_CLIENT_WINNAME)
+        sleep(1)
+        utils.click(GAME_SYSTEM_MENU_X, LEAGUE_GAME_CLIENT_WINNAME)
         sleep(1)
 
         utils.press('y', LEAGUE_GAME_CLIENT_WINNAME)  # lock screen on champ
@@ -165,7 +167,10 @@ class Game:
             positions = tuple(sum(x) for x in zip(GAME_BUY_EPIC_ITEM_RATIO, scale))  # add tuple to default item position ratio https://stackoverflow.com/questions/1169725/adding-values-from-tuples-of-same-length
             utils.click(positions, LEAGUE_GAME_CLIENT_WINNAME, .5)
             utils.click(GAME_BUY_PURCHASE_RATIO, LEAGUE_GAME_CLIENT_WINNAME, .5)
-        utils.press('p', LEAGUE_GAME_CLIENT_WINNAME)
+        utils.press('esc', LEAGUE_GAME_CLIENT_WINNAME)
+        sleep(1)
+        utils.click(GAME_SYSTEM_MENU_X, LEAGUE_GAME_CLIENT_WINNAME)
+        sleep(1)
 
     @staticmethod
     def upgrade_abilities() -> None:
@@ -199,7 +204,7 @@ class Game:
         self.game_data = response.json()
         self.game_time = int(self.game_data['gameData']['gameTime'])
         self.formatted_game_time = utils.seconds_to_min_sec(self.game_time)
-        if self.game_time < 3:
+        if self.game_time < 5:
             self.game_state = GameState.LOADING_SCREEN
         elif self.game_time < 85:
             self.game_state = GameState.PRE_MINIONS
