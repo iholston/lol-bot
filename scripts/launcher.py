@@ -124,7 +124,5 @@ class Launcher:
         r = connection.request('get', '/lol-login/v1/session')
         if r.json()['username'] != self.username:
             self.log.warning("Incorrect Account! Proceeding anyways")
-            return False
         else:
             self.log.info("Account Verified")
-            return True

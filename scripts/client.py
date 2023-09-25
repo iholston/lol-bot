@@ -155,7 +155,7 @@ class Client:
 
     def game_lobby(self) -> None:
         """Handles the Champ Select Lobby"""
-        self.log.info("Lobby State: INITIAL. Time Left in Lobby: 90s. Action: Initialize")
+        self.log.info("In lobby, locking in champ")
         r = self.connection.request('get', '/lol-champ-select/v1/session')
         if r.status_code != 200:
             return
@@ -182,7 +182,7 @@ class Client:
                 if not action['completed']:
                     # Select Champ or Lock in champ that has already been selected
                     if action['championId'] == 0:  # no champ selected, attempt to select a champ
-                        self.log.info("Lobby State: {}. Time Left in Lobby: {}s. Action: Hovering champ".format(lobby_state, lobby_time_left))
+                        self.log.debug("Lobby State: {}. Time Left in Lobby: {}s. Action: Hovering champ".format(lobby_state, lobby_time_left))
 
                         if champ_index < len(CHAMPS):
                             champion_id = CHAMPS[champ_index]
@@ -195,7 +195,7 @@ class Client:
                         data = {'championId': champion_id}
                         self.connection.request('patch', url, data=data)
                     else:  # champ selected, lock in
-                        self.log.info("Lobby State: {}. Time Left in Lobby: {}s. Action: Locking in champ".format(lobby_state, lobby_time_left))
+                        self.log.debug("Lobby State: {}. Time Left in Lobby: {}s. Action: Locking in champ".format(lobby_state, lobby_time_left))
                         url = '/lol-champ-select/v1/session/actions/{}'.format(action['id'])
                         data = {'championId': action['championId']}
                         self.connection.request('post', url + '/complete', data=data)
@@ -212,7 +212,7 @@ class Client:
                     self.log.debug("Lobby State: {}. Time Left in Lobby: {}s. Action: Waiting".format(lobby_state, lobby_time_left))
                 r = self.connection.request('get', '/lol-champ-select/v1/session')
                 if r.status_code != 200:
-                    self.log.info('Lobby State: CLOSED. Time Left in Lobby: 0s. Action: Exit')
+                    self.log.info('Lobby closed')
                     return
                 cs = r.json()
                 sleep(3)
