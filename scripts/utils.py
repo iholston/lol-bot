@@ -11,6 +11,7 @@ from time import sleep
 from win32gui import FindWindow, GetWindowRect
 from constants import *
 
+
 log = logging.getLogger(__name__)
 
 class WindowNotFound(Exception):
@@ -36,7 +37,7 @@ def is_rc_running() -> bool:
 
 def close_processes() -> None:
     """Closes all league related processes"""
-    log.info("Terminating league related processes.")
+    log.info("Terminating league related processes")
     os.system(KILL_LEAGUE)
     os.system(KILL_LEAGUE_CLIENT)
     os.system(KILL_RIOT_CLIENT)

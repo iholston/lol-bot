@@ -11,12 +11,14 @@ import subprocess
 from time import sleep
 from constants import *
 
+
 class LauncherError(Exception):
     def __init__(self, msg=''):
         self.msg = msg
 
     def __str__(self):
         return self.msg
+
 
 class Launcher:
     """Handles the Riot Client and launches League of Legends"""

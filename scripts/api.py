@@ -9,6 +9,7 @@ from base64 import b64encode
 from time import sleep
 from constants import *
 
+
 class Connection:
     """Handles HTTP requests for Riot Client and League Client"""
 

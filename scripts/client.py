@@ -4,9 +4,7 @@ Controls the League Client and continually starts League of Legends games
 
 import logging
 import random
-
 import pyautogui
-
 import utils
 import api
 import account
@@ -16,6 +14,7 @@ from datetime import datetime, timedelta
 from constants import *
 from game import Game
 
+
 class ClientError(Exception):
     """Indicates the League Client instance should be restarted"""
     def __init__(self, msg=''):
@@ -23,6 +22,7 @@ class ClientError(Exception):
 
     def __str__(self):
         return self.msg
+
 
 class Client:
     """Client class that handles the League Client and all tasks needed to start a new game"""
@@ -219,6 +219,7 @@ class Client:
 
     def reconnect(self) -> None:
         """Attempts to reconnect to an ongoing League of Legends match"""
+        self.log.info("Reconnecting to game")
         for i in range(3):
             r = self.connection.request('post', '/lol-gameflow/v1/reconnect')
             if r.status_code == 204:
@@ -232,6 +233,7 @@ class Client:
         Often times disconnects will happen after a game finishes and the league client will
         only return the phase 'WaitingForStats' which causes a ClientError.
         """
+
         self.log.info("Waiting for stats")
         for i in range(60):
             sleep(2)
@@ -271,6 +273,7 @@ class Client:
         to the play-again endpoint just does not work and the phase must be
         manually changed to 'Lobby' or raise a ClientError
         """
+
         self.log.info("-------------------------------------------------")
         posted = False
         for i in range(15):

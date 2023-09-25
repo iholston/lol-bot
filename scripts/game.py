@@ -12,11 +12,13 @@ from datetime import datetime, timedelta
 from time import sleep
 from constants import *
 
+
 class GameState(Enum):
-    LOADING_SCREEN = 0
-    PRE_MINIONS = 1  # 10 sec -> 90 sec
-    EARLY_GAME = 2   # 90 sec -> constants.EARLY_GAME_END_TIME
-    LATE_GAME = 3    # constants.EARLY_GAME_END_TIME  -> end of game
+    LOADING_SCREEN = 0  # 0 sec -> 3 sec
+    PRE_MINIONS = 1     # 3 sec -> 90 sec
+    EARLY_GAME = 2      # 90 sec -> constants.EARLY_GAME_END_TIME
+    LATE_GAME = 3       # constants.EARLY_GAME_END_TIME -> end of game
+
 
 class GameError(Exception):
     """Indicates the game should be terminated"""
@@ -25,6 +27,7 @@ class GameError(Exception):
 
     def __str__(self):
         return self.msg
+
 
 class Game:
     """Game class that handles the tasks needed to play/win a bot game of League of Legends"""
@@ -208,7 +211,7 @@ class Game:
                 self.is_dead = bool(player['isDead'])
         self.game_time = int(self.game_data['gameData']['gameTime'])
         self.formatted_game_time = utils.seconds_to_min_sec(self.game_time)
-        if self.game_time < 5:
+        if self.game_time < 3:
             self.game_state = GameState.LOADING_SCREEN
         elif self.game_time < 85:
             self.game_state = GameState.PRE_MINIONS
