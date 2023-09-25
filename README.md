@@ -28,20 +28,20 @@
 
 ## Setup
 - Ensure Python is added to your PATH, check "Add Python to PATH" when installing
-- Clone/Download the repo
+- Clone the repo or Download the [latest release](https://github.com/iholston/lol-bot/releases)
 - Download [extra RAM](https://downloadmoreram.com/) (only if needed)
 - Run Installer.bat or ```pip install -r requirements.txt```
 
 ## Optional Configuration
-- For non-standard league install paths, update the league_dir in constants.py
+- For non-standard league install paths, update the ```LEAGUE_CLIENT_DIR``` in constants.py
 - To continuously level new league accounts:
   - Implement account.py to connect to your database of league accounts
   - Make sure that "stay signed in" is not checked when league of legends starts. 
   - This allows the bot to log out of league by closing it, get new account credentials, restart league, log in with the new credentials, and start another leveling loop, cycling indefinitely
 - To level accounts past level 30 or play in different game types update game data variables in constants.py
-- For Virtual Machines, I recommend starting with [this forum](https://www.unknowncheats.me/forum/league-of-legends/480977-run-league-legends-virtual-machine-vmware.html). *Note*: I will not be fixing/troubleshooting VM related issues as there are far too many VM implementation/platform specific issues. 
+- For Virtual Machines, I recommend starting with [this forum](https://www.unknowncheats.me/forum/league-of-legends/480977-run-league-legends-virtual-machine-vmware.html). *Note*: I will not be fixing/troubleshooting VM related issues as there are far too many VM implementation/platform specific issues
 
 ## Disclaimer
 Another LoL Bot isn’t endorsed by Riot Games and doesn’t reflect the views or opinions of Riot Games or anyone officially involved in producing or managing League of Legends. League of Legends and Riot Games are trademarks or registered trademarks of Riot Games, Inc. League of Legends © Riot Games, Inc.
 
-This software works with other programs/services (League of Legends) so you take full responsibility for breaking their Terms of Service and full responsibility for the accounts that you’re using with this bot and agree to use it at your own risk.
+This software works with other programs/services (League of Legends) so you take full responsibility for breaking their Terms of Service and full responsibility for the accounts that you’re using with this bot and agree to use it at your own risk
