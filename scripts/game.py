@@ -37,6 +37,7 @@ class Game:
         self.game_state = None
         self.screen_locked = False
         self.in_lane = False
+        self.is_dead = False
         self.connection_errors = 0
         self.ability_upgrades = ['ctrl+r', 'ctrl+q', 'ctrl+w', 'ctrl+e']
         self.log.info("Game player initialized")
@@ -134,6 +135,10 @@ class Game:
         self.buy_items()
         self.upgrade_abilities()
 
+        while self.is_dead:
+            sleep(1)
+            self.update_state()
+
         # Head to lane
         if not self.in_lane:
             utils.attack_move_click(attack_position)
@@ -198,6 +203,9 @@ class Game:
             return False
 
         self.game_data = response.json()
+        for player in self.game_data['allPlayers']:
+            if player['summonerName'] == self.game_data['activePlayer']['summonerName']:
+                self.is_dead = bool(player['isDead'])
         self.game_time = int(self.game_data['gameData']['gameTime'])
         self.formatted_game_time = utils.seconds_to_min_sec(self.game_time)
         if self.game_time < 5:
