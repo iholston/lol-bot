@@ -1,9 +1,28 @@
 """Configuration constants"""
 
 import os
+import logging
+
+# COMMON - Configuration variables that you may need/want to change
+# ---------------------------------------------------------------------------------------------------------
+
+LEAGUE_CLIENT_DIR = 'C:/Riot Games/League of Legends'  # Path to your league installation. Make sure to use forward slashes
+LOGGING_LEVEL = logging.INFO  # Change to logging.DEBUG if you are having issues with the bot
+GAME_LOBBY_ID = 840  # Game mode. I recommend leaving it as beginner bots (840)
+CHAMPS = [21, 18, 22, 67]  # Champ pick order. If the bot runs out of options it will just pick a random free-to-play champ
+ASK_4_MID_DIALOG = [  # Champ select dialog. It randomly picks a dialog option to try and call mid
+    "mid ples",
+    "plannin on goin mid team",
+    "mid por favor",
+    "bienvenidos, mid",
+    "howdy, mid",
+    "goin mid",
+    "mid"
+]
+
+# ---------------------------------------------------------------------------------------------------------
 
 # PATHS
-LEAGUE_CLIENT_DIR = 'C:/Riot Games/League of Legends'  # Make sure to use forward slashes
 LEAGUE_CLIENT_PATH = LEAGUE_CLIENT_DIR + '/LeagueClient'
 LEAGUE_CLIENT_LOCKFILE_PATH = LEAGUE_CLIENT_DIR + "/lockfile"
 LEAGUE_GAME_CONFIG_PATH = LEAGUE_CLIENT_DIR + '/Config/game.cfg'
@@ -34,21 +53,10 @@ KILL_RIOT_CLIENT = 'TASKKILL /F /IM RiotClientUx.exe'
 ACCOUNT_MAX_LEVEL = 30
 BEGINNER_BOTS_GAME_LOBBY_ID = 840
 INTERMEDIATE_BOTS_GAME_LOBBY_ID = 850
-GAME_LOBBY_ID = BEGINNER_BOTS_GAME_LOBBY_ID
 EARLY_GAME_END_TIME = 630
 MAX_GAME_TIME = 2400
 STARTER_ITEMS_TO_BUY = 4
 ITEMS_TO_BUY = 6
-CHAMPS = [21, 18, 22, 67]
-ASK_4_MID_DIALOG = [
-    "mid ples",
-    "plannin on goin mid team",
-    "mid por favor",
-    "bienvenidos, mid",
-    "howdy, mid",
-    "goin mid",
-    "mid"
-]
 
 # GAME BUTTON RATIOS
 GAME_ALL_ITEMS_RATIO = (0.4019, 0.2349)

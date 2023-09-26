@@ -11,7 +11,7 @@ from datetime import datetime
 from logging.handlers import RotatingFileHandler
 
 
-def set_logs(log_dir, level=logging.INFO) -> None:
+def set_logs(log_dir) -> None:
     """Sets log output to file and console"""
     filename = os.path.join(log_dir, datetime.now().strftime('%d%m%Y_%H%M_log.log'))
     formatter = logging.Formatter(fmt='[%(asctime)s] [%(levelname)-7s] [%(funcName)-21s] %(message)s', datefmt='%d %b %Y %H:%M:%S')
@@ -24,7 +24,7 @@ def set_logs(log_dir, level=logging.INFO) -> None:
 
     logging.getLogger().addHandler(ch)
     logging.getLogger().addHandler(fh)
-    logging.getLogger().setLevel(level)
+    logging.getLogger().setLevel(constants.LOGGING_LEVEL)
 
 
 if __name__ == '__main__':

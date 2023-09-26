@@ -66,7 +66,7 @@ class Game:
             self.log.warning(e.__str__())
             utils.close_game()
         except (utils.WindowNotFound, pyautogui.FailSafeException):
-            self.log.info("Game Complete. Game Length: {}".format(self.formatted_game_time))
+            self.log.info("Game Complete")
 
     def wait_for_game_window(self) -> None:
         """Loop that waits for game window to open"""

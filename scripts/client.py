@@ -155,7 +155,7 @@ class Client:
 
     def game_lobby(self) -> None:
         """Handles the Champ Select Lobby"""
-        self.log.info("In lobby, locking in champ")
+        self.log.info("Lobby opened, locking in champ")
         r = self.connection.request('get', '/lol-champ-select/v1/session')
         if r.status_code != 200:
             return
@@ -271,7 +271,7 @@ class Client:
         manually changed to 'Lobby' or raise a ClientError
         """
 
-        self.log.info("-------------------------------------------------")
+        self.log.info("")
         posted = False
         for i in range(15):
             if self.get_phase() != 'EndOfGame':
@@ -321,11 +321,11 @@ class Client:
                 players = r.json()['eligiblePlayers']
                 index = random.randint(0, len(players)-1)
                 self.connection.request('post', '/lol-honor-v2/v1/honor-player', data={"summonerId": players[index]['summonerId']})
-                self.log.info("Honor Success: Player {}. Champ: {}. Summoner: {}. ID: {}".format(index+1, players[index]['championName'], players[index]['summonerName'], players[index]['summonerId']))
+                self.log.debug("Honor Success: Player {}. Champ: {}. Summoner: {}. ID: {}".format(index+1, players[index]['championName'], players[index]['summonerName'], players[index]['summonerId']))
                 sleep(2)
                 return
             sleep(2)
-        self.log.info('Honor Failure. Player -1, Champ: NULL. Summoner: NULL. ID: -1')
+        self.log.warning('Honor Failure. Player -1, Champ: NULL. Summoner: NULL. ID: -1')
         self.connection.request('post', '/lol-honor-v2/v1/honor-player', data={"summonerId": 0})  # will clear honor screen
 
     def chat(self, msg, calling_func_name='') -> None:
