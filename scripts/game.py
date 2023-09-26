@@ -41,6 +41,8 @@ class Game:
         self.screen_locked = False
         self.in_lane = False
         self.is_dead = False
+        self.early_log = False
+        self.mid_log = False
         self.connection_errors = 0
         self.ability_upgrades = ['ctrl+r', 'ctrl+q', 'ctrl+w', 'ctrl+e']
         self.log.info("Game player initialized")
@@ -59,8 +61,14 @@ class Game:
                         case GameState.PRE_MINIONS:
                             self.game_start()
                         case GameState.EARLY_GAME:
+                            if not self.early_log:
+                                self.log.info("Early Game. Pushing center mid. Game Time: {}".format(self.formatted_game_time))
+                                self.early_log = True
                             self.play(GAME_MINI_MAP_CENTER_MID, GAME_MINI_MAP_UNDER_TURRET, 20)
                         case GameState.LATE_GAME:
+                            if not self.mid_log:
+                                self.log.info("Mid Game. Pushing nexus. Game Time: {}".format(self.formatted_game_time))
+                                self.mid_log = True
                             self.play(GAME_MINI_MAP_ENEMY_NEXUS, GAME_MINI_MAP_CENTER_MID, 35)
         except GameError as e:
             self.log.warning(e.__str__())
@@ -74,7 +82,7 @@ class Game:
         for i in range(120):
             sleep(1)
             if utils.exists(LEAGUE_GAME_CLIENT_WINNAME):
-                self.log.info("Game window open")
+                self.log.debug("Game window open")
                 return
         raise GameError("Game window did not open")
 
@@ -84,7 +92,7 @@ class Game:
         for i in range(120):
             sleep(1)
             if self.update_state():
-                self.log.info("Connected to game server")
+                self.log.debug("Connected to game server")
                 return
         raise GameError("Game window opened but connection failed")
 
@@ -103,7 +111,7 @@ class Game:
 
     def game_start(self) -> None:
         """Buys starter items and waits for minions to clash (minions clash at 90 seconds)"""
-        self.log.info("Game has started, buying starter items and heading to lane. Game Time: {}".format(self.formatted_game_time))
+        self.log.info("Game start. Buying starter items and heading mid")
         sleep(10)
         utils.click(GAME_CENTER_OF_SCREEN, LEAGUE_GAME_CLIENT_WINNAME, 2)
         utils.press('p', LEAGUE_GAME_CLIENT_WINNAME, 2)  # p opens shop
@@ -127,7 +135,6 @@ class Game:
 
     def play(self, attack_position: tuple, retreat_position: tuple, time_to_lane: int) -> None:
         """A set of player actions. Buys items, levels up abilites, heads to lane, attacks, then retreats"""
-        self.log.info("Buying items and attacking. Game Time: {}".format(self.formatted_game_time))
         if not self.screen_locked:
             utils.press('y', LEAGUE_GAME_CLIENT_WINNAME)
             self.screen_locked = True

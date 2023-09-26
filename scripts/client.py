@@ -39,6 +39,7 @@ class Client:
         self.client_errors = 0
         self.phase_errors = 0
         utils.print_ascii()
+        self.log.debug("Client initialized")
 
     def account_loop(self) -> None:
         """Main loop, gets an account, launches league, levels the account, and repeats"""
@@ -155,7 +156,7 @@ class Client:
 
     def game_lobby(self) -> None:
         """Handles the Champ Select Lobby"""
-        self.log.info("Lobby opened, locking in champ")
+        self.log.info("Lobby opened, picking champ")
         r = self.connection.request('get', '/lol-champ-select/v1/session')
         if r.status_code != 200:
             return
