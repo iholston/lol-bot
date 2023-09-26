@@ -105,7 +105,9 @@ class Game:
     def game_start(self) -> None:
         """Buys starter items and waits for minions to clash (minions clash at 90 seconds)"""
         self.log.info("Game has started, buying starter items and heading to lane. Game Time: {}".format(self.formatted_game_time))
-        sleep(2)
+        sleep(10)
+        utils.click(GAME_CENTER_OF_SCREEN, LEAGUE_GAME_CLIENT_WINNAME)
+        sleep(1)
         utils.press('p', LEAGUE_GAME_CLIENT_WINNAME)  # p opens shop
         sleep(1)
         utils.click(GAME_ALL_ITEMS_RATIO, LEAGUE_GAME_CLIENT_WINNAME)
