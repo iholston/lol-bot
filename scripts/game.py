@@ -183,12 +183,16 @@ class Game:
         except requests.ConnectionError:
             self.log.debug("Connection error. Could not get game data")
             self.connection_errors += 1
+            if not utils.exists(LEAGUE_GAME_CLIENT_WINNAME):
+                raise utils.WindowNotFound
             if self.connection_errors == 15:
                 raise GameError("Could not connect to game")
             return False
         if response.status_code != 200:
             self.log.debug("Connection error. Response status code: {}".format(response.status_code))
             self.connection_errors += 1
+            if not utils.exists(LEAGUE_GAME_CLIENT_WINNAME):
+                raise utils.WindowNotFound
             if self.connection_errors == 15:
                 raise GameError("Could not connect to game")
             return False
