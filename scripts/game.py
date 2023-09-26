@@ -98,37 +98,31 @@ class Game:
             else:
                 self.update_state()
                 sleep(2)
-        utils.click(GAME_CENTER_OF_SCREEN, LEAGUE_GAME_CLIENT_WINNAME)
-        sleep(1)
+        utils.click(GAME_CENTER_OF_SCREEN, LEAGUE_GAME_CLIENT_WINNAME, 2)
         utils.click(GAME_CENTER_OF_SCREEN, LEAGUE_GAME_CLIENT_WINNAME)
 
     def game_start(self) -> None:
         """Buys starter items and waits for minions to clash (minions clash at 90 seconds)"""
         self.log.info("Game has started, buying starter items and heading to lane. Game Time: {}".format(self.formatted_game_time))
         sleep(10)
-        utils.click(GAME_CENTER_OF_SCREEN, LEAGUE_GAME_CLIENT_WINNAME)
-        sleep(1)
-        utils.press('p', LEAGUE_GAME_CLIENT_WINNAME)  # p opens shop
-        sleep(1)
+        utils.click(GAME_CENTER_OF_SCREEN, LEAGUE_GAME_CLIENT_WINNAME, 2)
+        utils.press('p', LEAGUE_GAME_CLIENT_WINNAME, 2)  # p opens shop
         utils.click(GAME_ALL_ITEMS_RATIO, LEAGUE_GAME_CLIENT_WINNAME)
         for _ in range(2):
             scale = tuple([random.randint(1, STARTER_ITEMS_TO_BUY) * x for x in GAME_BUY_ITEM_RATIO_INCREASE])
             positions = tuple(sum(x) for x in zip(GAME_BUY_STARTER_ITEM_RATIO, scale))  # https://stackoverflow.com/questions/1169725/adding-values-from-tuples-of-same-length
             utils.click(positions, LEAGUE_GAME_CLIENT_WINNAME)
             utils.click(GAME_BUY_PURCHASE_RATIO, LEAGUE_GAME_CLIENT_WINNAME)
-        utils.press('esc', LEAGUE_GAME_CLIENT_WINNAME)
-        sleep(1)
-        utils.click(GAME_SYSTEM_MENU_X, LEAGUE_GAME_CLIENT_WINNAME)
-        sleep(1)
+        utils.press('esc', LEAGUE_GAME_CLIENT_WINNAME, 2)
+        utils.click(GAME_SYSTEM_MENU_X, LEAGUE_GAME_CLIENT_WINNAME, 1.5)
 
         utils.press('y', LEAGUE_GAME_CLIENT_WINNAME)  # lock screen on champ
         self.screen_locked = True
         utils.press('ctrl+q')  # level up 'q'
-        utils.attack_move_click(GAME_MINI_MAP_UNDER_TURRET)
+        utils.attack_move_click(GAME_MINI_MAP_UNDER_TURRET, 4)
         self.in_lane = True
         while self.game_state == GameState.PRE_MINIONS:
-            sleep(3)
-            utils.attack_move_click(GAME_MINI_MAP_UNDER_TURRET)  # to prevent afk warning popup
+            utils.attack_move_click(GAME_MINI_MAP_UNDER_TURRET, 3)  # to prevent afk warning popup
             self.update_state()
 
     def play(self, attack_position: tuple, retreat_position: tuple, time_to_lane: int) -> None:
@@ -153,20 +147,15 @@ class Game:
 
         # Main attack move loop. This sequence attacks and then de-aggros to prevent them from dying 50 times.
         for i in range(7):
-            utils.attack_move_click(attack_position)
-            sleep(8)
-            utils.right_click(retreat_position, LEAGUE_GAME_CLIENT_WINNAME)
-            sleep(1)
+            utils.attack_move_click(attack_position, 9)
+            utils.right_click(retreat_position, LEAGUE_GAME_CLIENT_WINNAME, 2)
 
         # Ult and back
         utils.press('f', LEAGUE_GAME_CLIENT_WINNAME)
         utils.attack_move_click(GAME_ULT_RATIO)
-        utils.press('r', LEAGUE_GAME_CLIENT_WINNAME)
-        sleep(3)
-        utils.right_click(GAME_MINI_MAP_UNDER_TURRET, LEAGUE_GAME_CLIENT_WINNAME)
-        sleep(5)
-        utils.press('b', LEAGUE_GAME_CLIENT_WINNAME)
-        sleep(9)
+        utils.press('r', LEAGUE_GAME_CLIENT_WINNAME, 4)
+        utils.right_click(GAME_MINI_MAP_UNDER_TURRET, LEAGUE_GAME_CLIENT_WINNAME, 6)
+        utils.press('b', LEAGUE_GAME_CLIENT_WINNAME, 10)
         self.in_lane = False
 
     @staticmethod
@@ -178,16 +167,13 @@ class Game:
             positions = tuple(sum(x) for x in zip(GAME_BUY_EPIC_ITEM_RATIO, scale))  # add tuple to default item position ratio https://stackoverflow.com/questions/1169725/adding-values-from-tuples-of-same-length
             utils.click(positions, LEAGUE_GAME_CLIENT_WINNAME, .5)
             utils.click(GAME_BUY_PURCHASE_RATIO, LEAGUE_GAME_CLIENT_WINNAME, .5)
-        utils.press('esc', LEAGUE_GAME_CLIENT_WINNAME)
-        sleep(1)
-        utils.click(GAME_SYSTEM_MENU_X, LEAGUE_GAME_CLIENT_WINNAME)
-        sleep(1)
+        utils.press('esc', LEAGUE_GAME_CLIENT_WINNAME, 2)
+        utils.click(GAME_SYSTEM_MENU_X, LEAGUE_GAME_CLIENT_WINNAME, 2)
 
     def upgrade_abilities(self) -> None:
         """Upgrades abilities and then rotates which ability will be upgraded first next time"""
         for upgrade in self.ability_upgrades:
             utils.press(upgrade, LEAGUE_GAME_CLIENT_WINNAME)
-            sleep(.3)
         self.ability_upgrades = ([self.ability_upgrades[0]] + [self.ability_upgrades[-1]] + self.ability_upgrades[1:-1])  # r is always first
 
     def update_state(self) -> bool:

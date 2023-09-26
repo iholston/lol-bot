@@ -254,12 +254,9 @@ class Client:
         # occasionally the lcu-api will be ready before the actual client window appears
         # in this instance, the utils.click will throw an exception. just catch and wait
         try:
-            utils.click(POPUP_SEND_EMAIL_X_RATIO, LEAGUE_CLIENT_WINNAME, 1)
-            sleep(1)
+            utils.click(POPUP_SEND_EMAIL_X_RATIO, LEAGUE_CLIENT_WINNAME, 2)
             self.honor_player()
-            sleep(2)
-            utils.click(POPUP_SEND_EMAIL_X_RATIO, LEAGUE_CLIENT_WINNAME, 1)
-            sleep(1)
+            utils.click(POPUP_SEND_EMAIL_X_RATIO, LEAGUE_CLIENT_WINNAME, 2)
             for i in range(3):
                 utils.click(POST_GAME_SELECT_CHAMP_RATIO, LEAGUE_CLIENT_WINNAME, 1)
                 utils.click(POST_GAME_OK_RATIO, LEAGUE_CLIENT_WINNAME, 1)
@@ -325,6 +322,7 @@ class Client:
                 index = random.randint(0, len(players)-1)
                 self.connection.request('post', '/lol-honor-v2/v1/honor-player', data={"summonerId": players[index]['summonerId']})
                 self.log.info("Honor Success: Player {}. Champ: {}. Summoner: {}. ID: {}".format(index+1, players[index]['championName'], players[index]['summonerName'], players[index]['summonerId']))
+                sleep(2)
                 return
             sleep(2)
         self.log.info('Honor Failure. Player -1, Champ: NULL. Summoner: NULL. ID: -1')
