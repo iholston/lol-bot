@@ -59,6 +59,9 @@ class Client:
             except launcher.LauncherError as le:
                 self.log.error(le.__str__())
                 return
+            except Exception as e:
+                self.log.error(e)
+                return
 
     def leveling_loop(self) -> None:
         """
