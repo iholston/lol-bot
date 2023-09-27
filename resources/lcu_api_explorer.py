@@ -29,17 +29,11 @@ ignore = ['/lol-game-data/assets',
 async def connect(_) -> None:
     print("LCU API Connected")
 
-@connector.close
-async def disconnect(_) -> None:
-    print("Client Closed")
-    # await connector.stop()
-
 @connector.ws.register('/')
 async def event_listener(_, event) -> None:
     for skip_text in ignore:
         if skip_text in event.uri:
             return
-    print("\n{}".format(event.uri))
-    print(event.data)
+    print("\n{}\n{}".format(event.uri, event.data))
 
 connector.start()
