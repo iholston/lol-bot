@@ -145,10 +145,10 @@ class Client:
         while True:
             if self.get_phase() != 'Matchmaking':
                 return
-            elif datetime.now() - start > timedelta(minutes=10):
-                self.connection.request('delete', '/lol-lobby/v2/lobby/matchmaking/search')
             elif datetime.now() - start > timedelta(minutes=15):
                 raise ClientError("Queue Timeout")
+            elif datetime.now() - start > timedelta(minutes=10):
+                self.connection.request('delete', '/lol-lobby/v2/lobby/matchmaking/search')
             sleep(1)
 
     def accept_match(self) -> None:
