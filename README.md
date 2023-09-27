@@ -24,7 +24,7 @@
 ## Requirements
 - [Python >= 3.10](https://www.python.org/downloads/)
 - [League of Legends](https://signup.leagueoflegends.com/en-us/signup/download)
-- [League of Legends Account](https://signup.leagueoflegends.com/en-us/signup/index) (*Note*: The account needs to already have accepted the riot promise and set a username)
+- [League of Legends Account](https://signup.leagueoflegends.com/en-us/signup/index)
 
 ## Setup
 - Ensure Python is added to your PATH, check "Add Python to PATH" when installing
@@ -33,13 +33,17 @@
 - Run Installer.bat or ```pip install -r requirements.txt```
 
 ## Optional Configuration
-- For non-standard league install paths, update the ```LEAGUE_CLIENT_DIR``` in constants.py
-- To continuously level new league accounts:
-  - Implement account.py to connect to your database of league accounts
-  - Make sure that "stay signed in" is not checked when league of legends starts. 
-  - This allows the bot to log out of league by closing it, get new account credentials, restart league, log in with the new credentials, and start another leveling loop, cycling indefinitely
-- To level accounts past level 30 or play in different game types update game data variables in constants.py
-- For Virtual Machines, I recommend starting with [this forum](https://www.unknowncheats.me/forum/league-of-legends/480977-run-league-legends-virtual-machine-vmware.html). *Note*: I will not be fixing/troubleshooting VM related issues as there are far too many VM implementation/platform specific issues
+- constants.py
+  - For non-standard league install paths, update the ```LEAGUE_CLIENT_DIR``` 
+  - To level accounts past level 30, update ```ACCOUNT_MAX_LEVEL``` 
+  - To change the game mode update ```GAME_LOBBY_ID``` with another lobby id. (*Note*: the bot is designed for beginner or itermediate bots, lobby id: 840/850) 
+- account.py
+  - To continuously level new league accounts, implement account.py to connect to your database of league accounts.
+  - For a simple implementation, add your accounts to the accounts.json file in the resources folder and copy accounts.py from the resources folder into the scripts folder
+
+For Virtual Machine setups, I recommend starting with [this forum](https://www.unknowncheats.me/forum/league-of-legends/480977-run-league-legends-virtual-machine-vmware.html). *Note:* I will not be fixing/troubleshooting VM related issues as there are far too many VM implementation/platform specific issues
+
+The League of Legends accounts should already have accepted the riot promise and set a username. The bot will automatically change your league settings/configuration and the game window (not the client) should open as a 1024x720 window
 
 ## Disclaimer
 Another LoL Bot isn’t endorsed by Riot Games and doesn’t reflect the views or opinions of Riot Games or anyone officially involved in producing or managing League of Legends. League of Legends and Riot Games are trademarks or registered trademarks of Riot Games, Inc. League of Legends © Riot Games, Inc.
