@@ -67,7 +67,6 @@ def size(window_title=LEAGUE_CLIENT_WINNAME) -> tuple:
 
 def exists(window_title) -> bool:
     """Checks if a window exists"""
-    log.debug("Checking if {} window exists".format(window_title))
     if FindWindow(None, window_title) == 0:
         return False
     return True
@@ -87,7 +86,7 @@ def click(ratio, expected_window_name='', wait=1) -> None:
         else:
             log.debug("Cannot click on {}, no available window".format(ratio))
             return
-    log.debug('Clicking on ratio {}: {}, {}'.format(ratio, ratio[0], ratio[1]))
+    log.debug('Clicking on ratio {}: {}, {}. Waiting: {}'.format(ratio, ratio[0], ratio[1], wait))
     x, y, l, h = size(window_name)
     updated_x = ((l - x) * ratio[0]) + x
     updated_y = ((h - y) * ratio[1]) + y
@@ -111,6 +110,7 @@ def right_click(ratio, expected_window='', wait=1) -> None:
         else:
             log.debug("Cannot click on {}, no available window".format(ratio))
             return
+    log.debug('Clicking on ratio {}: {}, {}. Waiting: {}'.format(ratio, ratio[0], ratio[1], wait))
     x, y, l, h = size(window_name)
     updated_x = ((l - x) * ratio[0]) + x
     updated_y = ((h - y) * ratio[1]) + y
@@ -124,7 +124,7 @@ def attack_move_click(ratio, wait=1) -> None:
     if not exists(LEAGUE_GAME_CLIENT_WINNAME):
         log.debug("Cannot attack move when game is not running")
         raise WindowNotFound
-    log.debug('Attack Moving on ratio {}: {}, {}'.format(ratio, ratio[0], ratio[1]))
+    log.debug('Attack Moving on ratio {}: {}, {}. Waiting: {}'.format(ratio, ratio[0], ratio[1], wait))
     x, y, l, h = size(LEAGUE_GAME_CLIENT_WINNAME)
     updated_x = ((l - x) * ratio[0]) + x
     updated_y = ((h - y) * ratio[1]) + y
@@ -143,7 +143,7 @@ def press(key, expected_window='', wait=1) -> None:
     if expected_window != '' and not exists(expected_window):
         log.debug("Cannot press {}, {} does not exist".format(key, expected_window))
         raise WindowNotFound
-    log.debug("Pressing key: {}".format(key))
+    log.debug("Pressing key: {}. Waiting: {}".format(key, wait))
     keyboard.press_and_release(key)
     sleep(wait)
 
@@ -152,7 +152,7 @@ def write(keys, expected_window='', wait=1) -> None:
     if expected_window != '' and not exists(expected_window):
         log.debug("Cannot type {}, {} does not exist".format(keys, expected_window))
         raise WindowNotFound
-    log.debug("Typewriting {}".format(keys))
+    log.debug("Typewriting {}. Waiting: {}".format(keys, wait))
     pyautogui.typewrite(keys)
     sleep(wait)
 
