@@ -114,7 +114,7 @@ class Game:
         self.in_lane = True
 
     def play(self, attack_position: tuple, retreat_position: tuple, time_to_lane: int) -> None:
-        """A set of player actions. Buys items, levels up abilites, heads to lane, attacks, then retreats"""
+        """A set of player actions. Buys items, levels up abilities, heads to lane, attacks, then retreats"""
         self.log.debug("Main player loop. GameState: {}".format(self.game_state))
         self.buy_item()
         self.lock_screen()
@@ -142,14 +142,7 @@ class Game:
         self.in_lane = False
 
     def buy_item(self) -> None:
-        """
-        Opens the shop and attempts to purchase items
-
-        We use esc to close the shop instead of p or clicking on the gold because if the shop wasn't
-        actually opened by p click, the system menu will appear, and we can click the X button on it
-        consistently since it always opens in the same spot (unlike the shop)
-        """
-
+        """Opens the shop and attempts to purchase items via default shop hotkeys"""
         self.log.debug("Attempting to purchase an item from build order")
         utils.press('p', LEAGUE_GAME_CLIENT_WINNAME, 1.5)
         utils.press('ctrl+l', LEAGUE_GAME_CLIENT_WINNAME, 1.5)
@@ -177,16 +170,10 @@ class Game:
         self.ability_upgrades = ([self.ability_upgrades[0]] + [self.ability_upgrades[-1]] + self.ability_upgrades[1:-1])  # r is always first
 
     def create_build_order(self) -> list[str]:
-        """
-        Randomly generates a build order
-
-        Boots come after LEGENDARY_ITEMS because items are bought in order and slightly magical
-        boots will prevent buying any items for a long time
-        """
-
+        """Randomly generates a build order"""
         build = [random.choice(STARTER_ITEMS)]
         build.extend(random.choice(LEGENDARY_ITEMS))
-        build.append(random.choice(BOOTS))
+        build.append(random.choice(BOOTS))  # boots always need to come after a Legendary Item due to magical footwear
         build.extend(random.choice(MYTHIC_ITEMS))
         self.log.debug("Build order created: {}".format(build))
         return build

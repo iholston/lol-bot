@@ -58,7 +58,7 @@ class Connection:
             sleep(1)
             try:
                 r = self.request('get', '/lol-login/v1/session')
-            except:
+            except ConnectionError:
                 continue
             if r.json()['state'] == 'SUCCEEDED':
                 self.log.debug(r.json())

@@ -71,7 +71,7 @@ def exists(window_title: str) -> bool:
         return False
     return True
 
-def click(ratio: tuple, expected_window_name: str = '', wait: int = 1) -> None:
+def click(ratio: tuple, expected_window_name: str = '', wait: int or float = 1) -> None:
     """Makes a click in an open window"""
     if expected_window_name != '' and not exists(expected_window_name):
         log.debug("Cannot click on {}, {} does not exist".format(ratio, expected_window_name))
@@ -95,7 +95,7 @@ def click(ratio: tuple, expected_window_name: str = '', wait: int = 1) -> None:
     mouse.click()  # pyautogui clicks do not work with league/directx
     sleep(wait)
 
-def right_click(ratio: tuple, expected_window: str = '', wait: int = 1) -> None:
+def right_click(ratio: tuple, expected_window: str = '', wait: int or float = 1) -> None:
     """Makes a right click in an open window"""
     if expected_window != '' and not exists(expected_window):
         log.debug("Cannot click on {}, {} does not exist".format(ratio, expected_window))
@@ -119,7 +119,7 @@ def right_click(ratio: tuple, expected_window: str = '', wait: int = 1) -> None:
     mouse.right_click()  # pyautogui clicks do not work with league/directx
     sleep(wait)
 
-def attack_move_click(ratio: tuple, wait: int = 1) -> None:
+def attack_move_click(ratio: tuple, wait: int or float = 1) -> None:
     """Attack move clicks in an open League of Legends game window"""
     if not exists(LEAGUE_GAME_CLIENT_WINNAME):
         log.debug("Cannot attack move when game is not running")
@@ -138,7 +138,7 @@ def attack_move_click(ratio: tuple, wait: int = 1) -> None:
     keyboard.release('a')
     sleep(wait)
 
-def press(key: str, expected_window: str = '', wait: int = 1) -> None:
+def press(key: str, expected_window: str = '', wait: int or float = 1) -> None:
     """Sends a keypress to a window"""
     if expected_window != '' and not exists(expected_window):
         log.debug("Cannot press {}, {} does not exist".format(key, expected_window))
@@ -147,7 +147,7 @@ def press(key: str, expected_window: str = '', wait: int = 1) -> None:
     keyboard.press_and_release(key)
     sleep(wait)
 
-def write(keys: str, expected_window: str = '', wait: int = 1) -> None:
+def write(keys: str, expected_window: str = '', wait: int or float = 1) -> None:
     """Sends a string of key presses to a window"""
     if expected_window != '' and not exists(expected_window):
         log.debug("Cannot type {}, {} does not exist".format(keys, expected_window))
@@ -170,7 +170,7 @@ def seconds_to_min_sec(seconds: str or float or int) -> str:
                 return str(int(seconds / 60)) + ":0" + str(int(seconds % 60))
             else:
                 return str(int(seconds / 60)) + ":" + str(int(seconds % 60))
-    except:
+    except ValueError:
         return "XX:XX"
 
 def print_ascii() -> None:

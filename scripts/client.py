@@ -64,11 +64,7 @@ class Client:
                 return
 
     def leveling_loop(self) -> None:
-        """
-        Loop that runs the correct function based on the phase of the League Client, continuously starts games.
-        By default, this loop takes a league account from level 1 to level 30 which can take about 3-4 days...
-        """
-
+        """Loop that runs the correct function based on the phase of the League Client, continuously starts games"""
         self.connection.connect_lcu(verbose=False)
         self.check_patch()
         while not self.account_leveled():
@@ -189,14 +185,12 @@ class Client:
                     # Select Champ or Lock in champ that has already been selected
                     if action['championId'] == 0:  # no champ selected, attempt to select a champ
                         self.log.debug("Lobby State: {}. Time Left in Lobby: {}s. Action: Hovering champ".format(lobby_state, lobby_time_left))
-
                         if champ_index < len(CHAMPS):
                             champion_id = CHAMPS[champ_index]
                             champ_index += 1
                         else:
                             champion_id = f2p[f2p_index]
                             f2p_index += 1
-
                         url = '/lol-champ-select/v1/session/actions/{}'.format(action['id'])
                         data = {'championId': champion_id}
                         self.connection.request('patch', url, data=data)
@@ -209,7 +203,7 @@ class Client:
                         # Ask for mid
                         if not requested:
                             sleep(1)
-                            try:  # if the ASK_4_MID_DIALOG is empty this will error
+                            try:
                                 self.chat(random.choice(ASK_4_MID_DIALOG))
                             except IndexError:
                                 pass
@@ -234,12 +228,7 @@ class Client:
         self.log.warning('Could not reconnect to game')
 
     def wait_for_stats(self) -> None:
-        """
-        Waits for the League Client Phase to change to something other than 'WaitingForStats'
-        Often times disconnects will happen after a game finishes and the league client will
-        only return the phase 'WaitingForStats' which causes a ClientError.
-        """
-
+        """Waits for the League Client Phase to change to something other than 'WaitingForStats'"""
         self.log.info("Waiting for stats")
         for i in range(60):
             sleep(2)
@@ -248,17 +237,9 @@ class Client:
         raise ClientError("Waiting for stats timeout")
 
     def pre_end_of_game(self) -> None:
-        """
-        Handles league of legends client reopening after a game, honoring teamates, and clearing level-up/mission rewards
-        This function should hopefully be updated to not include any clicks on the client, but I currently do not know
-        of any endpoints that can clear the 'send email' popup or mission/level rewards
-        """
-
+        """Handles league of legends client reopening after a game, honoring teammates, and clearing level-up/mission rewards"""
         self.log.info("Honoring teammates and accepting rewards")
         sleep(3)
-
-        # occasionally the lcu-api will be ready before the actual client window appears
-        # in this instance, the utils.click will throw an exception. just catch and wait
         try:
             utils.click(POPUP_SEND_EMAIL_X_RATIO, LEAGUE_CLIENT_WINNAME, 2)
             self.honor_player()
@@ -271,12 +252,7 @@ class Client:
             sleep(3)
 
     def end_of_game(self) -> None:
-        """
-        Transitions League Client to 'Lobby' phase. Occasionally, posting
-        to the play-again endpoint just does not work and the phase must be
-        manually changed to 'Lobby' or raise a ClientError
-        """
-
+        """Transitions League Client to 'Lobby' phase."""
         self.log.info("Post game. Starting a new loop")
         posted = False
         for i in range(15):
@@ -341,7 +317,6 @@ class Client:
         if r.status_code != 200:
             self.log.warning("{} chat attempt failed. Could not reach endpoint".format(inspect.stack()[1][3]))
             return
-
         for convo in r.json():
             if convo['gameName'] != '' and convo['gameTag'] != '':
                 continue
@@ -349,11 +324,9 @@ class Client:
         if chat_id == '':
             self.log.warning('{} chat attempt failed. Could not send message. Chat ID is Null'.format(inspect.stack()[1][3]))
             return
-
         data = {"body": msg}
         r = self.connection.request('post', '/lol-chat/v1/conversations/{}/messages'.format(chat_id), data=data)
         if r.status_code != 200:
             self.log.warning('Could not send message. HTTP STATUS: {} - {}, Caller: {}'.format(r.status_code, r.json(), inspect.stack()[1][3]))
         else:
             self.log.debug("Message success. Msg: {}. Caller: {}".format(msg, inspect.stack()[1][3]))
-
