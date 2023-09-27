@@ -88,6 +88,5 @@ POST_GAME_SELECT_CHAMP_RATIO = (0.4977, 0.5333)
 POPUP_SEND_EMAIL_X_RATIO = (0.6960, 0.1238)
 
 # RANDOM
-LOGGING_LEVEL = logging.INFO  # Change to logging.DEBUG if you are having issues with the bot
 MAX_CLIENT_ERRORS = 5
 MAX_PHASE_ERRORS = 20
