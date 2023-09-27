@@ -49,7 +49,7 @@ def close_game() -> None:
     os.system(KILL_LEAGUE)
     sleep(15)
 
-def screenshot(img_name, path='') -> None:
+def screenshot(img_name: str, path: str = '') -> None:
     """Takes a screenshot and saves to desktop"""
     im = pyautogui.screenshot()
     if not path:
@@ -57,7 +57,7 @@ def screenshot(img_name, path='') -> None:
     else:
         im.save(path + img_name)
 
-def size(window_title=LEAGUE_CLIENT_WINNAME) -> tuple:
+def size(window_title: str = LEAGUE_CLIENT_WINNAME) -> tuple:
     """Gets the size of an open window"""
     window_handle = FindWindow(None, window_title)
     if window_handle == 0:
@@ -65,13 +65,13 @@ def size(window_title=LEAGUE_CLIENT_WINNAME) -> tuple:
     window_rect = GetWindowRect(window_handle)
     return window_rect[0], window_rect[1], window_rect[2], window_rect[3]
 
-def exists(window_title) -> bool:
+def exists(window_title: str) -> bool:
     """Checks if a window exists"""
     if FindWindow(None, window_title) == 0:
         return False
     return True
 
-def click(ratio, expected_window_name='', wait=1) -> None:
+def click(ratio: tuple, expected_window_name: str = '', wait: int = 1) -> None:
     """Makes a click in an open window"""
     if expected_window_name != '' and not exists(expected_window_name):
         log.debug("Cannot click on {}, {} does not exist".format(ratio, expected_window_name))
@@ -95,7 +95,7 @@ def click(ratio, expected_window_name='', wait=1) -> None:
     mouse.click()  # pyautogui clicks do not work with league/directx
     sleep(wait)
 
-def right_click(ratio, expected_window='', wait=1) -> None:
+def right_click(ratio: tuple, expected_window: str = '', wait: int = 1) -> None:
     """Makes a right click in an open window"""
     if expected_window != '' and not exists(expected_window):
         log.debug("Cannot click on {}, {} does not exist".format(ratio, expected_window))
@@ -119,7 +119,7 @@ def right_click(ratio, expected_window='', wait=1) -> None:
     mouse.right_click()  # pyautogui clicks do not work with league/directx
     sleep(wait)
 
-def attack_move_click(ratio, wait=1) -> None:
+def attack_move_click(ratio: tuple, wait: int = 1) -> None:
     """Attack move clicks in an open League of Legends game window"""
     if not exists(LEAGUE_GAME_CLIENT_WINNAME):
         log.debug("Cannot attack move when game is not running")
@@ -138,7 +138,7 @@ def attack_move_click(ratio, wait=1) -> None:
     keyboard.release('a')
     sleep(wait)
 
-def press(key, expected_window='', wait=1) -> None:
+def press(key: str, expected_window: str = '', wait: int = 1) -> None:
     """Sends a keypress to a window"""
     if expected_window != '' and not exists(expected_window):
         log.debug("Cannot press {}, {} does not exist".format(key, expected_window))
@@ -147,7 +147,7 @@ def press(key, expected_window='', wait=1) -> None:
     keyboard.press_and_release(key)
     sleep(wait)
 
-def write(keys, expected_window='', wait=1) -> None:
+def write(keys: str, expected_window: str = '', wait: int = 1) -> None:
     """Sends a string of key presses to a window"""
     if expected_window != '' and not exists(expected_window):
         log.debug("Cannot type {}, {} does not exist".format(keys, expected_window))
@@ -156,7 +156,7 @@ def write(keys, expected_window='', wait=1) -> None:
     pyautogui.typewrite(keys)
     sleep(wait)
 
-def seconds_to_min_sec(seconds) -> str:
+def seconds_to_min_sec(seconds: str or float or int) -> str:
     """Converts League of Legends game time to minute:seconds format"""
     try:
         if isinstance(seconds, int) or isinstance(seconds, float):

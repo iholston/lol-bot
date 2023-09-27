@@ -27,7 +27,7 @@ class Connection:
         self.log = logging.getLogger(__name__)
         urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-    def connect_lcu(self, verbose=True) -> None:
+    def connect_lcu(self, verbose: bool = True) -> None:
         """Sets header infor and connects to League Client"""
         if verbose:
             self.log.info("Connecting to LCU API")
@@ -94,8 +94,10 @@ class Connection:
         self.headers = {'Authorization': 'Basic {}'.format(userpass), "Content-Type": "application/json"}
         self.log.debug(self.headers['Authorization'])
 
-    def request(self, method, path, query='', data='') -> requests.models.Response:
+    def request(self, method: str, path: str, query: str = '', data: dict = None) -> requests.models.Response:
         """Handles HTTP requests to Riot Client or League Client server"""
+        if data is None:
+            data = {}
         if not query:
             url = "{}://{}:{}{}".format(self.protocol, self.host, self.port, path)
         else:

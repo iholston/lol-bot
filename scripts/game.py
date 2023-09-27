@@ -68,7 +68,7 @@ class Game:
             self.log.warning(e.__str__())
             utils.close_game()
         except (utils.WindowNotFound, pyautogui.FailSafeException):
-            self.log.info("Game Complete")
+            self.log.info("Game Complete. Game Time: {}".format(self.formatted_game_time))
 
     def wait_for_game_window(self) -> None:
         """Loop that waits for game window to open"""
@@ -102,7 +102,7 @@ class Game:
 
     def game_start(self) -> None:
         """Buys starter items and waits for minions to clash (minions clash at 90 seconds)"""
-        self.log.info("Game start. Buying starter items and heading mid")
+        self.log.info("Game start. Waiting for minions")
         sleep(10)
         self.buy_item()
         self.lock_screen()
@@ -145,9 +145,6 @@ class Game:
         """
         Opens the shop and attempts to purchase items
 
-        p - opens the shop
-        ctrl+l - focuses search bar
-        esc - closes the shop
         We use esc to close the shop instead of p or clicking on the gold because if the shop wasn't
         actually opened by p click, the system menu will appear, and we can click the X button on it
         consistently since it always opens in the same spot (unlike the shop)
@@ -186,14 +183,15 @@ class Game:
         Boots come after LEGENDARY_ITEMS because items are bought in order and slightly magical
         boots will prevent buying any items for a long time
         """
+
         build = [random.choice(STARTER_ITEMS)]
         build.extend(random.choice(LEGENDARY_ITEMS))
         build.append(random.choice(BOOTS))
         build.extend(random.choice(MYTHIC_ITEMS))
-        self.log.debug("Build order created: {}".format(build))
+        self.log.info("Build order created: {}".format(build))
         return build
 
-    def update_state(self, postpone_update=1) -> bool:
+    def update_state(self, postpone_update: int = 1) -> bool:
         """Gets game data from local game server and updates game state"""
         self.log.debug("Updating state. Caller: {}".format(inspect.stack()[1][3]))
         sleep(postpone_update)

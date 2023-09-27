@@ -4,6 +4,7 @@ Controls the League Client and continually starts League of Legends games
 
 import logging
 import random
+import inspect
 import pyautogui
 import utils
 import api
@@ -17,7 +18,7 @@ from game import Game
 
 class ClientError(Exception):
     """Indicates the League Client instance should be restarted"""
-    def __init__(self, msg=''):
+    def __init__(self, msg: str = ''):
         self.msg = msg
 
     def __str__(self):
@@ -114,13 +115,13 @@ class Client:
             sleep(1)
         raise ClientError("Could not get phase")
 
-    def create_lobby(self, lobby_id) -> None:
+    def create_lobby(self, lobby_id: int) -> None:
         """Creates a lobby for given lobby ID"""
         self.log.info("Creating lobby with lobby_id: {}".format(lobby_id))
         self.connection.request('post', '/lol-lobby/v2/lobby', data={'queueId': lobby_id})
         sleep(1.5)
 
-    def start_matchmaking(self, lobby_id) -> None:
+    def start_matchmaking(self, lobby_id: int) -> None:
         """Starts matchmaking for a given lobby ID, will also wait out dodge timers"""
         self.log.info("Starting queue for lobby_id: {}".format(lobby_id))
         r = self.connection.request('get', '/lol-lobby/v2/lobby')
@@ -204,7 +205,7 @@ class Client:
                         if not requested:
                             sleep(1)
                             try:  # if the ASK_4_MID_DIALOG is empty this will error
-                                self.chat(random.choice(ASK_4_MID_DIALOG), 'handle_game_lobby')
+                                self.chat(random.choice(ASK_4_MID_DIALOG))
                             except IndexError:
                                 pass
                             requested = True
@@ -271,7 +272,7 @@ class Client:
         manually changed to 'Lobby' or raise a ClientError
         """
 
-        self.log.info("")
+        self.log.info("Post game. Starting a new loop")
         posted = False
         for i in range(15):
             if self.get_phase() != 'EndOfGame':
@@ -328,38 +329,26 @@ class Client:
         self.log.warning('Honor Failure. Player -1, Champ: NULL. Summoner: NULL. ID: -1')
         self.connection.request('post', '/lol-honor-v2/v1/honor-player', data={"summonerId": 0})  # will clear honor screen
 
-    def chat(self, msg, calling_func_name='') -> None:
+    def chat(self, msg: str) -> None:
         """Sends a message to the chat window"""
         chat_id = ''
         r = self.connection.request('get', '/lol-chat/v1/conversations')
         if r.status_code != 200:
-            if calling_func_name != '':
-                self.log.warning("{} chat attempt failed. Could not reach endpoint".format(calling_func_name))
-            else:
-                self.log.warning("Could not reach endpoint")
+            self.log.warning("{} chat attempt failed. Could not reach endpoint".format(inspect.stack()[1][3]))
             return
 
         for convo in r.json():
             if convo['gameName'] != '' and convo['gameTag'] != '':
                 continue
             chat_id = convo['id']
-
         if chat_id == '':
-            if calling_func_name != '':
-                self.log.warning('{} chat attempt failed. Could not send message. Chat ID is Null'.format(calling_func_name))
-            else:
-                self.log.warning('Could not send message. Chat ID is Null')
+            self.log.warning('{} chat attempt failed. Could not send message. Chat ID is Null'.format(inspect.stack()[1][3]))
             return
 
         data = {"body": msg}
         r = self.connection.request('post', '/lol-chat/v1/conversations/{}/messages'.format(chat_id), data=data)
         if r.status_code != 200:
-            if calling_func_name != '':
-                self.log.warning('{}, could not send message. HTTP STATUS: {} - {}'.format(calling_func_name, r.status_code, r.json()))
-            else:
-                self.log.warning('Could not send message. HTTP STATUS: {} - {}'.format(r.status_code, r.json()))
+            self.log.warning('Could not send message. HTTP STATUS: {} - {}, Caller: {}'.format(r.status_code, r.json(), inspect.stack()[1][3]))
         else:
-            if calling_func_name != '':
-                self.log.debug("{}, message success. Msg: {}".format(calling_func_name, msg))
-            else:
-                self.log.debug("Message Success. Msg: {}".format(msg))
+            self.log.debug("Message success. Msg: {}. Caller: {}".format(msg, inspect.stack()[1][3]))
+
