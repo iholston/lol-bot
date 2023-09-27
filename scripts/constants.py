@@ -4,7 +4,7 @@ import os
 import logging
 
 # PATHS
-LEAGUE_CLIENT_DIR = 'D:/Riot Games/League of Legends'  # Path to your league installation. Make sure to use forward slashes
+LEAGUE_CLIENT_DIR = 'C:/Riot Games/League of Legends'  # Path to your league installation. Make sure to use forward slashes
 LEAGUE_CLIENT_PATH = LEAGUE_CLIENT_DIR + '/LeagueClient'
 LEAGUE_CLIENT_LOCKFILE_PATH = LEAGUE_CLIENT_DIR + "/lockfile"
 LEAGUE_GAME_CONFIG_PATH = LEAGUE_CLIENT_DIR + '/Config/game.cfg'
@@ -32,7 +32,7 @@ KILL_LEAGUE = 'TASKKILL /F /IM "League of Legends.exe"'
 KILL_RIOT_CLIENT = 'TASKKILL /F /IM RiotClientUx.exe'
 
 # GAME DATA
-ACCOUNT_MAX_LEVEL = 300
+ACCOUNT_MAX_LEVEL = 30
 GAME_LOBBY_ID = 840  # Game mode. I recommend leaving it as beginner bots (840)
 EARLY_GAME_END_TIME = 630
 MAX_GAME_TIME = 2400
