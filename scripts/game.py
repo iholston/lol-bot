@@ -84,9 +84,14 @@ class Game:
         """Loop that waits for connection to local game server"""
         self.log.debug("Connecting to game server...")
         for i in range(120):
-            if self.update_state():
-                self.log.debug("Connected to game server")
-                return
+            try:
+                response = requests.get('https://127.0.0.1:2999/liveclientdata/allgamedata', timeout=10, verify=False)
+                if response.status_code == 200:
+                    self.log.debug("Connected to game server")
+                    return
+            except ConnectionError:
+                pass
+            sleep(1)
         raise GameError("Game window opened but connection failed")
 
     def loading_screen(self) -> None:
@@ -190,7 +195,7 @@ class Game:
             if not utils.exists(LEAGUE_GAME_CLIENT_WINNAME):
                 raise utils.WindowNotFound
             if self.connection_errors == 15:
-                raise GameError("Could not connect to game")
+                raise GameError("Connection Error. Could not connect to game")
             return False
         if response.status_code != 200:
             self.log.debug("Connection error. Response status code: {}".format(response.status_code))
@@ -198,7 +203,7 @@ class Game:
             if not utils.exists(LEAGUE_GAME_CLIENT_WINNAME):
                 raise utils.WindowNotFound
             if self.connection_errors == 15:
-                raise GameError("Could not connect to game")
+                raise GameError("Bad Response. Could not connect to game")
             return False
 
         self.game_data = response.json()
