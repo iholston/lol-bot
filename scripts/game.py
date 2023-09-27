@@ -188,7 +188,7 @@ class Game:
         build.extend(random.choice(LEGENDARY_ITEMS))
         build.append(random.choice(BOOTS))
         build.extend(random.choice(MYTHIC_ITEMS))
-        self.log.info("Build order created: {}".format(build))
+        self.log.debug("Build order created: {}".format(build))
         return build
 
     def update_state(self, postpone_update: int = 1) -> bool:
