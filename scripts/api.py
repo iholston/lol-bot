@@ -8,7 +8,6 @@ import logging
 from base64 import b64encode
 from time import sleep
 from constants import *
-from client import ClientError
 
 
 class Connection:
@@ -70,7 +69,7 @@ class Connection:
                 self.request('post', '/lol-login/v1/delete-rso-on-close')  # ensures self.logout after close
                 sleep(2)
                 return
-        raise ClientError("Could not connect to League Client")
+        raise Exception("Could not connect to League Client")
 
     def connect_rc(self) -> None:
         """Sets header info for Riot Client"""
