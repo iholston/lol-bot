@@ -4,6 +4,7 @@ Controls the League Client and continually starts League of Legends games
 
 import logging
 import random
+import traceback
 import inspect
 import pyautogui
 import utils
@@ -58,9 +59,11 @@ class Client:
                 utils.close_processes()
             except launcher.LauncherError as le:
                 self.log.error(le.__str__())
+                self.log.error(traceback.print_exc())
                 return
             except Exception as e:
                 self.log.error(e)
+                self.log.error(traceback.print_exc())
                 return
 
     def leveling_loop(self) -> None:
