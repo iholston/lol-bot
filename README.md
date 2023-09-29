@@ -27,7 +27,7 @@
 - [League of Legends Account](https://signup.leagueoflegends.com/en-us/signup/index)
 
 ## Setup
-- Ensure Python is added to your PATH, check "Add Python to PATH" when installing
+- Ensure Python is added to your PATH, check "Add Python to PATH" when [installing](https://www.youtube.com/watch?v=uDbDIhR76H4)
 - Clone the repo or Download the [latest release](https://github.com/iholston/lol-bot/releases)
 - Download [extra RAM](https://downloadmoreram.com/) (only if needed)
 - Run Installer.bat or ```pip install -r requirements.txt```
@@ -43,7 +43,7 @@
 
 For Virtual Machine setups, I recommend starting with [this forum](https://www.unknowncheats.me/forum/league-of-legends/480977-run-league-legends-virtual-machine-vmware.html). *Note:* I will not be fixing/troubleshooting VM related issues as there are far too many VM implementation/platform specific issues
 
-The League of Legends accounts should already have accepted the riot promise and set a username. The bot will automatically change your league settings/configuration and the game window (not the client) should open as a 1024x720 window
+The League of Legends accounts should already have accepted the riot promise, set a username, and skipped the tutorials. The bot will automatically change your league settings/configuration and the game window (not the client) should open as a 1024x720 window
 
 ## Disclaimer
 Another LoL Bot isn’t endorsed by Riot Games and doesn’t reflect the views or opinions of Riot Games or anyone officially involved in producing or managing League of Legends. League of Legends and Riot Games are trademarks or registered trademarks of Riot Games, Inc. League of Legends © Riot Games, Inc.
