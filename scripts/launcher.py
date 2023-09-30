@@ -56,7 +56,7 @@ class Launcher:
                 try:
                     output = subprocess.check_output(KILL_RIOT_CLIENT, shell=False)
                     self.log.info(str(output, 'utf-8').rstrip())
-                except subprocess.CalledProcessError:
+                except:
                     self.log.warning("Could not kill riot client")
                 return
 
