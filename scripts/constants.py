@@ -10,6 +10,8 @@ LEAGUE_CLIENT_LOCKFILE_PATH = LEAGUE_CLIENT_DIR + "/lockfile"
 LEAGUE_GAME_CONFIG_PATH = LEAGUE_CLIENT_DIR + '/Config/game.cfg'
 LOCAL_GAME_CONFIG_PATH = os.path.dirname(os.getcwd()) + '/resources/game.cfg'
 RIOT_CLIENT_LOCKFILE_PATH = os.getenv('LOCALAPPDATA') + '/Riot Games/Riot Client/Config/lockfile'
+LOG_PATH = os.path.dirname(os.getcwd()) + '/logs'
+RESOURCES_PATH = os.path.dirname(os.getcwd()) + '/resources'
 
 # API INFO
 LCU_HOST = '127.0.0.1'
@@ -90,3 +92,4 @@ POPUP_SEND_EMAIL_X_RATIO = (0.6960, 0.1238)
 # RANDOM
 MAX_CLIENT_ERRORS = 5
 MAX_PHASE_ERRORS = 20
+VERSION = 'v1.3.1'

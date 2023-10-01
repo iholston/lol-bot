@@ -1,41 +1,38 @@
 """
-Where bot execution starts, sets logging configurations
+Where bot execution starts
 """
 
-import logging
-import os
+import multiprocessing
+from ctypes import windll
 import sys
-import constants
-from client import Client
-from datetime import datetime
-from logging.handlers import RotatingFileHandler
+from gui import Gui
+import dearpygui.dearpygui as dpg
+import dearpygui.demo as demo
 
+def is_admin():
+    try:
+        return windll.shell32.IsUserAnAdmin()
+    except:
+        return False
 
-def set_logs(dir_path: str) -> None:
-    """Sets log output to file and console"""
-    filename = os.path.join(dir_path, datetime.now().strftime('%d%m%Y_%H%M_log.log'))
-    formatter = logging.Formatter(fmt='[%(asctime)s] [%(levelname)-7s] [%(funcName)-21s] %(message)s', datefmt='%d %b %Y %H:%M:%S')
-    logging.getLogger().setLevel(logging.DEBUG)
+def demo1():
+    dpg.create_context()
+    dpg.create_viewport(title='Custom Title', width=600, height=600)
 
-    fh = RotatingFileHandler(filename=filename, maxBytes=500000, backupCount=1)
-    fh.setFormatter(formatter)
-    fh.setLevel(logging.DEBUG)
-    logging.getLogger().addHandler(fh)
+    demo.show_demo()
 
-    ch = logging.StreamHandler(sys.stdout)
-    ch.setFormatter(formatter)
-    ch.setLevel(logging.INFO)
-    logging.getLogger().addHandler(ch)
-
+    dpg.setup_dearpygui()
+    dpg.show_viewport()
+    dpg.start_dearpygui()
+    dpg.destroy_context()
 
 if __name__ == '__main__':
-    if not os.path.exists(constants.LEAGUE_CLIENT_DIR):
-        raise ValueError("League Directory is incorrect. Please update the path in constants.py")
+    # if not is_admin():
+    #     windll.shell32.ShellExecuteW(None, "runas", sys.executable, __file__, None, 1)
+    #     sys.exit()
 
-    log_dir = os.path.join(os.path.normpath(os.getcwd() + os.sep + os.pardir), 'logs')
-    if not os.path.exists(log_dir):
-        os.makedirs(log_dir)
-    set_logs(dir_path=log_dir)
-
-    client: Client = Client()
-    client.account_loop()
+    # demo1()
+    width, height = 600, 420
+    gui: Gui = Gui(width, height)
+    gui.render()
+    dpg.destroy_context()
