@@ -32,6 +32,7 @@ if __name__ == '__main__':
     #     sys.exit()
 
     # demo1()
+
     width, height = 600, 420
     gui: Gui = Gui(width, height)
     gui.render()
