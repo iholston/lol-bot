@@ -3,14 +3,16 @@ import os
 import subprocess
 import webbrowser
 import multiprocessing
+import threading
 import ast
-import json
 import shutil
+import requests
 from datetime import datetime
 import dearpygui.dearpygui as dpg
 import api
 import constants
 import account
+import utils
 from client import Client
 
 
@@ -57,10 +59,12 @@ class Gui:
         dpg.setup_dearpygui()
         dpg.show_viewport()
         dpg.set_primary_window('primary window', True)
+        self._info_updater()
         while dpg.is_dearpygui_running():
-            self._updater()
+            self._gui_updater()
             dpg.render_dearpygui_frame()
         dpg.destroy_context()
+        self._stop_bot()
 
     def create_status_tab(self) -> None:
         """Creates Status Tab"""
@@ -226,7 +230,7 @@ class Gui:
             dpg.add_spacer()
             dpg.add_input_text(multiline=True, default_value=self._notes_text(), height=288, width=568, enabled=False)
 
-    def _updater(self) -> None:
+    def _gui_updater(self) -> None:
         """Updates gui each frame, displays up to date bot info"""
         if not self.message_queue.empty():
             display_message = ""
@@ -243,6 +247,50 @@ class Gui:
             self.color_update = False
             for item in self.color_editable:
                 dpg.configure_item(item, color=self.color)
+
+    def _info_updater(self) -> None:
+        """Updates gui info string"""
+        if not utils.is_rc_running() and not utils.is_league_running():
+            self.info = "League is not running"
+        else:
+            _account = "Unknown"
+            phase = "None"
+            game_time = "-1"
+            champ = "None"
+            level = '-1'
+            try:
+                if not self.connection.headers:
+                    self.connection.set_lcu_headers()
+                r = self.connection.request('get', '/lol-summoner/v1/current-summoner')
+                if r.status_code == 200:
+                    _account = r.json()['displayName']
+                    level = str(r.json()['summonerLevel']) + " " + str(r.json()['percentCompleteForNextLevel']) + "% xp to next level"
+                r = self.connection.request('get', '/lol-gameflow/v1/gameflow-phase')
+                if r.status_code == 200:
+                    phase = r.json()
+                    if phase == 'None':
+                        phase = "In Main Menu"
+            except:
+                pass
+            if utils.is_game_running() or phase == "InProgress":
+                try:
+                    response = requests.get('https://127.0.0.1:2999/liveclientdata/allgamedata', timeout=10, verify=False)
+                    if response.status_code == 200:
+                        for player in response.json()['allPlayers']:
+                            if player['summonerName'] == response.json()['activePlayer']['summonerName']:
+                                champ = player['championName']
+                        game_time = utils.seconds_to_min_sec(
+                            response.json()['gameData']['gameTime'])
+                except:
+                    pass
+            msg = "Account: {}\n".format(_account)
+            msg = msg + "Status: {}\n".format(phase)
+            msg = msg + "Game Time: {}\n".format(game_time)
+            msg = msg + "Champ: {}\n".format(champ)
+            msg = msg + "Level: {}\n".format(level)
+            self.info = msg
+        self.info_update = True
+        threading.Timer(5, self._info_updater).start()
 
     @staticmethod
     def _set_dir(sender) -> None:
