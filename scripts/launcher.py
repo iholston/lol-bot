@@ -70,7 +70,7 @@ class Launcher:
             elif not utils.is_league_running() and utils.is_rc_running():
 
                 # Get session state
-                self.connection.connect_rc()
+                self.connection.set_rc_headers()
                 r = self.connection.request("get", "/rso-auth/v1/authorization/access-token")
 
                 # Already logged in

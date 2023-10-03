@@ -1,327 +1,176 @@
-import dearpygui.dearpygui as dpg
 import ctypes
 import os
 import subprocess
-import datetime
 import webbrowser
-import constants
+import multiprocessing
 import ast
 import json
-import threading
 import shutil
+from datetime import datetime
+import dearpygui.dearpygui as dpg
+import api
+import constants
+import account
+from client import Client
+
 
 class Gui:
     """Class that displays the gui"""
 
     def __init__(self, width: int, height: int) -> None:
         user32 = ctypes.windll.user32
-        f = open(constants.LOCAL_ACCOUNTS_PATH)
-        self.screen_w = user32.GetSystemMetrics(78)
-        self.screen_h = user32.GetSystemMetrics(79)
+        self.accounts = account.get_all_accounts()
+        self.message_queue = multiprocessing.Queue()
+        self.connection = api.Connection()
+        self.bot_thread = None
         self.width = width
         self.height = height
+        self.x_pos = int(int(user32.GetSystemMetrics(78)) / 2 + self.width)
+        self.y_pos = int(int(user32.GetSystemMetrics(79)) / 2 - self.height / 2)
+
         self.tab_bar = None
-
-        # Status Tab
         self.status_tab = None
-
+        self.info_update = True
+        self.info = "Initializing"
+        self.output_queue = []
         self.accounts_tab = None
-        self.account_label_widget = None
-        self.input_username_widget = None
-        self.input_password_widget = None
-        self.accounts_group = None
-
+        self.accounts_table = None
         self.logs_tab = None
-        self.log_group = None
-
+        self.logs_group = None
         self.settings_tab = None
-        self.about_tab = None
-
-        # Widgets
-        self.start_button_widget = None
-        self.path_feedback_widget = None
-        self.color_picker_widget = None
-        self.bot_status_text_widget = None
-
-        # Vars
-        self.red = (220, 20, 60)
-        self.green = (124, 252, 0)
         self.color = ast.literal_eval(constants.TEXT_COLOR)
         self.color_update = False
-        self.account_max_level = constants.ACCOUNT_MAX_LEVEL
-        self.accounts = json.load(f)
-
-        # Init
+        self.color_editable = []
+        self.about_tab = None
         dpg.create_context()
 
     def render(self):
-        with dpg.window(label='',
-                        tag='primary window',
-                        width=self.width,
-                        height=self.height,
-                        no_move=True,
-                        no_resize=True,
-                        no_title_bar=True):
+        """Displays dpg gui"""
+        with dpg.window(label='', tag='primary window', width=self.width, height=self.height, no_move=True, no_resize=True, no_title_bar=True):
             with dpg.tab_bar() as self.tab_bar:
-                self._create_status_tab()
-                self._create_accounts_tab()
-                self._create_logs_tab()
-                self._create_settings_tab()
-                self._create_about_tab()
-        dpg.create_viewport(title='LoL Bot',
-                            width=self.width,
-                            height=self.height,
-                            small_icon='a.ico',
-                            large_icon='b.ico',
-                            resizable=False,
-                            x_pos=int(int(self.screen_w)/2 + self.width),
-                            y_pos=int(int(self.screen_h)/2 - self.height/2)
-                            )
-        self._set_color()
+                self.create_status_tab()
+                self.create_accounts_tab()
+                self.create_logs_tab()
+                self.create_settings_tab()
+                self.create_about_tab()
+        dpg.create_viewport(title='LoL Bot', width=self.width, height=self.height, small_icon='a.ico', large_icon='b.ico', resizable=False, x_pos=self.x_pos, y_pos=self.y_pos)
         dpg.setup_dearpygui()
         dpg.show_viewport()
         dpg.set_primary_window('primary window', True)
         while dpg.is_dearpygui_running():
             self._updater()
             dpg.render_dearpygui_frame()
+        dpg.destroy_context()
 
-
-    def _create_status_tab(self):
-        with dpg.tab(label="Status") as self.status_tab:
+    def create_status_tab(self) -> None:
+        """Creates Status Tab"""
+        with dpg.tab(label="Bot") as self.status_tab:
             dpg.add_spacer()
+            self.color_editable.append(dpg.add_text(default_value="Controls", color=self.color))
             with dpg.group(horizontal=True):
-                dpg.add_input_text(
-                    default_value='Bot Status',
-                    width=90,
-                    enabled=False
-                )
-                dpg.add_text(
-                    tag="StatusText",
-                    default_value="Ready to run",
-                    color=self.green
-                )
-            dpg.add_spacer()
-            dpg.add_text("Controls")
-            with dpg.group(horizontal=True):
-                dpg.add_button(label='Start', width=90)
-                dpg.add_button(label='Pause', width=90)
+                dpg.add_button(label='Start', width=90, callback=self._start_bot)
+                dpg.add_button(label='Stop', width=90, callback=self._stop_bot)
                 dpg.add_button(label='Update Path', width=90, callback=lambda: dpg.set_value(self.tab_bar, self.settings_tab))
             dpg.add_spacer()
-            dpg.add_text(tag="Output", default_value="Output")
-            dpg.add_input_text(multiline=True, default_value="", height=235, width=568, tab_input=True)
+            self.color_editable.append(dpg.add_text(default_value="Info", color=self.color))
+            dpg.add_input_text(tag="Info", multiline=True, default_value="Initializing...", height=72, width=568, tab_input=True)
+            dpg.add_spacer()
+            self.color_editable.append(dpg.add_text(default_value="Output", color=self.color))
+            dpg.add_input_text(tag="Output", multiline=True, default_value="", height=162, width=568, enabled=False)
 
-    def _create_accounts_tab(self):
+    def _start_bot(self) -> None:
+        """Starts bot process"""
+        self.bot_thread = multiprocessing.Process(target=Client, args=(self.message_queue,))
+        self.bot_thread.start()
+
+    def _stop_bot(self) -> None:
+        """Stops bot process"""
+        if self.bot_thread is not None:
+            self.bot_thread.terminate()
+            self.bot_thread.join()
+            self.message_queue.put("\nBot Successfully Terminated")
+
+    def create_accounts_tab(self) -> None:
+        """Creates Accounts Tab"""
         with dpg.tab(label="Accounts") as self.accounts_tab:
             dpg.add_spacer()
-            dpg.add_text(tag="AccountsLabel", default_value="Add New Account", color=self.color)
+            with dpg.window(label="Add New Account", modal=True, show=False, tag="AccountSubmit", height=90, width=250, pos=[155, 110]):
+                dpg.add_input_text(tag="UsernameField", hint="Username", width=234)
+                dpg.add_input_text(tag="PasswordField", hint="Password", width=234)
+                with dpg.group(horizontal=True):
+                    dpg.add_button(label="Submit", width=113, callback=self._add_account)
+                    dpg.add_button(label="Cancel", width=113, callback=lambda: dpg.configure_item("AccountSubmit", show=False))
             with dpg.group(horizontal=True):
-                dpg.add_input_text(
-                    default_value='Username',
-                    width=100,
-                    enabled=False
-                )
-                self.new_username_text_widget = dpg.add_input_text(
-                    width=350,
-                )
-            with dpg.group(horizontal=True):
-                dpg.add_input_text(
-                    default_value='Password',
-                    width=100,
-                    enabled=False
-                )
-                self.new_password_text_widget = dpg.add_input_text(
-                    width=350,
-                )
-            with dpg.group(horizontal=True):
-                dpg.add_button(
-                    label='Submit',
-                    width=100,
-                    callback=self._submit_account
-                )
-                dpg.add_button(
-                    label='Show in File Explorer',
-                    callback=lambda: subprocess.Popen(
-                        'explorer /select, {}'.format(os.path.dirname(os.getcwd()) + '\\resources\\accounts.json')),
-                    width=350
-                )
+                dpg.add_button(label="Add New Account", width=280, callback=lambda: dpg.configure_item("AccountSubmit", show=True))
+                dpg.add_button(label="Show in File Explorer", width=280, callback=lambda: subprocess.Popen('explorer /select, {}'.format(os.path.dirname(os.getcwd()) + '\\resources\\accounts.json')))
             dpg.add_spacer()
-            dpg.add_spacer()
-            dpg.add_separator()
-            dpg.add_spacer()
-            dpg.add_spacer()
-            with dpg.collapsing_header(label="All Accounts", indent=3) as self.accounts_group:
-                for account in reversed(self.accounts['accounts']):
-                    with dpg.group(horizontal=True):
-                        dpg.add_input_text(
-                            default_value=account['username'],
-                            width=150,
-                            enabled=False
-                        )
-                        dpg.add_input_text(
-                            default_value=account['password'],
-                            width=150,
-                            enabled=False
-                        )
-                        dpg.add_input_text(
-                            default_value=account['leveled'],
-                            width=150,
-                            enabled=False
-                        )
+            self.create_accounts_table()
 
-    def _create_logs_tab(self) -> None:
+    def create_accounts_table(self) -> None:
+        """Creates a table from account data"""
+        if self.accounts_table is not None:
+            dpg.delete_item(self.accounts_table)
+            dpg.delete_item("AccountsNote")
+        with dpg.table(row_background=True, resizable=True,
+                       borders_innerV=True, borders_outerV=True, borders_innerH=True, scrollY=True,
+                       borders_outerH=True, parent=self.accounts_tab, height=275) as self.accounts_table:
+            dpg.add_table_column(label="Username", width_stretch=True)
+            dpg.add_table_column(label="Password", width_stretch=True)
+            dpg.add_table_column(label="Leveled")
+            for _account in reversed(self.accounts['accounts']):
+                with dpg.table_row():
+                    dpg.add_text(_account['username'])
+                    dpg.add_text(_account['password'])
+                    dpg.add_text(_account['leveled'])
+        self.color_editable.append(dpg.add_text(tag="AccountsNote", parent=self.accounts_tab, indent=1, wrap=560, default_value='To edit/copy account information, click "Show in Finder" and edit/copy information from the accounts.json file'))
+
+    def _add_account(self) -> None:
+        """Adds a new account to accounts.json and updates gui"""
+        dpg.configure_item("Account Submit", show=False)
+        account.add_account({"username": dpg.get_value("UsernameField"), "password": dpg.get_value("PasswordField"), "leveled": False})
+        dpg.configure_item("UsernameField", default_value="")
+        dpg.configure_item("PasswordField", default_value="")
+        self.create_accounts_table()
+
+    def create_logs_tab(self) -> None:
         """Creates Log Tab"""
         with dpg.tab(label="Logs") as self.logs_tab:
+            with dpg.window(label="Delete Files", modal=True, show=False, tag="DeleteFiles", pos=[115, 130]):
+                dpg.add_text("All files in the logs folder will be deleted")
+                dpg.add_separator()
+                dpg.add_spacer()
+                dpg.add_spacer()
+                dpg.add_spacer()
+                with dpg.group(horizontal=True, indent=75):
+                    dpg.add_button(label="OK", width=75, callback=self._clear_logs)
+                    dpg.add_button(label="Cancel", width=75, callback=lambda: dpg.configure_item("DeleteFiles", show=False))
+            dpg.add_spacer()
             with dpg.group(horizontal=True):
-                dpg.add_text(tag="LogUpdatedTime", default_value='Last Updated: {}'.format(datetime.datetime.now()))
-                dpg.add_button(label='Update', callback=self._refresh_logs)
-                dpg.add_button(label='Clear', callback=self._clear_logs)
-                dpg.add_button(
-                    label='Show in File Explorer',
-                    callback=lambda: subprocess.Popen(
-                        'explorer /select, {}'.format(os.path.dirname(os.getcwd()) + '\\logs\\')),
-                )
+                self.color_editable.append(dpg.add_text(tag="LogUpdatedTime", default_value='Last Updated: {}'.format(datetime.now()), color=self.color))
+                dpg.add_button(label='Update', callback=self.create_log_table)
+                dpg.add_button(label='Clear', callback=lambda: dpg.configure_item("DeleteFiles", show=True))
+                dpg.add_button(label='Show in File Explorer', callback=lambda: subprocess.Popen('explorer /select, {}'.format(os.path.dirname(os.getcwd()) + '\\logs\\')))
             dpg.add_spacer()
             dpg.add_separator()
             dpg.add_spacer()
-            self._refresh_logs()
+            self.create_log_table()
 
-    def _create_settings_tab(self) -> None:
-        """Creates Setttings Tab"""
-        with dpg.tab(label="Settings") as self.settings_tab:
-            dpg.add_spacer()
-            dpg.add_text(
-                tag="SettingsLabel",
-                default_value="You may need/want to update some of these values",
-                color=self.color
-            )
-            dpg.add_text(
-                tag="LeagueDirDialog",
-                default_value="Your League Installation Path is VALID",
-                color=self.green
-            )
-            dpg.add_spacer()
-            dpg.add_separator()
-            dpg.add_spacer()
-            with dpg.group(horizontal=True):
-                dpg.add_input_text(
-                    default_value='League Installation Path',
-                    width=180,
-                    enabled=False
-                )
-                dpg.add_input_text(
-                    default_value=constants.LEAGUE_CLIENT_DIR,
-                    width=350,
-                    callback=self._set_dir
-                )
-            with dpg.group(horizontal=True):
-                dpg.add_input_text(
-                    default_value='Game Mode',
-                    width=180,
-                    enabled=False
-                )
-                dpg.add_combo(
-                    items=['Intro', 'Beginner', 'Intermediate'],
-                    default_value='Beginner',
-                    width=350,
-                    callback=self._set_mode
-                )
-            with dpg.group(horizontal=True):
-                dpg.add_input_text(
-                    default_value='Account Max Level',
-                    width=180,
-                    enabled=False
-                )
-                dpg.add_input_int(
-                    default_value=constants.ACCOUNT_MAX_LEVEL,
-                    min_value=0,
-                    step=1,
-                    width=350,
-                    callback=self._set_level
-                )
-            with dpg.group(horizontal=True):
-                dpg.add_input_text(
-                    default_value='App Text Color',
-                    width=180,
-                    enabled=False
-                )
-                with dpg.tree_node(label='Color', selectable=False):
-                    dpg.add_color_picker(
-                        self.color,
-                        tag="ColorPicker",
-                        label="Color Picker",
-                        width=200,
-                        callback=self._set_color
-                    )
-
-    def _create_about_tab(self) -> None:
-        """Creates About Tab"""
-        with dpg.tab(label="About") as self.about_tab:
-            dpg.add_spacer()
-            with dpg.group(horizontal=True):
-                dpg.add_input_text(
-                    default_value='Version',
-                    width=100,
-                    enabled=False
-                )
-                dpg.add_text(constants.VERSION)
-            with dpg.group(horizontal=True):
-                dpg.add_input_text(
-                    default_value='Github',
-                    width=100,
-                    enabled=False
-                )
-                dpg.add_button(
-                    label='www.github.com/iholston/lol-bot',
-                    callback=lambda: webbrowser.open('www.github.com/iholston/lol-bot'))
-
-    def _submit_account(self) -> None:
-        """Adds a new account to accounts.json and updates gui"""
-        self.accounts['accounts'].append({"username": dpg.get_value(self.new_username_text_widget),
-                                          "password": dpg.get_value(self.new_password_text_widget),
-                                          "leveled": False
-                                          })
-        dpg.configure_item(self.new_username_text_widget, default_value="")
-        dpg.configure_item(self.new_password_text_widget, default_value="")
-        with open(constants.LOCAL_ACCOUNTS_PATH, 'w') as outfile:
-            outfile.write(json.dumps(self.accounts))
-        dpg.configure_item("AccountsLabel", default_value="Account Successfully Added")
-        threading.Timer(3.0, lambda: dpg.configure_item("AccountsLabel", default_value="Add New Account")).start()
-        dpg.delete_item(self.accounts_group)
-        with dpg.collapsing_header(label="All Accounts", indent=3, parent=self.accounts_tab) as self.accounts_group:
-            for account in reversed(self.accounts['accounts']):
-                with dpg.group(horizontal=True):
-                    dpg.add_input_text(
-                        default_value=account['username'],
-                        width=150,
-                        enabled=False
-                    )
-                    dpg.add_input_text(
-                        default_value=account['password'],
-                        width=150,
-                        enabled=False
-                    )
-                    dpg.add_input_text(
-                        default_value=account['leveled'],
-                        width=150,
-                        enabled=False
-                    )
-
-    def _refresh_logs(self) -> None:
-        """Reads the logs folder and repopulates the logs tab"""
-        if self.log_group is not None:
-            dpg.delete_item(self.log_group)
-        dpg.set_value('LogUpdatedTime', 'Last Updated: {}'.format(datetime.datetime.now()))
-        with dpg.group(parent=self.logs_tab) as self.group:
+    def create_log_table(self) -> None:
+        """Reads in logs from the logs folder and populates the logs tab"""
+        if self.logs_group is not None:
+            dpg.delete_item(self.logs_group)
+        dpg.set_value('LogUpdatedTime', 'Last Updated: {}'.format(datetime.now()))
+        with dpg.group(parent=self.logs_tab) as self.logs_group:
             for filename in os.listdir(constants.LOCAL_LOG_PATH):
                 f = os.path.join(constants.LOCAL_LOG_PATH, filename)
                 if os.path.isfile(f):
-                    with dpg.collapsing_header(label=filename, indent=3):
+                    with dpg.collapsing_header(label=filename):
                         f = open(f, "r")
                         dpg.add_input_text(multiline=True, default_value=f.read(), height=300, width=600, tab_input=True)
 
-    @staticmethod
     def _clear_logs(self) -> None:
         """Empties the log folder"""
+        dpg.configure_item("DeleteFiles", show=False)
         folder = constants.LOCAL_LOG_PATH
         for filename in os.listdir(folder):
             file_path = os.path.join(folder, filename)
@@ -332,19 +181,80 @@ class Gui:
                     shutil.rmtree(file_path)
             except Exception as e:
                 print('Failed to delete %s. Reason: %s' % (file_path, e))
+        self.create_log_table()
 
+    def create_settings_tab(self) -> None:
+        """Creates Settings Tab"""
+        with dpg.tab(label="Settings") as self.settings_tab:
+            dpg.add_spacer()
+            with dpg.group(horizontal=True):
+                dpg.add_button(label='Setting', enabled=False, width=180)
+                dpg.add_button(label="Value", enabled=False, width=380)
+            dpg.add_spacer()
+            dpg.add_spacer()
+            with dpg.group(horizontal=True):
+                dpg.add_input_text(default_value='League Installation Path', width=180, enabled=False)
+                dpg.add_input_text(default_value=constants.LEAGUE_CLIENT_DIR, width=380, callback=self._set_dir)
+            with dpg.group(horizontal=True):
+                dpg.add_input_text(default_value='Game Mode', width=180, enabled=False)
+                dpg.add_combo(items=['Intro', 'Beginner', 'Intermediate'], default_value='Beginner', width=380, callback=self._set_mode)
+            with dpg.group(horizontal=True):
+                dpg.add_input_text(default_value='Account Max Level', width=180, enabled=False)
+                dpg.add_input_int(default_value=constants.ACCOUNT_MAX_LEVEL, min_value=0, step=1, width=380, callback=self._set_level)
+            with dpg.group(horizontal=True):
+                dpg.add_input_text(default_value='App Text Color', width=180, enabled=False)
+                with dpg.tree_node(label='Color Picker', selectable=False):
+                    dpg.add_color_picker(self.color, tag="ColorPicker", width=150, callback=self._update_color, no_side_preview=True)
 
-    def _set_dir(self, sender) -> None:
+    def _update_color(self, sender) -> None:
+        """Sets text color"""
+        constants.TEXT_COLOR = str(dpg.get_value(sender))
+        self.color = dpg.get_value(sender)
+        self.color_update = True
+        constants.persist()
+
+    def create_about_tab(self) -> None:
+        """Creates About Tab"""
+        with dpg.tab(label="About") as self.about_tab:
+            dpg.add_spacer()
+            with dpg.group(horizontal=True):
+                dpg.add_button(label='Version', width=100, enabled=False)
+                self.color_editable.append(dpg.add_text(default_value=constants.VERSION, color=self.color))
+            with dpg.group(horizontal=True):
+                dpg.add_button(label='Github', width=100, enabled=False)
+                dpg.add_button(label='www.github.com/iholston/lol-bot', callback=lambda: webbrowser.open('www.github.com/iholston/lol-bot'))
+            dpg.add_spacer()
+            dpg.add_input_text(multiline=True, default_value=self._notes_text(), height=288, width=568, enabled=False)
+
+    def _updater(self) -> None:
+        """Updates gui each frame, displays up to date bot info"""
+        if not self.message_queue.empty():
+            display_message = ""
+            self.output_queue.append(self.message_queue.get())
+            if len(self.output_queue) > 12:
+                self.output_queue.pop(0)
+            for msg in self.output_queue:
+                display_message += msg + "\n"
+            dpg.configure_item("Output", default_value=display_message)
+        if self.info_update:
+            self.info_update = False
+            dpg.configure_item("Info", default_value=self.info)
+        if self.color_update:
+            self.color_update = False
+            for item in self.color_editable:
+                dpg.configure_item(item, color=self.color)
+
+    @staticmethod
+    def _set_dir(sender) -> None:
         """Checks if directory exists and sets the Client Directory path"""
         constants.LEAGUE_CLIENT_DIR = dpg.get_value(sender)
         if os.path.exists(constants.LEAGUE_CLIENT_DIR):
             constants.persist()
 
     @staticmethod
-    def _set_mode(self, sender) -> None:
+    def _set_mode(sender) -> None:
         """Sets the game mode"""
-        mode = dpg.get_value(sender)
-        match mode:
+        match dpg.get_value(sender):
             case "Intro":
                 constants.GAME_LOBBY_ID = 830
             case "Beginner":
@@ -354,27 +264,12 @@ class Gui:
         constants.persist()
 
     @staticmethod
-    def _set_level(self, sender) -> None:
+    def _set_level(sender) -> None:
         """Sets account max level"""
         constants.ACCOUNT_MAX_LEVEL = dpg.get_value(sender)
         constants.persist()
 
-    def _set_color(self) -> None:
-        """Sets text color"""
-        constants.TEXT_COLOR = str(dpg.get_value(self.color_picker_widget))
-        self.color = dpg.get_value(self.color_picker_widget)
-        self.color_update = True
-        constants.persist()
-
-    def _updater(self) -> None:
-        """Updates gui each frame"""
-
-        # Check if League Path is correct
-        if not os.path.exists(constants.LEAGUE_CLIENT_DIR):
-            dpg.configure_item("StatusText", default_value="League Path is Invalid", color=self.red)
-            dpg.configure_item("LeagueDirDialog", default_value="Your League Installation Path is INVALID", color=self.red)
-        else:
-            dpg.configure_item("StatusText", default_value="Ready to Run", color=self.color)
-            dpg.configure_item("LeagueDirDialog", default_value="Your League Installation Path is VALID", color=self.color)
-
-        # Update Text Colors
+    @staticmethod
+    def _notes_text() -> str:
+        """Sets text in About Text box"""
+        return "\t\t\t\t\t\t\t\t\tNotes\n\nIf you have any problems create an issue on the github repo\nLeave a star maybe <3\n\nKnown Issues:\n\n- Item buying issue for non-english clients"

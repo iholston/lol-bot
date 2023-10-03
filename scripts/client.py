@@ -9,12 +9,13 @@ import inspect
 import pyautogui
 import utils
 import api
-import account
 import launcher
+import account
 from time import sleep
 from datetime import datetime, timedelta
 from constants import *
 from game import Game
+from gui_updater import MultiProcessLogHandler
 
 
 class ClientError(Exception):
@@ -29,10 +30,11 @@ class ClientError(Exception):
 class Client:
     """Client class that handles the League Client and all tasks needed to start a new game"""
 
-    def __init__(self) -> None:
+    def __init__(self, message_queue) -> None:
         self.connection = api.Connection()
-        self.log = logging.getLogger(__name__)
         self.launcher = launcher.Launcher()
+        self.log = logging.getLogger(__name__)
+        self.handler = MultiProcessLogHandler(message_queue)
         self.username = ""
         self.password = ""
         self.account_level = 0
@@ -40,7 +42,9 @@ class Client:
         self.prev_phase = None
         self.client_errors = 0
         self.phase_errors = 0
+        self.handler.set_logs()
         utils.print_ascii()
+        self.account_loop()
 
     def account_loop(self) -> None:
         """Main loop, gets an account, launches league, levels the account, and repeats"""
@@ -58,10 +62,12 @@ class Client:
                     raise ClientError("Max errors reached.Exiting")
                 utils.close_processes()
             except launcher.LauncherError as le:
+                pyautogui.alert(le)
                 self.log.error(le.__str__())
                 self.log.error(traceback.print_exc())
                 return
             except Exception as e:
+                pyautogui.alert(e)
                 self.log.error(e)
                 self.log.error(traceback.print_exc())
                 return
