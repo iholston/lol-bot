@@ -16,12 +16,12 @@ class MultiProcessLogHandler(logging.Handler):
         msg = self.format(record)
         self.message_queue.put(msg)
 
-    def set_logs(self):
+    def set_logs(self) -> None:
         log_dir = os.path.join(os.path.normpath(os.getcwd() + os.sep + os.pardir), 'logs')
         if not os.path.exists(log_dir):
             os.makedirs(log_dir)
 
-        filename = os.path.join(log_dir, datetime.now().strftime('%d%m%Y_%H%M_log.log'))
+        filename = os.path.join(log_dir, datetime.now().strftime('%d%m%Y_%H%M.log'))
         formatter = logging.Formatter(fmt='[%(asctime)s] [%(levelname)-7s] [%(funcName)-21s] %(message)s', datefmt='%d %b %Y %H:%M:%S')
         logging.getLogger().setLevel(logging.DEBUG)
 

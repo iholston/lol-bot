@@ -39,4 +39,7 @@ def add_account(account) -> None:
 
 def get_all_accounts() -> dict:
     """Returns all account information"""
+    global data
+    with open(accounts_path, 'r') as f:
+        data = json.load(f)
     return data

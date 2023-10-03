@@ -77,7 +77,7 @@ class Gui:
                 dpg.add_button(label='Update Path', width=90, callback=lambda: dpg.set_value(self.tab_bar, self.settings_tab))
             dpg.add_spacer()
             self.color_editable.append(dpg.add_text(default_value="Info", color=self.color))
-            dpg.add_input_text(tag="Info", multiline=True, default_value="Initializing...", height=72, width=568, tab_input=True)
+            dpg.add_input_text(tag="Info", enabled=False, multiline=True, default_value="Initializing...", height=72, width=568, tab_input=True)
             dpg.add_spacer()
             self.color_editable.append(dpg.add_text(default_value="Output", color=self.color))
             dpg.add_input_text(tag="Output", multiline=True, default_value="", height=162, width=568, enabled=False)
@@ -105,8 +105,9 @@ class Gui:
                     dpg.add_button(label="Submit", width=113, callback=self._add_account)
                     dpg.add_button(label="Cancel", width=113, callback=lambda: dpg.configure_item("AccountSubmit", show=False))
             with dpg.group(horizontal=True):
-                dpg.add_button(label="Add New Account", width=280, callback=lambda: dpg.configure_item("AccountSubmit", show=True))
-                dpg.add_button(label="Show in File Explorer", width=280, callback=lambda: subprocess.Popen('explorer /select, {}'.format(os.path.dirname(os.getcwd()) + '\\resources\\accounts.json')))
+                dpg.add_button(label="Add New Account", width=184, callback=lambda: dpg.configure_item("AccountSubmit", show=True))
+                dpg.add_button(label="Show in File Explorer", width=184, callback=lambda: subprocess.Popen('explorer /select, {}'.format(os.path.dirname(os.getcwd()) + '\\resources\\accounts.json')))
+                dpg.add_button(label="Refresh", width=184, callback=self.create_accounts_table)
             dpg.add_spacer()
             self.create_accounts_table()
 
@@ -115,6 +116,7 @@ class Gui:
         if self.accounts_table is not None:
             dpg.delete_item(self.accounts_table)
             dpg.delete_item("AccountsNote")
+            self.accounts = account.get_all_accounts()
         with dpg.table(row_background=True, resizable=True,
                        borders_innerV=True, borders_outerV=True, borders_innerH=True, scrollY=True,
                        borders_outerH=True, parent=self.accounts_tab, height=275) as self.accounts_table:
