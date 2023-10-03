@@ -15,7 +15,7 @@ from time import sleep
 from datetime import datetime, timedelta
 from constants import *
 from game import Game
-from gui_updater import MultiProcessLogHandler
+from handler import MultiProcessLogHandler
 
 
 class ClientError(Exception):
