@@ -6,4 +6,5 @@ py -m pip install pywin32
 py -m pip install pyautogui
 py -m pip install requests
 py -m pip install urllib3
+py -m pip install dearpygui
 

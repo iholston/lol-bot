@@ -11,7 +11,6 @@ from time import sleep
 from win32gui import FindWindow, GetWindowRect
 from constants import *
 
-
 log = logging.getLogger(__name__)
 
 class WindowNotFound(Exception):
@@ -33,6 +32,14 @@ def is_rc_running() -> bool:
     for name in RIOT_CLIENT_PROCESS_NAMES:
         if name in output:
             return True
+    return False
+
+def is_game_running() -> bool:
+    """Checks if game process exists"""
+    res = subprocess.check_output(["TASKLIST"], creationflags=0x08000000)
+    output = str(res)
+    if "League of Legends.exe" in output:
+        return True
     return False
 
 def close_processes() -> None:

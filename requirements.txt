@@ -4,3 +4,4 @@ pywin32
 pyautogui
 requests
 urllib3
+dearpygui
