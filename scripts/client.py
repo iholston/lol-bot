@@ -67,7 +67,6 @@ class Client:
                 self.log.error(traceback.print_exc())
                 return
             except Exception as e:
-                pyautogui.alert(e)
                 self.log.error(e)
                 self.log.error(traceback.print_exc())
                 return

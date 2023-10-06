@@ -34,9 +34,14 @@ class Gui:
         self.status_tab = None
         self.info_update = True
         self.info = "Initializing"
+        self.info_terminate = False
         self.output_queue = []
         self.accounts_tab = None
         self.accounts_table = None
+        self.https_tab = None
+        self.ratio_tab = None
+        self.capture_tab = None
+        self.lcu_tab = None
         self.logs_tab = None
         self.logs_group = None
         self.settings_tab = None
@@ -52,6 +57,9 @@ class Gui:
             with dpg.tab_bar() as self.tab_bar:
                 self.create_status_tab()
                 self.create_accounts_tab()
+                self.create_https_tab()
+                self.create_capture_tab()
+                self.create_ratio_tab()
                 self.create_logs_tab()
                 self.create_settings_tab()
                 self.create_about_tab()
@@ -65,6 +73,7 @@ class Gui:
             dpg.render_dearpygui_frame()
         dpg.destroy_context()
         self._stop_bot()
+        self.info_terminate = True
 
     def create_status_tab(self) -> None:
         """Creates Status Tab"""
@@ -74,16 +83,21 @@ class Gui:
             with dpg.group(horizontal=True):
                 dpg.add_button(label='Start', width=90, callback=self._start_bot)
                 dpg.add_button(label='Stop', width=90, callback=self._stop_bot)
+                dpg.add_button(label='Close Client', width=90)
+                dpg.add_button(label="Restart UX", width=90)
                 dpg.add_button(label='Update Path', width=90, callback=lambda: dpg.set_value(self.tab_bar, self.settings_tab))
             dpg.add_spacer()
             self.color_editable.append(dpg.add_text(default_value="Info", color=self.color))
-            dpg.add_input_text(tag="Info", enabled=False, multiline=True, default_value="Initializing...", height=72, width=568, tab_input=True)
+            dpg.add_input_text(tag="Info", readonly=True, multiline=True, default_value="Initializing...", height=72, width=568, tab_input=True)
             dpg.add_spacer()
             self.color_editable.append(dpg.add_text(default_value="Output", color=self.color))
             dpg.add_input_text(tag="Output", multiline=True, default_value="", height=162, width=568, enabled=False)
 
     def _start_bot(self) -> None:
         """Starts bot process"""
+        if not os.path.exists(constants.LEAGUE_CLIENT_DIR):
+            dpg.configure_item("Info", default_value="League Path is Invalid. Update Path to start bot")
+            return
         self.bot_thread = multiprocessing.Process(target=Client, args=(self.message_queue,))
         self.bot_thread.start()
 
@@ -92,11 +106,15 @@ class Gui:
         if self.bot_thread is not None:
             self.bot_thread.terminate()
             self.bot_thread.join()
+            self.bot_thread = None
             self.message_queue.put("\nBot Successfully Terminated")
 
     def create_accounts_tab(self) -> None:
         """Creates Accounts Tab"""
         with dpg.tab(label="Accounts") as self.accounts_tab:
+            with dpg.theme(tag="clear_background"):
+                with dpg.theme_component(dpg.mvInputText):
+                    dpg.add_theme_color(dpg.mvThemeCol_FrameBg, [0, 0, 0, 0])
             dpg.add_spacer()
             with dpg.window(label="Add New Account", modal=True, show=False, tag="AccountSubmit", height=90, width=250, pos=[155, 110]):
                 dpg.add_input_text(tag="UsernameField", hint="Username", width=234)
@@ -125,9 +143,12 @@ class Gui:
             dpg.add_table_column(label="Leveled")
             for _account in reversed(self.accounts['accounts']):
                 with dpg.table_row():
-                    dpg.add_text(_account['username'])
-                    dpg.add_text(_account['password'])
-                    dpg.add_text(_account['leveled'])
+                    dpg.add_input_text(default_value=_account['username'])
+                    dpg.bind_item_theme(dpg.last_item(), "clear_background")
+                    dpg.add_input_text(default_value=_account['password'])
+                    dpg.bind_item_theme(dpg.last_item(), "clear_background")
+                    dpg.add_input_text(default_value=_account['leveled'])
+                    dpg.bind_item_theme(dpg.last_item(), "clear_background")
         self.color_editable.append(dpg.add_text(tag="AccountsNote", parent=self.accounts_tab, indent=1, wrap=560, default_value='To edit/copy account information, click "Show in Finder" and edit/copy information from the accounts.json file'))
 
     def _add_account(self) -> None:
@@ -137,6 +158,78 @@ class Gui:
         dpg.configure_item("UsernameField", default_value="")
         dpg.configure_item("PasswordField", default_value="")
         self.create_accounts_table()
+
+    def create_https_tab(self) -> None:
+        """Creates HTTPS tab"""
+        with dpg.tab(label="HTTP") as self.https_tab:
+            with dpg.theme(tag="__demo_hyperlinkTheme"):
+                with dpg.theme_component(dpg.mvButton):
+                    dpg.add_theme_color(dpg.mvThemeCol_Button, [0, 0, 0, 0])
+                    dpg.add_theme_color(dpg.mvThemeCol_ButtonActive, [0, 0, 0, 0])
+                    dpg.add_theme_color(dpg.mvThemeCol_ButtonHovered, [29, 151, 236, 25])
+                    dpg.add_theme_color(dpg.mvThemeCol_Text, [29, 151, 236])
+            dpg.add_text("Method:")
+            dpg.add_combo(items=['GET', 'POST', 'DELETE'], default_value='GET', width=569)
+            dpg.add_text("URL:")
+            dpg.add_input_text(width=568)
+            dpg.add_text("Body:")
+            dpg.add_input_text(width=568, height=84, multiline=True)
+            dpg.add_spacer()
+            with dpg.group(horizontal=True):
+                dpg.add_button(label="Send Request")
+                dpg.add_button(label="Format JSON")
+                dpg.add_spacer(width=110)
+                dpg.add_text("Endpoints list: ")
+                lcu = dpg.add_button(label="LCU", callback=lambda: webbrowser.open("https://lcu.kebs.dev/"))
+                with dpg.tooltip(dpg.last_item()):
+                    dpg.add_text("Open https://lcu.kebs.dev/ in webbrowser")
+                dpg.bind_item_theme(lcu, "__demo_hyperlinkTheme")
+                dpg.add_text("|")
+                rcu = dpg.add_button(label="Riot Client", callback=lambda: webbrowser.open("https://riotclient.kebs.dev/"))
+                with dpg.tooltip(dpg.last_item()):
+                    dpg.add_text("Open https://riotclient.kebs.dev/ in webbrowser")
+                dpg.bind_item_theme(rcu, "__demo_hyperlinkTheme")
+            dpg.add_spacer()
+            with dpg.group(horizontal=True):
+                dpg.add_text("Response")
+                dpg.add_button(label="Copy to Clipboard")
+            dpg.add_input_text(width=568, height=85, multiline=True)
+
+    def create_capture_tab(self):
+        with dpg.tab(label="Capture") as self.capture_tab:
+            dpg.add_spacer()
+            with dpg.group(horizontal=True):
+                dpg.add_text("Blacklist")
+                with dpg.tooltip(dpg.last_item()):
+                    dpg.add_text("URLs you don't want to see")
+                dpg.add_spacer()
+                dpg.add_button(label="Restore Default Blacklist")
+            dpg.add_input_text(default_value="/lol-game-data/assets\n/lol-hovercard\n/lol-clash\n/lol-challenges\n/data-store\n/lol-patch\n/patcher\n/lol-tft\n/lol-chat\n/lol-regalia", width=568, height=100, multiline=True)
+            dpg.add_spacer()
+            with dpg.group(horizontal=True):
+                dpg.add_button(label="Capture")
+                dpg.add_checkbox(label="Wrap Text")
+            dpg.add_input_text(width=568, height=184, multiline=True)
+
+    def create_ratio_tab(self):
+        with dpg.tab(label="Ratio") as self.https_tab:
+            dpg.add_text("Build Ratio")
+            dpg.add_combo(items=['Riot Client', 'League Client', 'Game'], default_value='League Client', width=500)
+            dpg.add_spacer()
+            with dpg.group(horizontal=True):
+                dpg.add_input_text(default_value="Start capture and left-click in window to capture coordinates", multiline=True, width=500, height=105)
+                dpg.add_button(label="Capture", width=60)
+            dpg.add_spacer()
+            dpg.add_spacer()
+            dpg.add_spacer()
+            dpg.add_separator()
+            dpg.add_spacer()
+            dpg.add_text("Test Ratio")
+            dpg.add_combo(items=['Riot Client', 'League Client', 'Game'], default_value='League Client', width=500)
+            dpg.add_spacer()
+            with dpg.group(horizontal=True):
+                dpg.add_input_text(default_value="Add ratio with parenthesis, separate multiple with a comma\ni.e. (.2023, .3033), (.3333, .4444)", multiline=True, width=500, height=105)
+                dpg.add_button(label="Test", width=60)
 
     def create_logs_tab(self) -> None:
         """Creates Log Tab"""
@@ -202,13 +295,27 @@ class Gui:
                 dpg.add_input_text(default_value='League Installation Path', width=180, enabled=False)
                 dpg.add_input_text(default_value=constants.LEAGUE_CLIENT_DIR, width=380, callback=self._set_dir)
             with dpg.group(horizontal=True):
-                dpg.add_input_text(default_value='Game Mode', width=180, enabled=False)
+                dpg.add_input_text(default_value='Game Mode', width=180, readonly=True)
                 dpg.add_combo(items=['Intro', 'Beginner', 'Intermediate'], default_value='Beginner', width=380, callback=self._set_mode)
             with dpg.group(horizontal=True):
                 dpg.add_input_text(default_value='Account Max Level', width=180, enabled=False)
                 dpg.add_input_int(default_value=constants.ACCOUNT_MAX_LEVEL, min_value=0, step=1, width=380, callback=self._set_level)
             with dpg.group(horizontal=True):
-                dpg.add_input_text(default_value='App Text Color', width=180, enabled=False)
+                dpg.add_input_text(default_value='Champ Pick Order', width=180, enabled=False)
+                with dpg.tooltip(dpg.last_item()):
+                    dpg.add_text("If blank or if champs are taken, the bot\nwill select a random free to play champion.\nAdd champs with a comma between each number")
+                dpg.add_input_text(default_value="43, 54, 12, 21", width=334)
+                b = dpg.add_button(label="list")
+                with dpg.tooltip(dpg.last_item()):
+                    dpg.add_text("Open www.champlist.com in webbrowser")
+                dpg.bind_item_theme(b, "__demo_hyperlinkTheme")
+            with dpg.group(horizontal=True):
+                dpg.add_input_text(default_value='Ask for Mid Dialog', width=180, enabled=False)
+                with dpg.tooltip(dpg.last_item()):
+                    dpg.add_text("The bot will type a random phrase in the\nchamp select lobby")
+                dpg.add_input_text(default_value='mid ples\nplanning on going mid team\nmid por favor\nbienvenidos, mid\nhowdy, mid\ngoing mid\nmid', width=380, multiline=True, height=80)
+            with dpg.group(horizontal=True):
+                dpg.add_input_text(default_value='Highlight Color', width=180, enabled=False)
                 with dpg.tree_node(label='Color Picker', selectable=False):
                     dpg.add_color_picker(self.color, tag="ColorPicker", width=150, callback=self._update_color, no_side_preview=True)
 
@@ -224,11 +331,13 @@ class Gui:
         with dpg.tab(label="About") as self.about_tab:
             dpg.add_spacer()
             with dpg.group(horizontal=True):
-                dpg.add_button(label='Version', width=100, enabled=False)
+                dpg.add_button(label='Bot Version', width=100, enabled=False)
                 self.color_editable.append(dpg.add_text(default_value=constants.VERSION, color=self.color))
             with dpg.group(horizontal=True):
                 dpg.add_button(label='Github', width=100, enabled=False)
                 dpg.add_button(label='www.github.com/iholston/lol-bot', callback=lambda: webbrowser.open('www.github.com/iholston/lol-bot'))
+                with dpg.tooltip(dpg.last_item()):
+                    dpg.add_text("Open link in webbrowser")
             dpg.add_spacer()
             dpg.add_input_text(multiline=True, default_value=self._notes_text(), height=288, width=568, enabled=False)
 
@@ -242,6 +351,8 @@ class Gui:
             for msg in self.output_queue:
                 display_message += msg + "\n"
             dpg.configure_item("Output", default_value=display_message)
+            if "Bot Successfully Terminated" in display_message:
+                self.output_queue = []
         if self.info_update:
             self.info_update = False
             dpg.configure_item("Info", default_value=self.info)
@@ -257,6 +368,7 @@ class Gui:
         else:
             _account = "Unknown"
             phase = "None"
+            league_patch = "0.0.0"
             game_time = "-1"
             champ = "None"
             level = '-1'
@@ -266,12 +378,16 @@ class Gui:
                 r = self.connection.request('get', '/lol-summoner/v1/current-summoner')
                 if r.status_code == 200:
                     _account = r.json()['displayName']
-                    level = str(r.json()['summonerLevel']) + " " + str(r.json()['percentCompleteForNextLevel']) + "% xp to next level"
+                    level = str(r.json()['summonerLevel']) + " - " + str(r.json()['percentCompleteForNextLevel']) + "% to next level"
                 r = self.connection.request('get', '/lol-gameflow/v1/gameflow-phase')
                 if r.status_code == 200:
                     phase = r.json()
                     if phase == 'None':
                         phase = "In Main Menu"
+                    elif phase == 'Matchmaking':
+                        phase = 'In Queue'
+                    elif phase == 'Lobby':
+                        phase = '{Type} Lobby'
             except:
                 pass
             if utils.is_game_running() or phase == "InProgress":
@@ -285,19 +401,33 @@ class Gui:
                             response.json()['gameData']['gameTime'])
                 except:
                     pass
-            msg = "Account: {}\n".format(_account)
-            msg = msg + "Status: {}\n".format(phase)
-            msg = msg + "Game Time: {}\n".format(game_time)
-            msg = msg + "Champ: {}\n".format(champ)
-            msg = msg + "Level: {}\n".format(level)
-            self.info = msg
+                msg = "Account: {}\n".format(_account)
+                msg = msg + "Status: {}\n".format(phase)
+                msg = msg + "Game Time: {}\n".format(game_time)
+                msg = msg + "Champ: {}\n".format(champ)
+                msg = msg + "Level: {}".format(level)
+                self.info = msg
+            else:
+                try:
+                    r = requests.get('http://ddragon.leagueoflegends.com/api/versions.json')
+                    league_patch = r.json()[0]
+                except:
+                    pass
+                msg = "Account: {}\n".format(_account)
+                msg = msg + "Status: {}\n".format(phase)
+                msg = msg + "Patch: {}\n".format(league_patch)
+                msg = msg + "Champ: {}\n".format(champ)
+                msg = msg + "Level: {}".format(level)
+                self.info = msg
+
         self.info_update = True
-        threading.Timer(5, self._info_updater).start()
+        if not self.info_terminate:
+            threading.Timer(2, self._info_updater).start()
 
     @staticmethod
     def _set_dir(sender) -> None:
         """Checks if directory exists and sets the Client Directory path"""
-        constants.LEAGUE_CLIENT_DIR = dpg.get_value(sender)
+        constants.LEAGUE_CLIENT_DIR = dpg.get_value(sender)  # https://stackoverflow.com/questions/42861643/python-global-variable-modified-prior-to-multiprocessing-call-is-passed-as-ori
         if os.path.exists(constants.LEAGUE_CLIENT_DIR):
             constants.persist()
 
