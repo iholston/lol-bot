@@ -45,6 +45,7 @@ class Gui:
         self.logs_tab = None
         self.logs_group = None
         self.settings_tab = None
+        self.league_patch = ''
         self.color = ast.literal_eval(constants.TEXT_COLOR)
         self.color_update = False
         self.color_editable = []
@@ -57,11 +58,11 @@ class Gui:
             with dpg.tab_bar() as self.tab_bar:
                 self.create_status_tab()
                 self.create_accounts_tab()
+                self.create_settings_tab()
                 self.create_https_tab()
                 self.create_capture_tab()
                 self.create_ratio_tab()
                 self.create_logs_tab()
-                self.create_settings_tab()
                 self.create_about_tab()
         dpg.create_viewport(title='LoL Bot', width=self.width, height=self.height, small_icon='a.ico', large_icon='b.ico', resizable=False, x_pos=self.x_pos, y_pos=self.y_pos)
         dpg.setup_dearpygui()
@@ -284,10 +285,10 @@ class Gui:
 
     def create_settings_tab(self) -> None:
         """Creates Settings Tab"""
-        with dpg.tab(label="Settings") as self.settings_tab:
+        with dpg.tab(label="Config") as self.settings_tab:
             dpg.add_spacer()
             with dpg.group(horizontal=True):
-                dpg.add_button(label='Setting', enabled=False, width=180)
+                dpg.add_button(label='Configuration', enabled=False, width=180)
                 dpg.add_button(label="Value", enabled=False, width=380)
             dpg.add_spacer()
             dpg.add_spacer()
@@ -305,9 +306,9 @@ class Gui:
                 with dpg.tooltip(dpg.last_item()):
                     dpg.add_text("If blank or if champs are taken, the bot\nwill select a random free to play champion.\nAdd champs with a comma between each number")
                 dpg.add_input_text(default_value="43, 54, 12, 21", width=334)
-                b = dpg.add_button(label="list")
+                b = dpg.add_button(label="list", callback=lambda: webbrowser.open('ddragon.leagueoflegends.com/cdn/12.6.1/data/en_US/champion.json'))
                 with dpg.tooltip(dpg.last_item()):
-                    dpg.add_text("Open www.champlist.com in webbrowser")
+                    dpg.add_text("Open ddragon.leagueoflegends.com in webbrowser")
                 dpg.bind_item_theme(b, "__demo_hyperlinkTheme")
             with dpg.group(horizontal=True):
                 dpg.add_input_text(default_value='Ask for Mid Dialog', width=180, enabled=False)
@@ -410,12 +411,12 @@ class Gui:
             else:
                 try:
                     r = requests.get('http://ddragon.leagueoflegends.com/api/versions.json')
-                    league_patch = r.json()[0]
+                    self.league_patch = r.json()[0]
                 except:
                     pass
                 msg = "Account: {}\n".format(_account)
                 msg = msg + "Status: {}\n".format(phase)
-                msg = msg + "Patch: {}\n".format(league_patch)
+                msg = msg + "Patch: {}\n".format(self.league_patch)
                 msg = msg + "Champ: {}\n".format(champ)
                 msg = msg + "Level: {}".format(level)
                 self.info = msg
