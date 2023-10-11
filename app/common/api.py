@@ -7,7 +7,7 @@ import urllib3
 import logging
 from base64 import b64encode
 from time import sleep
-from constants import *
+from app.common.constants import *
 
 
 class Connection:

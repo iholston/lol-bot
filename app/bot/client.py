@@ -7,15 +7,14 @@ import random
 import traceback
 import inspect
 import pyautogui
-import utils
-import api
-import launcher
-import account
+from app.common import api, utils
+import app.bot.launcher as launcher
+import app.common.account as account
 from time import sleep
 from datetime import datetime, timedelta
-from constants import *
-from game import Game
-from handler import MultiProcessLogHandler
+from app.common.constants import *
+from app.bot.game import Game
+from app.gui.handler import MultiProcessLogHandler
 
 
 class ClientError(Exception):
@@ -67,7 +66,6 @@ class Client:
                 self.log.error(traceback.print_exc())
                 return
             except Exception as e:
-                pyautogui.alert(e)
                 self.log.error(e)
                 self.log.error(traceback.print_exc())
                 return

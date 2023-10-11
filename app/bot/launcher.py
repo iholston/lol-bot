@@ -3,13 +3,11 @@ Handles Riot Client and login to launch the League Client
 """
 
 import logging
-import api
+from app.common import api, utils
 import shutil
-import utils
-import os
 import subprocess
 from time import sleep
-from constants import *
+from app.common.constants import *
 
 
 class LauncherError(Exception):
@@ -68,7 +66,6 @@ class Launcher:
 
             # League is not running but Riot Client is running
             elif not utils.is_league_running() and utils.is_rc_running():
-
                 # Get session state
                 self.connection.set_rc_headers()
                 r = self.connection.request("get", "/rso-auth/v1/authorization/access-token")
@@ -90,6 +87,7 @@ class Launcher:
                     self.log.info("Authenticated. Attempting to Launch League")
                     subprocess.run([LEAGUE_CLIENT_PATH])
                     sleep(3)
+
 
             # Nothing is running
             elif not utils.is_league_running() and not utils.is_rc_running():
