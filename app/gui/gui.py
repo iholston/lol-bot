@@ -12,6 +12,8 @@ import pyautogui
 from app.common import constants, api, utils, account
 from .bot_tab import BotTab
 from .accounts_tab import AccountsTab
+from  .config_tab import ConfigTab
+from .http_tab import HTTPTab
 
 
 class Gui:
@@ -31,16 +33,16 @@ class Gui:
         self.tab_bar = None
         self.bot_tab = BotTab(self.message_queue, self.terminate)
         self.accounts_tab = AccountsTab()
+        self.config_tab = ConfigTab()
+        self.https_tab = HTTPTab()
         self.info_terminate = False
         self.output_queue = []
-        self.https_tab = None
+
         self.ratio_tab = None
-        self.capture_tab = None
         self.lcu_tab = None
         self.logs_tab = None
         self.logs_group = None
         self.ratio_window_title = ""
-        self.settings_tab = None
         self.league_patch = ''
         self.color = ast.literal_eval(constants.TEXT_COLOR)
         self.color_update = False
@@ -55,9 +57,8 @@ class Gui:
             with dpg.tab_bar() as self.tab_bar:
                 self.bot_tab.create_tab(self.tab_bar)
                 self.accounts_tab.create_tab(self.tab_bar)
-                self.create_settings_tab()
-                self.create_https_tab()
-                self.create_capture_tab()
+                self.config_tab.create_tab(self.tab_bar)
+                self.https_tab.create_tab(self.tab_bar)
                 self.create_ratio_tab()
                 self.create_logs_tab()
                 self.create_about_tab()
@@ -70,59 +71,6 @@ class Gui:
             dpg.render_dearpygui_frame()
         dpg.destroy_context()
         self.bot_tab.stop_bot()
-
-
-    def create_https_tab(self) -> None:
-        """Creates HTTPS tab"""
-        with dpg.tab(label="HTTP") as self.https_tab:
-            with dpg.theme(tag="__demo_hyperlinkTheme"):
-                with dpg.theme_component(dpg.mvButton):
-                    dpg.add_theme_color(dpg.mvThemeCol_Button, [0, 0, 0, 0])
-                    dpg.add_theme_color(dpg.mvThemeCol_ButtonActive, [0, 0, 0, 0])
-                    dpg.add_theme_color(dpg.mvThemeCol_ButtonHovered, [29, 151, 236, 25])
-                    dpg.add_theme_color(dpg.mvThemeCol_Text, [29, 151, 236])
-            dpg.add_text("Method:")
-            dpg.add_combo(items=['GET', 'POST', 'DELETE'], default_value='GET', width=569)
-            dpg.add_text("URL:")
-            dpg.add_input_text(width=568)
-            dpg.add_text("Body:")
-            dpg.add_input_text(width=568, height=84, multiline=True)
-            dpg.add_spacer()
-            with dpg.group(horizontal=True):
-                dpg.add_button(label="Send Request")
-                dpg.add_button(label="Format JSON")
-                dpg.add_spacer(width=110)
-                dpg.add_text("Endpoints list: ")
-                lcu = dpg.add_button(label="LCU", callback=lambda: webbrowser.open("https://lcu.kebs.dev/"))
-                with dpg.tooltip(dpg.last_item()):
-                    dpg.add_text("Open https://lcu.kebs.dev/ in webbrowser")
-                dpg.bind_item_theme(lcu, "__demo_hyperlinkTheme")
-                dpg.add_text("|")
-                rcu = dpg.add_button(label="Riot Client", callback=lambda: webbrowser.open("https://riotclient.kebs.dev/"))
-                with dpg.tooltip(dpg.last_item()):
-                    dpg.add_text("Open https://riotclient.kebs.dev/ in webbrowser")
-                dpg.bind_item_theme(rcu, "__demo_hyperlinkTheme")
-            dpg.add_spacer()
-            with dpg.group(horizontal=True):
-                dpg.add_text("Response")
-                dpg.add_button(label="Copy to Clipboard")
-            dpg.add_input_text(width=568, height=85, multiline=True)
-
-    def create_capture_tab(self):
-        with dpg.tab(label="Capture") as self.capture_tab:
-            dpg.add_spacer()
-            with dpg.group(horizontal=True):
-                dpg.add_text("Blacklist")
-                with dpg.tooltip(dpg.last_item()):
-                    dpg.add_text("URLs you don't want to see")
-                dpg.add_spacer()
-                dpg.add_button(label="Restore Default Blacklist")
-            dpg.add_input_text(default_value="/lol-game-data/assets\n/lol-hovercard\n/lol-clash\n/lol-challenges\n/data-store\n/lol-patch\n/patcher\n/lol-tft\n/lol-chat\n/lol-regalia", width=568, height=100, multiline=True)
-            dpg.add_spacer()
-            with dpg.group(horizontal=True):
-                dpg.add_button(label="Capture")
-                dpg.add_checkbox(label="Wrap Text")
-            dpg.add_input_text(width=568, height=184, multiline=True)
 
     def create_ratio_tab(self):
         with dpg.tab(label="Ratio") as self.https_tab:
@@ -206,42 +154,7 @@ class Gui:
                 print('Failed to delete %s. Reason: %s' % (file_path, e))
         self.create_log_table()
 
-    def create_settings_tab(self) -> None:
-        """Creates Settings Tab"""
-        with dpg.tab(label="Config") as self.settings_tab:
-            dpg.add_spacer()
-            with dpg.group(horizontal=True):
-                dpg.add_button(label='Configuration', enabled=False, width=180)
-                dpg.add_button(label="Value", enabled=False, width=380)
-            dpg.add_spacer()
-            dpg.add_spacer()
-            with dpg.group(horizontal=True):
-                dpg.add_input_text(default_value='League Installation Path', width=180, enabled=False)
-                dpg.add_input_text(default_value=constants.LEAGUE_CLIENT_DIR, width=380, callback=self._set_dir)
-            with dpg.group(horizontal=True):
-                dpg.add_input_text(default_value='Game Mode', width=180, readonly=True)
-                dpg.add_combo(items=['Intro', 'Beginner', 'Intermediate'], default_value='Beginner', width=380, callback=self._set_mode)
-            with dpg.group(horizontal=True):
-                dpg.add_input_text(default_value='Account Max Level', width=180, enabled=False)
-                dpg.add_input_int(default_value=constants.ACCOUNT_MAX_LEVEL, min_value=0, step=1, width=380, callback=self._set_level)
-            with dpg.group(horizontal=True):
-                dpg.add_input_text(default_value='Champ Pick Order', width=180, enabled=False)
-                with dpg.tooltip(dpg.last_item()):
-                    dpg.add_text("If blank or if champs are taken, the bot\nwill select a random free to play champion.\nAdd champs with a comma between each number")
-                dpg.add_input_text(default_value="43, 54, 12, 21", width=334)
-                b = dpg.add_button(label="list", callback=lambda: webbrowser.open('ddragon.leagueoflegends.com/cdn/12.6.1/data/en_US/champion.json'))
-                with dpg.tooltip(dpg.last_item()):
-                    dpg.add_text("Open ddragon.leagueoflegends.com in webbrowser")
-                dpg.bind_item_theme(b, "__demo_hyperlinkTheme")
-            with dpg.group(horizontal=True):
-                dpg.add_input_text(default_value='Ask for Mid Dialog', width=180, enabled=False)
-                with dpg.tooltip(dpg.last_item()):
-                    dpg.add_text("The bot will type a random phrase in the\nchamp select lobby")
-                dpg.add_input_text(default_value='mid ples\nplanning on going mid team\nmid por favor\nbienvenidos, mid\nhowdy, mid\ngoing mid\nmid', width=380, multiline=True, height=80)
-            with dpg.group(horizontal=True):
-                dpg.add_input_text(default_value='Highlight Color', width=180, enabled=False)
-                with dpg.tree_node(label='Color Picker', selectable=False):
-                    dpg.add_color_picker(self.color, tag="ColorPicker", width=150, callback=self._update_color, no_side_preview=True)
+
 
     def _update_color(self, sender) -> None:
         """Sets text color"""
@@ -284,30 +197,6 @@ class Gui:
 
 
 
-    @staticmethod
-    def _set_dir(sender) -> None:
-        """Checks if directory exists and sets the Client Directory path"""
-        constants.LEAGUE_CLIENT_DIR = dpg.get_value(sender)  # https://stackoverflow.com/questions/42861643/python-global-variable-modified-prior-to-multiprocessing-call-is-passed-as-ori
-        if os.path.exists(constants.LEAGUE_CLIENT_DIR):
-            constants.persist()
-
-    @staticmethod
-    def _set_mode(sender) -> None:
-        """Sets the game mode"""
-        match dpg.get_value(sender):
-            case "Intro":
-                constants.GAME_LOBBY_ID = 830
-            case "Beginner":
-                constants.GAME_LOBBY_ID = 840
-            case "Intermediate":
-                constants.GAME_LOBBY_ID = 850
-        constants.persist()
-
-    @staticmethod
-    def _set_level(sender) -> None:
-        """Sets account max level"""
-        constants.ACCOUNT_MAX_LEVEL = dpg.get_value(sender)
-        constants.persist()
 
     @staticmethod
     def _notes_text() -> str:
