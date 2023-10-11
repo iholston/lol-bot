@@ -7,11 +7,11 @@ import inspect
 import random
 import pyautogui
 import requests
-import utils
+from app.common import utils
 from enum import Enum
 from datetime import datetime, timedelta
 from time import sleep
-from constants import *
+from app.common.constants import *
 
 
 class GameState(Enum):

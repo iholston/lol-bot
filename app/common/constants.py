@@ -2,10 +2,9 @@
 
 import configparser
 import os
-import ctypes
-ctypes.windll.shcore.SetProcessDpiAwareness(0)  # This must be set before importing pyautogui
 
-LOCAL_SETTINGS_PATH = os.path.dirname(os.getcwd()) + '/resources/lolbot.cfg'
+
+LOCAL_SETTINGS_PATH = os.getcwd() + '/app/resources/lolbot.cfg'
 config = configparser.RawConfigParser()
 if os.path.exists(LOCAL_SETTINGS_PATH):
     config.read(LOCAL_SETTINGS_PATH)
@@ -45,7 +44,6 @@ MYTHIC_ITEMS = [["Sheen", "Hearthbound Axe", "Kindlegem", "Trinity Force"],
                 ["B. F. Sword", "Pickaxe", "Cloak of Agility", "Infinity Edge"],
                 ["Aegis of the Legion", "Kindlegem", "Ruby Crystal"]]
 
-
 # PATHS
 LEAGUE_CLIENT_DIR = config.get('Paths', 'LeaguePath')
 LEAGUE_CLIENT_PATH = LEAGUE_CLIENT_DIR + '/LeagueClient'
@@ -55,6 +53,9 @@ LOCAL_ACCOUNTS_PATH = os.path.dirname(os.getcwd()) + '/resources/accounts.json'
 LOCAL_GAME_CONFIG_PATH = os.path.dirname(os.getcwd()) + '/resources/game.cfg'
 RIOT_CLIENT_LOCKFILE_PATH = os.getenv('LOCALAPPDATA') + '/Riot Games/Riot Client/Config/lockfile'
 LOCAL_LOG_PATH = os.path.dirname(os.getcwd()) + '/logs'
+
+if not os.path.exists(LOCAL_LOG_PATH):
+    os.makedirs(LOCAL_LOG_PATH)
 
 # API INFO
 LCU_HOST = '127.0.0.1'

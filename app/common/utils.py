@@ -9,7 +9,7 @@ import logging
 import subprocess
 from time import sleep
 from win32gui import FindWindow, GetWindowRect
-from constants import *
+from app.common.constants import *
 
 log = logging.getLogger(__name__)
 
