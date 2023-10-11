@@ -2,6 +2,7 @@ import os
 import multiprocessing
 import requests
 import threading
+from time import sleep
 import dearpygui.dearpygui as dpg
 from ..common import constants, utils, api
 from ..bot.client import Client
@@ -21,8 +22,8 @@ class BotTab:
             dpg.add_text(default_value="Controls")
             with dpg.group(horizontal=True):
                 dpg.add_button(tag="StartButton", label='Start Bot', width=90, callback=self.start_bot)
-                dpg.add_button(label="Restart UX", width=90)
-                dpg.add_button(label='Close Client', width=90)
+                dpg.add_button(label="Restart UX", width=90, callback=self.ux_callback)
+                dpg.add_button(label="Close Client", width=90, callback=self.close_client_callback)
             dpg.add_spacer()
             dpg.add_text(default_value="Info")
             dpg.add_input_text(tag="Info", readonly=True, multiline=True, default_value="Initializing...", height=72, width=568, tab_input=True)
@@ -51,6 +52,17 @@ class BotTab:
             self.bot_thread.join()
             self.bot_thread = None
             self.message_queue.put("\nBot Successfully Terminated")
+
+    def ux_callback(self):
+        if utils.is_league_running():
+            self.connection.request('post', '/riotclient/kill-and-restart-ux')
+            sleep(1)
+            self.connection.set_lcu_headers()
+        else:
+            self.message_queue.put("Cannot restart UX, League is not running")
+
+    def close_client_callback(self):
+        pass
 
     def update_info_panel(self) -> None:
         """Updates gui info string"""
