@@ -34,10 +34,11 @@ LEAGUE_CLIENT_DIR = "C:/Riot Games/League of Legends"
 LEAGUE_CLIENT_PATH = LEAGUE_CLIENT_DIR + '/LeagueClient'
 LEAGUE_GAME_CONFIG_PATH = LEAGUE_CLIENT_DIR + '/Config/game.cfg'
 LEAGUE_CLIENT_LOCKFILE_PATH = LEAGUE_CLIENT_DIR + "/lockfile"
+RIOT_CLIENT_LOCKFILE_PATH = os.getenv('LOCALAPPDATA') + '/Riot Games/Riot Client/Config/lockfile'
 LOCAL_ACCOUNTS_PATH = os.getcwd() + "/app/resources/accounts.json"
 LOCAL_GAME_CONFIG_PATH = os.getcwd() + '/app/resources/game.cfg'
 LOCAL_APP_CONFIG_PATH = os.getcwd() + "/app/resources/config.json"
-RIOT_CLIENT_LOCKFILE_PATH = os.getenv('LOCALAPPDATA') + '/Riot Games/Riot Client/Config/lockfile'
+LOCAL_ICON_PATH = os.getcwd() + '/app/resources/images/a.ico'
 LOCAL_LOG_PATH = os.getcwd() + '/logs'
 if not os.path.exists(LOCAL_LOG_PATH):
     os.makedirs(LOCAL_LOG_PATH)
@@ -95,7 +96,7 @@ MAX_CLIENT_ERRORS = 5
 MAX_PHASE_ERRORS = 20
 VERSION = 'v1.3.1'
 
-def __update():
+def update():
     """Either read from config.json or create it with default values"""
     global LEAGUE_CLIENT_DIR, GAME_LOBBY_ID, ACCOUNT_MAX_LEVEL, CHAMPS, ASK_4_MID_DIALOG
     global LEAGUE_CLIENT_PATH, LEAGUE_GAME_CONFIG_PATH, LEAGUE_CLIENT_LOCKFILE_PATH
@@ -121,6 +122,6 @@ def __update():
                 ASK_4_MID_DIALOG = data['dialog']
         except:
             os.remove(LOCAL_APP_CONFIG_PATH)
-            __update()
+            update()
 
-__update()
+update()

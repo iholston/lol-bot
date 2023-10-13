@@ -7,7 +7,7 @@ import urllib3
 import logging
 from base64 import b64encode
 from time import sleep
-from app.common.constants import *
+import app.common.constants as constants
 
 
 class Connection:
@@ -30,11 +30,11 @@ class Connection:
     def set_rc_headers(self) -> None:
         """Sets header info for Riot Client"""
         self.log.debug("Initializing Riot Client session")
-        self.host = RCU_HOST
-        self.client_username = RCU_USERNAME
+        self.host = constants.RCU_HOST
+        self.client_username = constants.RCU_USERNAME
 
         # lockfile
-        lockfile = open(RIOT_CLIENT_LOCKFILE_PATH, 'r')
+        lockfile = open(constants.RIOT_CLIENT_LOCKFILE_PATH, 'r')
         data = lockfile.read()
         self.log.debug(data)
         lockfile.close()
@@ -53,15 +53,11 @@ class Connection:
 
     def set_lcu_headers(self, verbose: bool = True) -> None:
         """Sets header info for League Client"""
-        if verbose:
-            self.log.info("Connecting to LCU API")
-        else:
-            self.log.debug("Connecting to LCU API")
-        self.host = LCU_HOST
-        self.client_username = LCU_USERNAME
+        self.host = constants.LCU_HOST
+        self.client_username = constants.LCU_USERNAME
 
         # lockfile
-        lockfile = open(LEAGUE_CLIENT_LOCKFILE_PATH, 'r')
+        lockfile = open(constants.LEAGUE_CLIENT_LOCKFILE_PATH, 'r')
         data = lockfile.read()
         self.log.debug(data)
         lockfile.close()
@@ -83,11 +79,11 @@ class Connection:
             self.log.info("Connecting to LCU API")
         else:
             self.log.debug("Connecting to LCU API")
-        self.host = LCU_HOST
-        self.client_username = LCU_USERNAME
+        self.host = constants.LCU_HOST
+        self.client_username = constants.LCU_USERNAME
 
         # lockfile
-        lockfile = open(LEAGUE_CLIENT_LOCKFILE_PATH, 'r')
+        lockfile = open(constants.LEAGUE_CLIENT_LOCKFILE_PATH, 'r')
         data = lockfile.read()
         self.log.debug(data)
         lockfile.close()

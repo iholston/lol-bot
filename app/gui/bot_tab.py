@@ -54,6 +54,7 @@ class BotTab:
                 self.message_queue.put("Clear")
                 self.message_queue.put("League Installation Path is Invalid. Update Path to START")
                 return
+            self.message_queue.put("Clear")
             self.bot_thread = multiprocessing.Process(target=Client, args=(self.message_queue,))
             self.bot_thread.start()
             dpg.configure_item("StartButton", label="Quit Bot")
@@ -89,6 +90,17 @@ class BotTab:
         if not utils.is_league_running():
             dpg.configure_item("Info", default_value="League is not running")
         else:
+            if not os.path.exists(constants.LEAGUE_CLIENT_DIR):
+                self.message_queue.put("Clear")
+                self.message_queue.put("League Installation Path is Invalid. Update Path")
+                if not self.terminate:
+                    threading.Timer(2, self.update_info_panel).start()
+                else:
+                    self.stop_bot()
+                return
+            else:
+                self.message_queue.put("Clear")
+
             _account = ""
             phase = ""
             league_patch = ""

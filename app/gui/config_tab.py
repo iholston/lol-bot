@@ -67,6 +67,8 @@ class ConfigTab:
         if os.path.exists(constants.LEAGUE_CLIENT_DIR):
             self.configs['league_path'] = constants.LEAGUE_CLIENT_DIR
             self._config_update()
+            constants.update()
+
 
     def _set_mode(self, sender) -> None:
         """Sets the game mode"""
