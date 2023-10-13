@@ -147,4 +147,5 @@ class BotTab:
 
         if not self.terminate:
             threading.Timer(2, self.update_info_panel).start()
+        else:
             self.stop_bot()

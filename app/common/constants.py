@@ -98,6 +98,7 @@ VERSION = 'v1.3.1'
 def __update():
     """Either read from config.json or create it with default values"""
     global LEAGUE_CLIENT_DIR, GAME_LOBBY_ID, ACCOUNT_MAX_LEVEL, CHAMPS, ASK_4_MID_DIALOG
+    global LEAGUE_CLIENT_PATH, LEAGUE_GAME_CONFIG_PATH, LEAGUE_CLIENT_LOCKFILE_PATH
     if not os.path.exists(LOCAL_APP_CONFIG_PATH):
         data = {'league_path': LEAGUE_CLIENT_DIR,
                 'lobby': GAME_LOBBY_ID,
@@ -111,6 +112,9 @@ def __update():
             with open(LOCAL_APP_CONFIG_PATH, "r") as readfile:
                 data = json.load(readfile)
                 LEAGUE_CLIENT_DIR = data['league_path']
+                LEAGUE_CLIENT_PATH = LEAGUE_CLIENT_DIR + '/LeagueClient'
+                LEAGUE_GAME_CONFIG_PATH = LEAGUE_CLIENT_DIR + '/Config/game.cfg'
+                LEAGUE_CLIENT_LOCKFILE_PATH = LEAGUE_CLIENT_DIR + "/lockfile"
                 GAME_LOBBY_ID = data['lobby']
                 ACCOUNT_MAX_LEVEL = data['max_level']
                 CHAMPS = data['champs']
