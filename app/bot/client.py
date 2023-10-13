@@ -41,6 +41,7 @@ class Client:
         self.prev_phase = None
         self.client_errors = 0
         self.phase_errors = 0
+        self.game_errors = 0
         self.handler.set_logs()
         utils.print_ascii()
         self.account_loop()
@@ -61,13 +62,14 @@ class Client:
                     raise ClientError("Max errors reached.Exiting")
                 utils.close_processes()
             except launcher.LauncherError as le:
-                pyautogui.alert(le)
                 self.log.error(le.__str__())
-                self.log.error(traceback.print_exc())
+                self.log.error("Bot Exiting")
                 return
             except Exception as e:
                 self.log.error(e)
-                self.log.error(traceback.print_exc())
+                if traceback.format_exc() is not None:
+                    self.log.error(traceback.format_exc())
+                self.log.error("Bot Exiting")
                 return
 
     def leveling_loop(self) -> None:
@@ -88,7 +90,12 @@ class Client:
                     self.game_lobby()
                 case 'InProgress':
                     game: Game = Game()
-                    game.play_game()
+                    if self.game_errors == 5:
+                        raise ClientError("Game issue. Most likely client disconnect..")
+                    if not game.play_game():
+                        self.game_errors += 1
+                    else:
+                        self.game_errors = 0
                 case 'Reconnect':
                     self.reconnect()
                 case 'WaitingForStats':

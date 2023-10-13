@@ -13,12 +13,6 @@ class HTTPTab:
 
     def create_tab(self, parent):
         with dpg.tab(label="HTTP", parent=parent) as self.id:
-            with dpg.theme(tag="__demo_hyperlinkTheme"):
-                with dpg.theme_component(dpg.mvButton):
-                    dpg.add_theme_color(dpg.mvThemeCol_Button, [0, 0, 0, 0])
-                    dpg.add_theme_color(dpg.mvThemeCol_ButtonActive, [0, 0, 0, 0])
-                    dpg.add_theme_color(dpg.mvThemeCol_ButtonHovered, [29, 151, 236, 25])
-                    dpg.add_theme_color(dpg.mvThemeCol_Text, [29, 151, 236])
             dpg.add_text("Method:")
             dpg.add_combo(tag='Method', items=self.methods, default_value='GET', width=569)
             dpg.add_text("URL:")
@@ -34,12 +28,12 @@ class HTTPTab:
                 lcu = dpg.add_button(label="LCU", callback=lambda: webbrowser.open("https://lcu.kebs.dev/"))
                 with dpg.tooltip(dpg.last_item()):
                     dpg.add_text("Open https://lcu.kebs.dev/ in webbrowser")
-                dpg.bind_item_theme(lcu, "__demo_hyperlinkTheme")
+                dpg.bind_item_theme(lcu, "__hyperlinkTheme")
                 dpg.add_text("|")
                 rcu = dpg.add_button(label="Riot Client", callback=lambda: webbrowser.open("https://riotclient.kebs.dev/"))
                 with dpg.tooltip(dpg.last_item()):
                     dpg.add_text("Open https://riotclient.kebs.dev/ in webbrowser")
-                dpg.bind_item_theme(rcu, "__demo_hyperlinkTheme")
+                dpg.bind_item_theme(rcu, "__hyperlinkTheme")
             dpg.add_spacer()
             with dpg.group(horizontal=True):
                 dpg.add_text("Response:")

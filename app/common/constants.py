@@ -1,23 +1,8 @@
 """Configuration constants"""
-
-import configparser
+import json
 import os
 
-
-LOCAL_SETTINGS_PATH = os.getcwd() + '/app/resources/lolbot.cfg'
-config = configparser.RawConfigParser()
-if os.path.exists(LOCAL_SETTINGS_PATH):
-    config.read(LOCAL_SETTINGS_PATH)
-else:
-    config['Paths'] = {"LeaguePath": "C:/Riot Games/League of Legends"}
-    config['Game'] = {
-        "Maxlevel": "30",
-        "GameMode": "840"
-    }
-    config['Graphical'] = {"TextColor": "None"}
-    with open(LOCAL_SETTINGS_PATH, 'w') as outfile:
-        config.write(outfile)
-
+# ITEMS
 STARTER_ITEMS = ["Cull",
                  "Doran's Blade",
                  "Doran's Ring",
@@ -45,15 +30,15 @@ MYTHIC_ITEMS = [["Sheen", "Hearthbound Axe", "Kindlegem", "Trinity Force"],
                 ["Aegis of the Legion", "Kindlegem", "Ruby Crystal"]]
 
 # PATHS
-LEAGUE_CLIENT_DIR = config.get('Paths', 'LeaguePath')
+LEAGUE_CLIENT_DIR = "C:/Riot Games/League of Legends"
 LEAGUE_CLIENT_PATH = LEAGUE_CLIENT_DIR + '/LeagueClient'
 LEAGUE_GAME_CONFIG_PATH = LEAGUE_CLIENT_DIR + '/Config/game.cfg'
 LEAGUE_CLIENT_LOCKFILE_PATH = LEAGUE_CLIENT_DIR + "/lockfile"
-LOCAL_ACCOUNTS_PATH = os.path.dirname(os.getcwd()) + '/resources/accounts.json'
+LOCAL_ACCOUNTS_PATH = os.getcwd() + "/app/resources/accounts.json"
 LOCAL_GAME_CONFIG_PATH = os.getcwd() + '/app/resources/game.cfg'
+LOCAL_APP_CONFIG_PATH = os.getcwd() + "/app/resources/config.json"
 RIOT_CLIENT_LOCKFILE_PATH = os.getenv('LOCALAPPDATA') + '/Riot Games/Riot Client/Config/lockfile'
-LOCAL_LOG_PATH = os.path.dirname(os.getcwd()) + '/logs'
-
+LOCAL_LOG_PATH = os.getcwd() + '/logs'
 if not os.path.exists(LOCAL_LOG_PATH):
     os.makedirs(LOCAL_LOG_PATH)
 
@@ -78,18 +63,18 @@ KILL_LEAGUE = 'TASKKILL /F /IM "League of Legends.exe"'
 KILL_RIOT_CLIENT = 'TASKKILL /F /IM RiotClientUx.exe'
 
 # GAME DATA
-ACCOUNT_MAX_LEVEL = int(config.get('Game', 'MaxLevel'))
-GAME_LOBBY_ID = int(config.get('Game', 'GameMode'))
+ACCOUNT_MAX_LEVEL = 30
+GAME_LOBBY_ID = 840
 EARLY_GAME_END_TIME = 630
 MAX_GAME_TIME = 2400
 CHAMPS = [21, 18, 22, 67]
-ASK_4_MID_DIALOG = ["mid ples",
-                    "plannin on goin mid team",
-                    "mid por favor",
-                    "bienvenidos, mid",
-                    "howdy, mid",
-                    "goin mid",
-                    "mid"]
+ASK_4_MID_DIALOG = ['mid ples',
+                    'plannin on goin mid team',
+                    'mid por favor',
+                    'bienvenidos, mid',
+                    'howdy, mid',
+                    'goin mid',
+                    'mid']
 
 # GAME BUTTON RATIOS
 GAME_MINI_MAP_UNDER_TURRET = (0.8760, 0.8846)
@@ -108,14 +93,30 @@ POPUP_SEND_EMAIL_X_RATIO = (0.6960, 0.1238)
 # RANDOM
 MAX_CLIENT_ERRORS = 5
 MAX_PHASE_ERRORS = 20
-TEXT_COLOR = config.get('Graphical', 'TextColor')
 VERSION = 'v1.3.1'
 
-def persist():
-    """Persists game settings"""
-    config['Paths']['LeaguePath'] = LEAGUE_CLIENT_DIR
-    config['Game']['MaxLevel'] = str(ACCOUNT_MAX_LEVEL)
-    config['Game']['GameMode'] = str(GAME_LOBBY_ID)
-    config['Graphical']['TextColor'] = TEXT_COLOR
-    with open(LOCAL_SETTINGS_PATH, 'w') as configfile:
-        config.write(configfile)
+def __update():
+    """Either read from config.json or create it with default values"""
+    global LEAGUE_CLIENT_DIR, GAME_LOBBY_ID, ACCOUNT_MAX_LEVEL, CHAMPS, ASK_4_MID_DIALOG
+    if not os.path.exists(LOCAL_APP_CONFIG_PATH):
+        data = {'league_path': LEAGUE_CLIENT_DIR,
+                'lobby': GAME_LOBBY_ID,
+                'max_level': ACCOUNT_MAX_LEVEL,
+                'champs': CHAMPS,
+                'dialog': ASK_4_MID_DIALOG}
+        with open(LOCAL_APP_CONFIG_PATH, "w") as outfile:
+            json.dump(data, outfile, indent=4)
+    else:
+        try:
+            with open(LOCAL_APP_CONFIG_PATH, "r") as readfile:
+                data = json.load(readfile)
+                LEAGUE_CLIENT_DIR = data['league_path']
+                GAME_LOBBY_ID = data['lobby']
+                ACCOUNT_MAX_LEVEL = data['max_level']
+                CHAMPS = data['champs']
+                ASK_4_MID_DIALOG = data['dialog']
+        except:
+            os.remove(LOCAL_APP_CONFIG_PATH)
+            __update()
+
+__update()

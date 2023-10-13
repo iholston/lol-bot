@@ -48,7 +48,7 @@ class Game:
         self.ability_upgrades = ['ctrl+r', 'ctrl+q', 'ctrl+w', 'ctrl+e']
         self.log.info("Game player initialized")
 
-    def play_game(self) -> None:
+    def play_game(self) -> bool:
         """Plays a single game of League of Legends, takes actions based on game time"""
         try:
             self.wait_for_game_window()
@@ -67,8 +67,10 @@ class Game:
         except GameError as e:
             self.log.warning(e.__str__())
             utils.close_game()
+            return False
         except (utils.WindowNotFound, pyautogui.FailSafeException):
             self.log.info("Game Complete. Game Time: {}".format(self.formatted_game_time))
+            return True
 
     def wait_for_game_window(self) -> None:
         """Loop that waits for game window to open"""

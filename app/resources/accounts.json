@@ -3,7 +3,7 @@
         {
             "username": "username1",
             "password": "password1",
-            "leveled": true
+            "leveled": false
         },
         {
             "username": "username2",
@@ -13,11 +13,6 @@
         {
             "username": "username3",
             "password": "password3",
-            "leveled": false
-        },
-        {
-            "username": "geagsd",
-            "password": "asdgasd",
             "leveled": false
         }
     ]

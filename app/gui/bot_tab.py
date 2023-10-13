@@ -12,6 +12,20 @@ class BotTab:
     def __init__(self, message_queue, terminate):
         self.message_queue = message_queue
         self.connection = api.Connection()
+        self.lobbies = {
+            'Draft Pick': 400,
+            'Ranked Solo/Duo': 420,
+            'Blind Pick': 430,
+            'Ranked Flex': 440,
+            'ARAM': 450,
+            'Intro Bots': 830,
+            'Beginner Bots': 840,
+            'Intermediate Bots': 850,
+            'Normal TFT': 1090,
+            'Ranked TFT': 1100,
+            'Hyper Roll TFT': 1130,
+            'Double Up TFT': 1160
+        }
         self.terminate = terminate
         self.bot_thread = None
 
@@ -22,6 +36,7 @@ class BotTab:
             dpg.add_text(default_value="Controls")
             with dpg.group(horizontal=True):
                 dpg.add_button(tag="StartButton", label='Start Bot', width=90, callback=self.start_bot)
+                dpg.add_button(label="Clear Output", width=90, callback=lambda: self.message_queue.put("Clear"))
                 dpg.add_button(label="Restart UX", width=90, callback=self.ux_callback)
                 dpg.add_button(label="Close Client", width=90, callback=self.close_client_callback)
             dpg.add_spacer()
@@ -36,11 +51,15 @@ class BotTab:
         """Starts bot process"""
         if self.bot_thread is None:
             if not os.path.exists(constants.LEAGUE_CLIENT_DIR):
-                dpg.configure_item("Info", default_value="League Path is Invalid. Update Path to start bot")
+                self.message_queue.put("Clear")
+                self.message_queue.put("League Installation Path is Invalid. Update Path to START")
                 return
             self.bot_thread = multiprocessing.Process(target=Client, args=(self.message_queue,))
             self.bot_thread.start()
             dpg.configure_item("StartButton", label="Quit Bot")
+            self.bot_thread.join()
+            self.bot_thread = None
+            dpg.configure_item("StartButton", label="Start Bot")
         else:
             dpg.configure_item("StartButton", label="Start Bot")
             self.stop_bot()
@@ -51,7 +70,7 @@ class BotTab:
             self.bot_thread.terminate()
             self.bot_thread.join()
             self.bot_thread = None
-            self.message_queue.put("\nBot Successfully Terminated")
+            self.message_queue.put("Bot Successfully Terminated")
 
     def ux_callback(self):
         if utils.is_league_running():
@@ -62,27 +81,27 @@ class BotTab:
             self.message_queue.put("Cannot restart UX, League is not running")
 
     def close_client_callback(self):
-        pass
+        self.message_queue.put('Closing League Processes')
+        utils.close_processes()
 
     def update_info_panel(self) -> None:
         """Updates gui info string"""
         if not utils.is_league_running():
             dpg.configure_item("Info", default_value="League is not running")
         else:
-            _account = "Unknown"
-            phase = "None"
-            league_patch = "0.0.0"
-            game_time = "-1"
-            champ = "None"
-            level = '-1'
+            _account = ""
+            phase = ""
+            league_patch = ""
+            game_time = ""
+            champ = ""
+            level = ""
             try:
                 if not self.connection.headers:
                     self.connection.set_lcu_headers()
                 r = self.connection.request('get', '/lol-summoner/v1/current-summoner')
                 if r.status_code == 200:
                     _account = r.json()['displayName']
-                    level = str(r.json()['summonerLevel']) + " - " + str(
-                        r.json()['percentCompleteForNextLevel']) + "% to next level"
+                    level = str(r.json()['summonerLevel']) + " - " + str(r.json()['percentCompleteForNextLevel']) + "% to next level"
                 r = self.connection.request('get', '/lol-gameflow/v1/gameflow-phase')
                 if r.status_code == 200:
                     phase = r.json()
@@ -91,7 +110,10 @@ class BotTab:
                     elif phase == 'Matchmaking':
                         phase = 'In Queue'
                     elif phase == 'Lobby':
-                        phase = '{Type} Lobby'
+                        r = self.connection.request('get', '/lol-lobby/v2/lobby')
+                        for lobby, id in self.lobbies.items():
+                            if id == r.json()['gameConfig']['queueId']:
+                                phase = lobby + ' Lobby'
             except:
                 pass
             if utils.is_game_running() or phase == "InProgress":
@@ -107,7 +129,7 @@ class BotTab:
                 except:
                     pass
                 msg = "Account: {}\n".format(_account)
-                msg = msg + "Status: {}\n".format(phase)
+                msg = msg + "Phase: {}\n".format(phase)
                 msg = msg + "Game Time: {}\n".format(game_time)
                 msg = msg + "Champ: {}\n".format(champ)
                 msg = msg + "Level: {}".format(level)
@@ -118,11 +140,11 @@ class BotTab:
                 except:
                     pass
                 msg = "Account: {}\n".format(_account)
-                msg = msg + "Status: {}\n".format(phase)
+                msg = msg + "Phase: {}\n".format(phase)
                 msg = msg + "Patch: {}\n".format(league_patch)
-                msg = msg + "Champ: {}\n".format(champ)
                 msg = msg + "Level: {}".format(level)
             dpg.configure_item("Info", default_value=msg)
 
         if not self.terminate:
             threading.Timer(2, self.update_info_panel).start()
+            self.stop_bot()
