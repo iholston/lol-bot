@@ -14,8 +14,10 @@ import app.common.constants as constants
 
 log = logging.getLogger(__name__)
 
+
 class WindowNotFound(Exception):
     pass
+
 
 def is_league_running() -> bool:
     """Checks if league processes exists"""
@@ -26,6 +28,7 @@ def is_league_running() -> bool:
             return True
     return False
 
+
 def is_rc_running() -> bool:
     """Checks if riot client process exists"""
     res = subprocess.check_output(["TASKLIST"], creationflags=0x08000000)
@@ -35,6 +38,7 @@ def is_rc_running() -> bool:
             return True
     return False
 
+
 def is_game_running() -> bool:
     """Checks if game process exists"""
     res = subprocess.check_output(["TASKLIST"], creationflags=0x08000000)
@@ -42,6 +46,7 @@ def is_game_running() -> bool:
     if "League of Legends.exe" in output:
         return True
     return False
+
 
 def close_processes() -> None:
     """Closes all league related processes"""
@@ -51,11 +56,13 @@ def close_processes() -> None:
     os.system(constants.KILL_RIOT_CLIENT)
     sleep(5)
 
+
 def close_game() -> None:
     """Closes the League of Legends game process"""
     log.info("Terminating game instance")
     os.system(constants.KILL_LEAGUE)
     sleep(15)
+
 
 def screenshot(img_name: str, path: str = '') -> None:
     """Takes a screenshot and saves to desktop"""
@@ -65,6 +72,7 @@ def screenshot(img_name: str, path: str = '') -> None:
     else:
         im.save(path + img_name)
 
+
 def size(window_title: str = constants.LEAGUE_CLIENT_WINNAME) -> tuple:
     """Gets the size of an open window"""
     window_handle = FindWindow(None, window_title)
@@ -73,11 +81,13 @@ def size(window_title: str = constants.LEAGUE_CLIENT_WINNAME) -> tuple:
     window_rect = GetWindowRect(window_handle)
     return window_rect[0], window_rect[1], window_rect[2], window_rect[3]
 
+
 def exists(window_title: str) -> bool:
     """Checks if a window exists"""
     if FindWindow(None, window_title) == 0:
         return False
     return True
+
 
 def click(ratio: tuple, expected_window_name: str = '', wait: int or float = 1) -> None:
     """Makes a click in an open window"""
@@ -103,6 +113,7 @@ def click(ratio: tuple, expected_window_name: str = '', wait: int or float = 1) 
     mouse.click()  # pyautogui clicks do not work with league/directx
     sleep(wait)
 
+
 def right_click(ratio: tuple, expected_window: str = '', wait: int or float = 1) -> None:
     """Makes a right click in an open window"""
     if expected_window != '' and not exists(expected_window):
@@ -127,6 +138,7 @@ def right_click(ratio: tuple, expected_window: str = '', wait: int or float = 1)
     mouse.right_click()  # pyautogui clicks do not work with league/directx
     sleep(wait)
 
+
 def attack_move_click(ratio: tuple, wait: int or float = 1) -> None:
     """Attack move clicks in an open League of Legends game window"""
     if not exists(constants.LEAGUE_GAME_CLIENT_WINNAME):
@@ -146,6 +158,7 @@ def attack_move_click(ratio: tuple, wait: int or float = 1) -> None:
     keyboard.release('a')
     sleep(wait)
 
+
 def press(key: str, expected_window: str = '', wait: int or float = 1) -> None:
     """Sends a keypress to a window"""
     if expected_window != '' and not exists(expected_window):
@@ -155,6 +168,7 @@ def press(key: str, expected_window: str = '', wait: int or float = 1) -> None:
     keyboard.press_and_release(key)
     sleep(wait)
 
+
 def write(keys: str, expected_window: str = '', wait: int or float = 1) -> None:
     """Sends a string of key presses to a window"""
     if expected_window != '' and not exists(expected_window):
@@ -163,6 +177,7 @@ def write(keys: str, expected_window: str = '', wait: int or float = 1) -> None:
     log.debug("Typewriting {}. Waiting: {}".format(keys, wait))
     pyautogui.typewrite(keys)
     sleep(wait)
+
 
 def seconds_to_min_sec(seconds: str or float or int) -> str:
     """Converts League of Legends game time to minute:seconds format"""
@@ -180,6 +195,7 @@ def seconds_to_min_sec(seconds: str or float or int) -> str:
                 return str(int(seconds / 60)) + ":" + str(int(seconds % 60))
     except ValueError:
         return "XX:XX"
+
 
 def print_ascii() -> None:
     """Prints some ascii art"""

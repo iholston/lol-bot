@@ -1,3 +1,5 @@
 /.idea
 __pycache__/
 /logs
+app/resources/accounts.json
+app/resources/config.json

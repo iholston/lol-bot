@@ -27,8 +27,7 @@ class AccountsTab:
                     dpg.add_button(label="Submit", width=113, callback=self.add_account)
                     dpg.add_button(label="Cancel", width=113, callback=lambda: dpg.configure_item("AccountSubmit", show=False))
             with dpg.group(horizontal=True):
-                dpg.add_button(label="Add New Account", width=182,
-                               callback=lambda: dpg.configure_item("AccountSubmit", show=True))
+                dpg.add_button(label="Add New Account", width=182, callback=lambda: dpg.configure_item("AccountSubmit", show=True))
                 dpg.add_button(label="Show in File Explorer", width=182, callback=lambda: subprocess.Popen('explorer /select, {}'.format(os.getcwd() + "\\app\\resources\\accounts.json")))
                 dpg.add_button(label="Refresh", width=182, callback=self.create_accounts_table)
             dpg.add_spacer()

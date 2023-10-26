@@ -10,6 +10,11 @@ class ConfigTab:
 
     def __init__(self):
         self.id = None
+        self.lobbies = {
+            'Intro': 830,
+            'Beginner': 840,
+            'Intermediate': 850
+        }
         self.file_name = constants.LOCAL_APP_CONFIG_PATH
         self.file = open(self.file_name, "r+")
         self.configs = load(self.file)
@@ -29,7 +34,8 @@ class ConfigTab:
                 dpg.add_input_text(tag="LeaguePath", default_value=constants.LEAGUE_CLIENT_DIR, width=380, callback=self._set_dir)
             with dpg.group(horizontal=True):
                 dpg.add_input_text(default_value='Game Mode', width=180, readonly=True)
-                dpg.add_combo(tag="GameMode", items=['Intro', 'Beginner', 'Intermediate'], default_value='Beginner', width=380, callback=self._set_mode)
+                dpg.add_combo(tag="GameMode", items=list(self.lobbies.keys()), default_value=list(self.lobbies.keys())[
+                    list(self.lobbies.values()).index(self.configs['lobby'])], width=380, callback=self._set_mode)
             with dpg.group(horizontal=True):
                 dpg.add_input_text(default_value='Account Max Level', width=180, enabled=False)
                 dpg.add_input_int(tag="MaxLevel", default_value=constants.ACCOUNT_MAX_LEVEL, min_value=0, step=1, width=380, callback=self._set_level)
@@ -45,13 +51,15 @@ class ConfigTab:
             with dpg.group(horizontal=True):
                 dpg.add_input_text(default_value='Ask for Mid Dialog', width=180, enabled=False)
                 with dpg.tooltip(dpg.last_item()):
-                    dpg.add_text("The bot will type a random phrase in the\nchamp select lobby. Each line is a phrase.\nIt will autosave.")
+                    dpg.add_text(
+                        "The bot will type a random phrase in the\nchamp select lobby. Each line is a phrase.\nIt will autosave.")
                 x = ""
                 for dia in constants.ASK_4_MID_DIALOG:
                     x += dia.replace("'", "") + "\n"
                 dpg.add_input_text(default_value=x, width=380, multiline=True, height=200, callback=self._set_dialog)
 
     def _config_update(self) -> None:
+        """Dumps settings into config file. Updates values based on constants.py which reads config.json in"""
         self.configs['league_path'] = constants.LEAGUE_CLIENT_DIR
         self.configs['lobby'] = constants.GAME_LOBBY_ID
         self.configs['max_level'] = constants.ACCOUNT_MAX_LEVEL
@@ -68,7 +76,6 @@ class ConfigTab:
             self.configs['league_path'] = constants.LEAGUE_CLIENT_DIR
             self._config_update()
             constants.update()
-
 
     def _set_mode(self, sender) -> None:
         """Sets the game mode"""
