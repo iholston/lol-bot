@@ -146,7 +146,7 @@ class BotTab:
                     league_patch = r.json()[0]
                 except:
                     pass
-                msg = "Account: {}\n".format(_account)
+                msg = "Accnt: {}\n".format(_account)
                 msg = msg + "Phase: {}\n".format(phase)
                 msg = msg + "Patch: {}\n".format(league_patch)
                 msg = msg + "Level: {}".format(level)

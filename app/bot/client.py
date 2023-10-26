@@ -7,14 +7,15 @@ import random
 import traceback
 import inspect
 import pyautogui
-from app.common import api, utils
-import app.bot.launcher as launcher
-import app.common.account as account
 from time import sleep
 from datetime import datetime, timedelta
-from app.common.constants import *
+import app.bot.launcher as launcher
+import app.common.account as account
+from app.common import api
+from app.common import utils
 from app.bot.game import Game
-from app.gui.handler import MultiProcessLogHandler
+from app.common.handler import MultiProcessLogHandler
+from app.common.constants import *
 
 
 class ClientError(Exception):
@@ -33,7 +34,7 @@ class Client:
         self.connection = api.Connection()
         self.launcher = launcher.Launcher()
         self.log = logging.getLogger(__name__)
-        self.handler = MultiProcessLogHandler(message_queue)
+        self.handler = MultiProcessLogHandler(message_queue, LOCAL_LOG_PATH)
         self.username = ""
         self.password = ""
         self.account_level = 0

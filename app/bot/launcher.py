@@ -3,10 +3,11 @@ Handles Riot Client and login to launch the League Client
 """
 
 import logging
-from app.common import api, utils
 import shutil
 import subprocess
 from time import sleep
+from app.common import api
+from app.common import utils
 from app.common.constants import *
 
 

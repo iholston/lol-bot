@@ -1,8 +1,8 @@
 import dearpygui.dearpygui as dpg
 import pyautogui
 from time import sleep
-
 from ..common import utils
+
 
 class RatioTab:
 

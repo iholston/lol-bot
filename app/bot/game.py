@@ -7,10 +7,10 @@ import inspect
 import random
 import pyautogui
 import requests
-from app.common import utils
 from enum import Enum
 from datetime import datetime, timedelta
 from time import sleep
+from app.common import utils
 from app.common.constants import *
 
 
@@ -79,6 +79,8 @@ class Game:
             sleep(1)
             if utils.exists(LEAGUE_GAME_CLIENT_WINNAME):
                 self.log.debug("Game window open")
+                utils.click(GAME_CENTER_OF_SCREEN, LEAGUE_GAME_CLIENT_WINNAME, 2)
+                utils.click(GAME_CENTER_OF_SCREEN, LEAGUE_GAME_CLIENT_WINNAME)
                 return
         raise GameError("Game window did not open")
 
@@ -105,7 +107,6 @@ class Game:
                 raise GameError("Loading Screen max time limit exceeded")
             self.update_state(postpone_update=2)
         utils.click(GAME_CENTER_OF_SCREEN, LEAGUE_GAME_CLIENT_WINNAME, 2)
-        utils.click(GAME_CENTER_OF_SCREEN, LEAGUE_GAME_CLIENT_WINNAME)
 
     def game_start(self) -> None:
         """Buys starter items and waits for minions to clash (minions clash at 90 seconds)"""
@@ -137,8 +138,8 @@ class Game:
 
         # Main attack move loop. This sequence attacks and then de-aggros to prevent them from dying 50 times.
         for i in range(7):
-            utils.attack_move_click(attack_position, 9)
-            utils.right_click(retreat_position, LEAGUE_GAME_CLIENT_WINNAME, 2)
+            utils.attack_move_click(attack_position, 8)
+            utils.right_click(retreat_position, LEAGUE_GAME_CLIENT_WINNAME, 2.5)
 
         # Ult and back
         utils.press('f', LEAGUE_GAME_CLIENT_WINNAME)
