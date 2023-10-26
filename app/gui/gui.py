@@ -58,6 +58,7 @@ class Gui:
         dpg.setup_dearpygui()
         dpg.show_viewport()
         dpg.set_primary_window('primary window', True)
+        dpg.set_exit_callback(self.bot_tab.stop_bot)
         while dpg.is_dearpygui_running():
             self._gui_updater()
             dpg.render_dearpygui_frame()

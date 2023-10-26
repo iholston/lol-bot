@@ -7,6 +7,7 @@ import dearpygui.dearpygui as dpg
 from ..common import constants, utils, api
 from ..bot.client import Client
 
+
 class BotTab:
 
     def __init__(self, message_queue, terminate):
@@ -108,7 +109,8 @@ class BotTab:
                 r = self.connection.request('get', '/lol-summoner/v1/current-summoner')
                 if r.status_code == 200:
                     _account = r.json()['displayName']
-                    level = str(r.json()['summonerLevel']) + " - " + str(r.json()['percentCompleteForNextLevel']) + "% to next level"
+                    level = str(r.json()['summonerLevel']) + " - " + str(
+                        r.json()['percentCompleteForNextLevel']) + "% to next level"
                 r = self.connection.request('get', '/lol-gameflow/v1/gameflow-phase')
                 if r.status_code == 200:
                     phase = r.json()
@@ -122,11 +124,13 @@ class BotTab:
                             if id == r.json()['gameConfig']['queueId']:
                                 phase = lobby + ' Lobby'
             except:
-                pass
+                try:
+                    self.connection.set_lcu_headers()
+                except:
+                    pass
             if utils.is_game_running() or phase == "InProgress":
                 try:
-                    response = requests.get('https://127.0.0.1:2999/liveclientdata/allgamedata', timeout=10,
-                                            verify=False)
+                    response = requests.get('https://127.0.0.1:2999/liveclientdata/allgamedata', timeout=10, verify=False)
                     if response.status_code == 200:
                         for player in response.json()['allPlayers']:
                             if player['summonerName'] == response.json()['activePlayer']['summonerName']:
@@ -134,7 +138,10 @@ class BotTab:
                         game_time = utils.seconds_to_min_sec(
                             response.json()['gameData']['gameTime'])
                 except:
-                    pass
+                    try:
+                        self.connection.set_lcu_headers()
+                    except:
+                        pass
                 msg = "Account: {}\n".format(_account)
                 msg = msg + "Phase: {}\n".format(phase)
                 msg = msg + "Game Time: {}\n".format(game_time)
