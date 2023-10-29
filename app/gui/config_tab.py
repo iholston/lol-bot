@@ -55,7 +55,7 @@ class ConfigTab:
                 x = ""
                 for dia in constants.ASK_4_MID_DIALOG:
                     x += dia.replace("'", "") + "\n"
-                dpg.add_input_text(default_value=x, width=380, multiline=True, height=200, callback=self._set_dialog)
+                dpg.add_input_text(default_value=x, width=380, multiline=True, height=215, callback=self._set_dialog)
 
     def _config_update(self) -> None:
         """Dumps settings into config file. Updates values based on constants.py which reads config.json in"""

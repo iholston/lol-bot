@@ -17,15 +17,12 @@ class Gui:
     """Class that displays the gui"""
 
     def __init__(self, width: int, height: int) -> None:
-        user32 = ctypes.windll.user32
         self.accounts = account.get_all_accounts()
         self.message_queue = multiprocessing.Queue()
         self.output_queue = []
         self.connection = api.Connection()
         self.width = width
         self.height = height
-        self.x_pos = int(int(user32.GetSystemMetrics(78)) / 2 + self.width)
-        self.y_pos = int(int(user32.GetSystemMetrics(79)) / 2 - self.height / 2)
         self.terminate = False
         self.tab_bar = None
         self.bot_tab = BotTab(self.message_queue, self.terminate)
@@ -54,7 +51,7 @@ class Gui:
                 # self.ratio_tab.create_tab(self.tab_bar)
                 self.logs_tab.create_tab(self.tab_bar)
                 self.about_tab.create_tab(self.tab_bar)
-        dpg.create_viewport(title='LoL Bot', width=self.width, height=self.height, small_icon=LOCAL_ICON_PATH, resizable=False, x_pos=self.x_pos, y_pos=self.y_pos)
+        dpg.create_viewport(title='LoL Bot', width=self.width, height=self.height, small_icon=LOCAL_ICON_PATH, resizable=False)
         dpg.setup_dearpygui()
         dpg.show_viewport()
         dpg.set_primary_window('primary window', True)
