@@ -27,7 +27,7 @@ class MultiProcessLogHandler(logging.Handler):
                                       datefmt='%d %b %Y %H:%M:%S')
         logging.getLogger().setLevel(logging.DEBUG)
 
-        fh = RotatingFileHandler(filename=filename, maxBytes=500000, backupCount=1)
+        fh = RotatingFileHandler(filename=filename, maxBytes=1000000, backupCount=1)
         fh.setFormatter(formatter)
         fh.setLevel(logging.DEBUG)
         logging.getLogger().addHandler(fh)

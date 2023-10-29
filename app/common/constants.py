@@ -94,7 +94,7 @@ POPUP_SEND_EMAIL_X_RATIO = (0.6960, 0.1238)
 # RANDOM
 MAX_CLIENT_ERRORS = 5
 MAX_PHASE_ERRORS = 20
-VERSION = 'v1.3.1'
+VERSION = 'v1.3.2'
 
 def update():
     """Either read from config.json or create it with default values"""

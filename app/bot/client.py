@@ -152,6 +152,22 @@ class Client:
             self.log.info("Dodge Timer. Time Remaining: {}".format(utils.seconds_to_min_sec(dodge_timer)))
             sleep(dodge_timer)
 
+        # Check if queue times are too long. If so, start a draft pick and don't accept (should reset high queue time in bot mode)
+        if r.status_code == 200:
+            if float(r.json()['estimatedQueueTime']) > 6000:
+                self.log.warning("Queue times are too long")
+        #         self.connection.request('delete', '/lol-lobby/v2/lobby/matchmaking/search')
+        #         sleep(1)
+        #         self.create_lobby(400)
+        #         data = {"firstPreference": "MIDDLE", "secondPreference": "BOTTOM"}
+        #         self.connection.request('put', "/lol-lobby/v1/lobby/members/localMember/position-preferences", data=data)
+        #         sleep(1)
+        #         self.connection.request('post', '/lol-lobby/v2/lobby/matchmaking/search')
+        #         sleep(3)
+        #         while self.get_phase() == 'Matchmaking':
+        #             sleep(1)
+        #         self.connection.request('post', '/lol-matchmaking/v1/ready-check/decline')
+
     def queue(self) -> None:
         """Waits until the League Client Phase changes to something other than 'Matchmaking'"""
         self.log.info("In queue. Waiting for match")
