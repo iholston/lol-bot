@@ -76,7 +76,9 @@ class Client:
     def leveling_loop(self) -> None:
         """Loop that runs the correct function based on the phase of the League Client, continuously starts games"""
         self.connection.connect_lcu(verbose=False)
-        self.check_patch()
+        phase = self.get_phase()
+        if phase != 'InProgress' and phase != 'Reconnect':
+            self.check_patch()
         while not self.account_leveled():
             match self.get_phase():
                 case 'None':

@@ -135,16 +135,15 @@ class BotTab:
                         for player in response.json()['allPlayers']:
                             if player['summonerName'] == response.json()['activePlayer']['summonerName']:
                                 champ = player['championName']
-                        game_time = utils.seconds_to_min_sec(
-                            response.json()['gameData']['gameTime'])
+                        game_time = utils.seconds_to_min_sec(response.json()['gameData']['gameTime'])
                 except:
                     try:
                         self.connection.set_lcu_headers()
                     except:
                         pass
-                msg = "Account: {}\n".format(_account)
+                msg = "Accnt: {}\n".format(_account)
                 msg = msg + "Phase: {}\n".format(phase)
-                msg = msg + "Game Time: {}\n".format(game_time)
+                msg = msg + "Time : {}\n".format(game_time)
                 msg = msg + "Champ: {}\n".format(champ)
                 msg = msg + "Level: {}".format(level)
             else:
