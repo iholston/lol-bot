@@ -22,7 +22,7 @@ class HTTPTab:
             dpg.add_spacer()
             with dpg.group(horizontal=True):
                 dpg.add_button(label="Send Request", callback=self.request)
-                dpg.add_button(label="Format JSON")
+                dpg.add_button(label="Format JSON", callback=self.format_json)
                 dpg.add_spacer(width=110)
                 dpg.add_text("Endpoints list: ")
                 lcu = dpg.add_button(label="LCU", callback=lambda: webbrowser.open("https://lcu.kebs.dev/"))
@@ -41,6 +41,21 @@ class HTTPTab:
                 dpg.add_button(label="Copy to Clipboard")
             dpg.add_input_text(tag='ResponseOutput', width=568, height=124, multiline=True)
 
+    @staticmethod
+    def format_json():
+        json_obj = None
+        try:
+            body = dpg.get_value('Body')
+            if body[0] == "'" or body[0] == '"':
+                body = body[1:]
+            if body[len(body)-1] == "'" or body[len(body)-1] == '"':
+                body = body[:-1]
+            json_obj = json.loads(body)
+        except Exception as e:
+            dpg.set_value('Body', e)
+        if json_obj is not None:
+            dpg.set_value('Body', json.dumps(json_obj, indent=4))
+
     def request(self):
         try:
             self.connection.set_lcu_headers()
@@ -48,6 +63,6 @@ class HTTPTab:
             dpg.configure_item('StatusOutput', label='418')
             dpg.configure_item('ResponseOutput', default_value='League of Legends is not running')
             return
-        r = self.connection.request(dpg.get_value('Method').lower(), dpg.get_value('URL'), data=dpg.get_value('Body'))
+        r = self.connection.request(dpg.get_value('Method').lower(), dpg.get_value('URL').strip(), data=dpg.get_value('Body').strip())
         dpg.configure_item('StatusOutput', label=r.status_code)
         dpg.configure_item('ResponseOutput', default_value=json.dumps(r.json(), indent=4))
