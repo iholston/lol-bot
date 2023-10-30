@@ -1,4 +1,3 @@
-import ctypes
 import datetime
 import multiprocessing
 import dearpygui.dearpygui as dpg

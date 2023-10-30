@@ -50,7 +50,6 @@ class Connection:
         self.headers = {'Authorization': 'Basic {}'.format(userpass), "Content-Type": "application/json"}
         self.log.debug(self.headers['Authorization'])
 
-
     def set_lcu_headers(self, verbose: bool = True) -> None:
         """Sets header info for League Client"""
         self.host = constants.LCU_HOST

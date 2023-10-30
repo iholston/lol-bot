@@ -96,6 +96,7 @@ MAX_CLIENT_ERRORS = 5
 MAX_PHASE_ERRORS = 20
 VERSION = 'v1.3.2'
 
+
 def update():
     """Either read from config.json or create it with default values"""
     global LEAGUE_CLIENT_DIR, GAME_LOBBY_ID, ACCOUNT_MAX_LEVEL, CHAMPS, ASK_4_MID_DIALOG
@@ -123,5 +124,6 @@ def update():
         except:
             os.remove(LOCAL_APP_CONFIG_PATH)
             update()
+
 
 update()

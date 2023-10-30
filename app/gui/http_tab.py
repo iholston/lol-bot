@@ -1,7 +1,7 @@
-import dearpygui.dearpygui as dpg
 import webbrowser
 import json
 import subprocess
+import dearpygui.dearpygui as dpg
 from ..common import api
 
 

@@ -36,7 +36,7 @@ class BotTab:
             dpg.add_spacer()
             dpg.add_text(default_value="Controls")
             with dpg.group(horizontal=True):
-                dpg.add_button(tag="StartButton", label='Start Bot', width=93, callback=self.start_bot) # 136
+                dpg.add_button(tag="StartButton", label='Start Bot', width=93, callback=self.start_bot)  # width=136
                 dpg.add_button(label="Clear Output", width=93, callback=lambda: self.message_queue.put("Clear"))
                 dpg.add_button(label="Restart UX", width=93, callback=self.ux_callback)
                 dpg.add_button(label="Close Client", width=93, callback=self.close_client_callback)

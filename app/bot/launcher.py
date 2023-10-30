@@ -89,7 +89,6 @@ class Launcher:
                     subprocess.run([LEAGUE_CLIENT_PATH])
                     sleep(3)
 
-
             # Nothing is running
             elif not utils.is_league_running() and not utils.is_rc_running():
                 self.log.info("Attempting to Launch League")
@@ -101,7 +100,6 @@ class Launcher:
             raise LauncherError("Launch Error. Most likely the Riot Client needs an update or League needs an update from within Riot Client")
         else:
             raise LauncherError("Could not launch League of legends")
-
 
     def login(self) -> None:
         """Sends account credentials to Riot Client"""

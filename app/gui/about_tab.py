@@ -1,7 +1,8 @@
-import dearpygui.dearpygui as dpg
 import webbrowser
 import requests
+import dearpygui.dearpygui as dpg
 from ..common import constants
+
 
 class AboutTab:
 

@@ -1,9 +1,10 @@
-import dearpygui.dearpygui as dpg
-from datetime import datetime
 import subprocess
 import os
 import shutil
+from datetime import datetime
+import dearpygui.dearpygui as dpg
 from ..common import constants
+
 
 class LogsTab:
 

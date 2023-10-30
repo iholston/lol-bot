@@ -1,6 +1,6 @@
-import dearpygui.dearpygui as dpg
 import pyautogui
 from time import sleep
+import dearpygui.dearpygui as dpg
 from ..common import utils
 
 
