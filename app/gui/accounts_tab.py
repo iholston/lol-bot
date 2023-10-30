@@ -1,6 +1,5 @@
 import os
 import subprocess
-import subprocess
 import dearpygui.dearpygui as dpg
 from ..common import account
 
@@ -65,7 +64,6 @@ class AccountsTab:
                     dpg.add_button(label="Edit", callback=self.edit_account_dialog, user_data=acc)
                     dpg.add_button(label="Delete", callback=self.delete_account_dialog, user_data=acc)
 
-
     def add_account(self) -> None:
         """Adds a new account to accounts.json and updates gui"""
         dpg.configure_item("AccountSubmit", show=False)
@@ -105,5 +103,6 @@ class AccountsTab:
                 dpg.add_button(label="OK", width=140, callback=self.delete_account, user_data=user_data)
                 dpg.add_button(label="Cancel", width=140, callback=lambda: dpg.delete_item("DeleteAccount"))
 
-    def copy_2_clipboard(self, sender):
+    @staticmethod
+    def copy_2_clipboard(sender):
         subprocess.run("clip", text=True, input=dpg.get_item_label(sender))

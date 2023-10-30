@@ -26,9 +26,9 @@ class LogsTab:
             dpg.add_spacer()
             with dpg.group(horizontal=True):
                 dpg.add_text(tag="LogUpdatedTime", default_value='Last Updated: {}'.format(datetime.now()))
-                dpg.add_button(label='Update', callback=self.create_log_table)
-                dpg.add_button(label='Clear', callback=lambda: dpg.configure_item("DeleteFiles", show=True))
-                dpg.add_button(label='Show in File Explorer', callback=lambda: subprocess.Popen('explorer /select, {}'.format(os.path.dirname(os.getcwd()) + '\\logs\\')))
+                dpg.add_button(label='Update', width=54, callback=self.create_log_table)
+                dpg.add_button(label='Clear', width=54, callback=lambda: dpg.configure_item("DeleteFiles", show=True))
+                dpg.add_button(label='Show in File Explorer', callback=lambda: subprocess.Popen('explorer /select, {}'.format(os.getcwd() + '\\logs\\')))
             dpg.add_spacer()
             dpg.add_separator()
             dpg.add_spacer()

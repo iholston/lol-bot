@@ -1,5 +1,6 @@
 import webbrowser
 import os
+import requests
 from json import load, dump
 import dearpygui.dearpygui as dpg
 from ..common import constants
@@ -18,6 +19,11 @@ class ConfigTab:
         self.file = open(self.file_name, "r+")
         self.configs = load(self.file)
         self._config_update()
+        try:
+            r = requests.get('http://ddragon.leagueoflegends.com/api/versions.json')
+            self.patch = r.json()[0]
+        except:
+            self.patch = '13.21.1'
 
     def create_tab(self, parent):
         """Creates Settings Tab"""
@@ -43,10 +49,10 @@ class ConfigTab:
                 with dpg.tooltip(dpg.last_item()):
                     dpg.add_text("If blank or if all champs are taken, the bot\nwill select a random free to play champion.\nAdd champs with a comma between each number.\nIt will autosave if valid.")
                 dpg.add_input_text(default_value=str(constants.CHAMPS).replace("[", "").replace("]", ""), width=334, callback=self._set_champs)
-                b = dpg.add_button(label="list", width=42, indent=526, callback=lambda: webbrowser.open('ddragon.leagueoflegends.com/cdn/12.6.1/data/en_US/champion.json'))
+                b = dpg.add_button(label="list", width=42, indent=526, callback=lambda: webbrowser.open('ddragon.leagueoflegends.com/cdn/{}/data/en_US/champion.json'.format(self.patch)))
                 with dpg.tooltip(dpg.last_item()):
                     dpg.add_text("Open ddragon.leagueoflegends.com in webbrowser")
-                dpg.bind_item_theme(b, "__demo_hyperlinkTheme")
+                dpg.bind_item_theme(b, "__hyperlinkTheme")
             with dpg.group(horizontal=True):
                 dpg.add_input_text(default_value='Ask for Mid Dialog', width=180, enabled=False)
                 with dpg.tooltip(dpg.last_item()):
