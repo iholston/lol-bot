@@ -42,7 +42,12 @@ class HTTPTab:
             dpg.add_input_text(tag='ResponseOutput', width=568, height=124, multiline=True)
 
     def request(self):
-        self.connection.set_lcu_headers()
+        try:
+            self.connection.set_lcu_headers()
+        except FileNotFoundError:
+            dpg.configure_item('StatusOutput', label='418')
+            dpg.configure_item('ResponseOutput', default_value='League of Legends is not running')
+            return
         r = self.connection.request(dpg.get_value('Method').lower(), dpg.get_value('URL'), data=dpg.get_value('Body'))
         dpg.configure_item('StatusOutput', label=r.status_code)
         dpg.configure_item('ResponseOutput', default_value=json.dumps(r.json(), indent=4))

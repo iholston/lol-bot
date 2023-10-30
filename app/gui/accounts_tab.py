@@ -1,5 +1,6 @@
 import os
 import subprocess
+import subprocess
 import dearpygui.dearpygui as dpg
 from ..common import account
 
@@ -54,10 +55,10 @@ class AccountsTab:
                 dpg.bind_item_theme(dpg.last_item(), "clear_background")
             for acc in reversed(self.accounts['accounts']):
                 with dpg.group(horizontal=True):
-                    dpg.add_button(label=acc['username'], width=147)
+                    dpg.add_button(label=acc['username'], width=147, callback=self.copy_2_clipboard)
                     with dpg.tooltip(dpg.last_item()):
                         dpg.add_text("Copy")
-                    dpg.add_button(label=acc['password'], width=147)
+                    dpg.add_button(label=acc['password'], width=147, callback=self.copy_2_clipboard)
                     with dpg.tooltip(dpg.last_item()):
                         dpg.add_text("Copy")
                     dpg.add_button(label=acc['leveled'], width=147)
@@ -104,3 +105,5 @@ class AccountsTab:
                 dpg.add_button(label="OK", width=140, callback=self.delete_account, user_data=user_data)
                 dpg.add_button(label="Cancel", width=140, callback=lambda: dpg.delete_item("DeleteAccount"))
 
+    def copy_2_clipboard(self, sender):
+        subprocess.run("clip", text=True, input=dpg.get_item_label(sender))
