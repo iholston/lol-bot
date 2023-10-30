@@ -1,6 +1,7 @@
 import dearpygui.dearpygui as dpg
 import webbrowser
 import json
+import subprocess
 from ..common import api
 
 
@@ -38,7 +39,7 @@ class HTTPTab:
             with dpg.group(horizontal=True):
                 dpg.add_text("Response:")
                 dpg.add_button(tag='StatusOutput', width=50)
-                dpg.add_button(label="Copy to Clipboard")
+                dpg.add_button(label="Copy to Clipboard", callback=lambda: subprocess.run("clip", text=True, input=dpg.get_value('ResponseOutput')))
             dpg.add_input_text(tag='ResponseOutput', width=568, height=124, multiline=True)
 
     @staticmethod
