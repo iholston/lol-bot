@@ -11,8 +11,13 @@
 
 </br>
 <p align="left">
-  <img src="https://user-images.githubusercontent.com/32341824/231916860-8cdaa0bb-c808-48f7-8afe-5cd151501a98.gif")
+  <img src="https://user-images.githubusercontent.com/32341824/231916860-8cdaa0bb-c808-48f7-8afe-5cd151501a98.gif">
 </p>
+<p align="left">
+  <img src="https://github.com/iholston/lol-bot/assets/32341824/cb16a16f-9195-4b31-8b52-587f9958bcd6" width="500">
+</p>
+
+[More Screenshots](https://imgur.com/a/8PlsMmi)
 
 ## Current Features
 - Start League and Login
@@ -20,6 +25,7 @@
 - Buy items and somewhat intelligently push mid until the game is over
 - End game, earn experience, collect rewards
 - Loop 🥡🧋
+
 
 ## Requirements
 - [Python >= 3.10](https://www.python.org/downloads/)
@@ -30,17 +36,9 @@
 - Ensure Python is added to your PATH, check "Add Python to PATH" when [installing](https://www.youtube.com/watch?v=uDbDIhR76H4)
 - Download the [latest release](https://github.com/iholston/lol-bot/releases)
 - Download [extra RAM](https://downloadmoreram.com/) (only if needed)
-- Run Installer.bat or ```pip install -r requirements.txt```
+- Run installer.bat or ```pip install -r requirements.txt```
 
 ## Optional Configuration
-- constants.py
-  - For non-standard league install paths, update the ```LEAGUE_CLIENT_DIR``` 
-  - To level accounts past level 30, update ```ACCOUNT_MAX_LEVEL``` 
-  - To change the game mode update ```GAME_LOBBY_ID``` with another lobby id. (*Note*: the bot is designed for beginner or itermediate bots, lobby id: 840/850) 
-- account.py
-  - To continuously level new league accounts, implement account.py to connect to your database of league accounts.
-  - For a simple implementation, add your accounts to the accounts.json file in the resources folder and copy accounts.py from the resources folder into the scripts folder
-
 For Virtual Machine setups, I recommend starting with [this forum](https://www.unknowncheats.me/forum/league-of-legends/480977-run-league-legends-virtual-machine-vmware.html). *Note:* I will not be fixing/troubleshooting VM related issues as there are far too many VM implementation/platform specific issues
 
 The League of Legends accounts should already have accepted the riot promise, set a username, and skipped the tutorials. The bot will automatically change your league settings/configuration and the game window (not the client) should open as a 1024x768 window
