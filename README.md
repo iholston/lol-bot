@@ -33,7 +33,7 @@
 - [League of Legends Account](https://signup.leagueoflegends.com/en-us/signup/index)
 
 ## Setup
-- Ensure Python is added to your PATH, check "Add Python to PATH" when [installing](https://www.youtube.com/watch?v=uDbDIhR76H4)
+- Ensure Python is added to your PATH, check "Add Python to PATH" when [installing](https://youtu.be/nU2Egc3Zx3Q)
 - Clone the repo or download the [latest release](https://github.com/iholston/lol-bot/releases)
 - Download [extra RAM](https://downloadmoreram.com/) (only if needed)
 - Run installer.bat or ```pip install -r requirements.txt```
