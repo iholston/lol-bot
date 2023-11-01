@@ -34,7 +34,7 @@
 
 ## Setup
 - Ensure Python is added to your PATH, check "Add Python to PATH" when [installing](https://www.youtube.com/watch?v=uDbDIhR76H4)
-- Download the [latest release](https://github.com/iholston/lol-bot/releases)
+- Clone the repo or download the [latest release](https://github.com/iholston/lol-bot/releases)
 - Download [extra RAM](https://downloadmoreram.com/) (only if needed)
 - Run installer.bat or ```pip install -r requirements.txt```
 
