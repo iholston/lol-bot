@@ -73,7 +73,7 @@ class Client:
                 self.log.error("Bot Exiting")
                 return
 
-    def leveling_loop(self) -> None:
+    def leveling_loop(self) -> None: 
         """Loop that runs the correct function based on the phase of the League Client, continuously starts games"""
         self.connection.connect_lcu(verbose=False)
         phase = self.get_phase()
