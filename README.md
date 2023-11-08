@@ -21,7 +21,7 @@
 
 ## Current Features
 - Start League and Login
-- Start a Beginner Bot Game
+- Start a Bot Game
 - Buy items and somewhat intelligently push mid until the game is over
 - End game, earn experience, collect rewards
 - Loop 🥡🧋
@@ -35,8 +35,8 @@
 ## Setup
 - Ensure Python is added to your PATH, check "Add Python to PATH" when [installing](https://youtu.be/nU2Egc3Zx3Q)
 - Clone the repo or download the [latest release](https://github.com/iholston/lol-bot/releases)
-- Download [extra RAM](https://downloadmoreram.com/) (only if needed)
 - Run installer.bat or ```pip install -r requirements.txt```
+- In some cases it may be necessary to download and install [Microsoft C and C++ (MSVC) runtime libraries](https://learn.microsoft.com/en-GB/cpp/windows/latest-supported-vc-redist?view=msvc-170)
 
 ## Optional Configuration
 For Virtual Machine setups, I recommend starting with [this forum](https://www.unknowncheats.me/forum/league-of-legends/480977-run-league-legends-virtual-machine-vmware.html). *Note:* I will not be fixing/troubleshooting VM related issues as there are far too many VM implementation/platform specific issues
