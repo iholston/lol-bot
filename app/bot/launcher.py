@@ -39,14 +39,13 @@ class Launcher:
         """Overwrites the League of Legends game config"""
         self.log.info("Overwriting/creating game config")
         if os.path.exists(LEAGUE_GAME_CONFIG_PATH):
-            shutil.copyfile(LOCAL_GAME_CONFIG_PATH, LEAGUE_GAME_CONFIG_PATH)
+            shutil.copy(LOCAL_GAME_CONFIG_PATH, LEAGUE_GAME_CONFIG_PATH)
         else:
             shutil.copy2(LOCAL_GAME_CONFIG_PATH, LEAGUE_GAME_CONFIG_PATH)
 
     def launch_loop(self) -> None:
         """Handles tasks necessary to open the League of Legends client"""
         logged_in = False
-
         for i in range(100):
 
             # League is running and there was a successful login attempt

@@ -60,17 +60,19 @@ class Client:
                 self.log.error(ce.__str__())
                 self.client_errors += 1
                 if self.client_errors == MAX_CLIENT_ERRORS:
-                    raise ClientError("Max errors reached.Exiting")
+                    err_msg = "Max errors reached. Exiting"
+                    self.log.error(err_msg)
+                    raise ClientError(err_msg)
                 utils.close_processes()
             except launcher.LauncherError as le:
                 self.log.error(le.__str__())
-                self.log.error("Bot Exiting")
+                self.log.error("Launcher Error. Exiting")
                 return
             except Exception as e:
                 self.log.error(e)
                 if traceback.format_exc() is not None:
                     self.log.error(traceback.format_exc())
-                self.log.error("Bot Exiting")
+                self.log.error("Unknown Error. Exiting")
                 return
 
     def leveling_loop(self) -> None: 
