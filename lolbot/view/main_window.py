@@ -1,9 +1,13 @@
-import ctypes
-ctypes.windll.shcore.SetProcessDpiAwareness(0)  # This must be set before importing pyautogui
+"""
+User interface module that contains the main window
+"""
 
+import ctypes; ctypes.windll.shcore.SetProcessDpiAwareness(0)  # This must be set before importing pyautogui/dpg
 import datetime
 import multiprocessing
+
 import dearpygui.dearpygui as dpg
+
 from lolbot.common import api, account
 from .bot_tab import BotTab
 from .accounts_tab import AccountsTab
@@ -35,8 +39,8 @@ class MainWindow:
         self.logs_tab = LogsTab()
         self.about_tab = AboutTab()
 
-    def show(self):
-        """Displays dpg view"""
+    def show(self) -> None:
+        """Renders view"""
         dpg.create_context()
         with dpg.window(label='', tag='primary window', width=self.width, height=self.height, no_move=True, no_resize=True, no_title_bar=True):
             with dpg.theme(tag="__hyperlinkTheme"):
@@ -65,7 +69,7 @@ class MainWindow:
         dpg.destroy_context()
 
     def _gui_updater(self) -> None:
-        """Updates view each frame, displays up to date bot info"""
+        """Updates view each frame, displays up-to-date bot info"""
         if not self.message_queue.empty():
             display_message = ""
             self.output_queue.append(self.message_queue.get())

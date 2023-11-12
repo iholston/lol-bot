@@ -1,12 +1,19 @@
+"""
+View tab that displays informationa about the bot
+"""
+
 import webbrowser
 import requests
+
 import dearpygui.dearpygui as dpg
+
 from ..common import constants
 
 
 class AboutTab:
+    """Class that displays the About Tab and information about the bot"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         response = requests.get("https://api.github.com/repos/iholston/lol-bot/releases/latest")
         self.version = constants.VERSION
         self.latest_version = response.json()["name"]
@@ -14,7 +21,7 @@ class AboutTab:
         if self.latest_version != self.version:
             self.need_update = True
 
-    def create_tab(self, parent) -> None:
+    def create_tab(self, parent: int) -> None:
         """Creates About Tab"""
         with dpg.tab(label="About", parent=parent) as self.about_tab:
             dpg.add_spacer()

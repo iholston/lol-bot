@@ -5,11 +5,13 @@ Plays and monitors the state of a single League of Legends match
 import logging
 import inspect
 import random
-import pyautogui
-import requests
 from enum import Enum
 from datetime import datetime, timedelta
 from time import sleep
+
+import pyautogui
+import requests
+
 from lolbot.common import utils
 from lolbot.common.constants import *
 

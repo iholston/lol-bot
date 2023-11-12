@@ -3,6 +3,7 @@ A simple implementation of account.py using a json file
 """
 
 import json
+
 import lolbot.common.constants as constants
 
 

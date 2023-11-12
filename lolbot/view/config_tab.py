@@ -1,14 +1,21 @@
+"""
+View tab that sets configurations for the bot
+"""
+
 import webbrowser
 import os
 import requests
 from json import load, dump
+
 import dearpygui.dearpygui as dpg
+
 from ..common import constants
 
 
 class ConfigTab:
+    """Class that creates the ConfigTab and sets configurations for the bot"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.id = None
         self.lobbies = {
             'Intro': 830,
@@ -25,7 +32,7 @@ class ConfigTab:
         except:
             self.patch = '13.21.1'
 
-    def create_tab(self, parent):
+    def create_tab(self, parent: int) -> None:
         """Creates Settings Tab"""
         with dpg.tab(label="Config", parent=parent) as self.id:
             dpg.add_spacer()
@@ -74,7 +81,7 @@ class ConfigTab:
         dump(self.configs, self.file, indent=4)
         self.file.truncate()
 
-    def _set_dir(self, sender) -> None:
+    def _set_dir(self, sender: int) -> None:
         """Checks if directory exists and sets the Client Directory path"""
         constants.LEAGUE_CLIENT_DIR = dpg.get_value(sender)  # https://stackoverflow.com/questions/42861643/python-global-variable-modified-prior-to-multiprocessing-call-is-passed-as-ori
         if os.path.exists(constants.LEAGUE_CLIENT_DIR):
@@ -82,7 +89,7 @@ class ConfigTab:
             self._config_update()
             constants.update()
 
-    def _set_mode(self, sender) -> None:
+    def _set_mode(self, sender: int) -> None:
         """Sets the game mode"""
         match dpg.get_value(sender):
             case "Intro":
@@ -94,13 +101,13 @@ class ConfigTab:
         self.configs['mode'] = constants.GAME_LOBBY_ID
         self._config_update()
 
-    def _set_level(self, sender) -> None:
+    def _set_level(self, sender: int) -> None:
         """Sets account max level"""
         constants.ACCOUNT_MAX_LEVEL = dpg.get_value(sender)
         self.configs['max_level'] = constants.ACCOUNT_MAX_LEVEL
         self._config_update()
 
-    def _set_champs(self, sender) -> None:
+    def _set_champs(self, sender: int) -> None:
         """Sets champ pick order"""
         x = dpg.get_value(sender)
         try:
@@ -111,7 +118,7 @@ class ConfigTab:
         constants.CHAMPS = champs
         self._config_update()
 
-    def _set_dialog(self, sender) -> None:
+    def _set_dialog(self, sender: int) -> None:
         """Sets dialog options"""
         constants.ASK_4_MID_DIALOG = dpg.get_value(sender).strip().split("\n")
         self._config_update()

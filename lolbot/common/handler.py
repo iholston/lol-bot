@@ -1,12 +1,18 @@
+"""
+Handles bot logging
+"""
+
 import logging
 import os
 import sys
 from datetime import datetime
 from multiprocessing import Queue
+
 from logging.handlers import RotatingFileHandler
 
 
 class MultiProcessLogHandler(logging.Handler):
+    """Class that handles bot log messsages, writes to log file, terminal, and view"""
 
     def __init__(self, message_queue: Queue, path: str) -> None:
         logging.Handler.__init__(self)
@@ -19,6 +25,7 @@ class MultiProcessLogHandler(logging.Handler):
         self.message_queue.put(msg)
 
     def set_logs(self) -> None:
+        """Sets log configurations"""
         if not os.path.exists(self.log_dir):
             os.makedirs(self.log_dir)
 

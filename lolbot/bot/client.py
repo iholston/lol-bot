@@ -6,9 +6,11 @@ import logging
 import random
 import traceback
 import inspect
-import pyautogui
 from time import sleep
 from datetime import datetime, timedelta
+
+import pyautogui
+
 import lolbot.bot.launcher as launcher
 import lolbot.common.account as account
 from lolbot.common import api

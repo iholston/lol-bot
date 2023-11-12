@@ -1,15 +1,23 @@
+"""
+View tab that allows user to create ratios that can be used to create custom bot actions
+"""
+
 import pyautogui
 from time import sleep
+
 import dearpygui.dearpygui as dpg
+
 from ..common import utils
 
 
 class RatioTab:
+    """Class that displays mouse coordinates as a ratio of selected window position"""
 
     def __init__(self):
         pass
 
-    def create_tab(self, parent):
+    def create_tab(self, parent: int) -> None:
+        """Creates Ratio Tab"""
         with dpg.tab(label="Ratio", parent=parent) as self.https_tab:
             dpg.add_text("Build Ratio")
             dpg.add_combo(items=['Riot Client', 'League Client', 'Game'], default_value='League Client', width=500)
@@ -29,7 +37,9 @@ class RatioTab:
                 dpg.add_input_text(default_value="Add ratio with parenthesis, separate multiple with a comma\ni.e. (.2023, .3033), (.3333, .4444)", multiline=True, width=500, height=109)
                 dpg.add_button(label="Test", width=60)
 
-    def _build_ratio(self):
+    @staticmethod
+    def _build_ratio(self) -> None:
+        """Creates ratio of mouse coordinates to top-left window position"""
         while True:
             sleep(1)
             p = pyautogui.position()

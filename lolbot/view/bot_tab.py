@@ -1,16 +1,23 @@
+"""
+View tab that handles bot controls and displays bot output
+"""
+
 import os
 import multiprocessing
 import requests
 import threading
 from time import sleep
+
 import dearpygui.dearpygui as dpg
+
 from ..common import constants, utils, api
 from ..bot.client import Client
 
 
 class BotTab:
+    """Class that displays the BotTab and handles bot controls/output"""
 
-    def __init__(self, message_queue, terminate):
+    def __init__(self, message_queue: multiprocessing.Queue, terminate: bool) -> None:
         self.message_queue = message_queue
         self.connection = api.Connection()
         self.lobbies = {
@@ -30,8 +37,8 @@ class BotTab:
         self.terminate = terminate
         self.bot_thread = None
 
-    def create_tab(self, parent):
-        """Creates Status Tab"""
+    def create_tab(self, parent) -> None:
+        """Creates Bot Tab"""
         with dpg.tab(label="Bot", parent=parent) as self.status_tab:
             dpg.add_spacer()
             dpg.add_text(default_value="Controls")
@@ -71,7 +78,8 @@ class BotTab:
             self.bot_thread = None
             self.message_queue.put("Bot Successfully Terminated")
 
-    def ux_callback(self):
+    def ux_callback(self) -> None:
+        """Sends restart ux request to api"""
         if utils.is_league_running():
             self.connection.request('post', '/riotclient/kill-and-restart-ux')
             sleep(1)
@@ -79,12 +87,13 @@ class BotTab:
         else:
             self.message_queue.put("Cannot restart UX, League is not running")
 
-    def close_client_callback(self):
+    def close_client_callback(self) -> None:
+        """Closes all league related processes"""
         self.message_queue.put('Closing League Processes')
         threading.Thread(target=utils.close_processes).start()
 
     def update_info_panel(self) -> None:
-        """Updates view info string"""
+        """Updates info panel text"""
         if not utils.is_league_running():
             dpg.configure_item("Info", default_value="League is not running")
         else:

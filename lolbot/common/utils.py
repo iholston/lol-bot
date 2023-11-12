@@ -2,14 +2,16 @@
 Utility functions that interact with game windows and processes
 """
 
-import keyboard
-import pyautogui
-import mouse
 import logging
 import subprocess
 import os
 from time import sleep
+
+import keyboard
+import mouse
+import pyautogui
 from win32gui import FindWindow, GetWindowRect
+
 import lolbot.common.constants as constants
 
 log = logging.getLogger(__name__)

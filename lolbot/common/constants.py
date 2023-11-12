@@ -1,4 +1,5 @@
 """Configuration constants"""
+
 import json
 import os
 

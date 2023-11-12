@@ -1,14 +1,21 @@
+"""
+View tab that displays logs in the /logs folder
+"""
+
 import subprocess
 import os
 import shutil
 from datetime import datetime
+
 import dearpygui.dearpygui as dpg
+
 from ..common import constants
 
 
 class LogsTab:
+    """Class that displays the Log Tab"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.id = None
         self.logs_group = None
 
@@ -22,7 +29,7 @@ class LogsTab:
                 dpg.add_spacer()
                 dpg.add_spacer()
                 with dpg.group(horizontal=True, indent=75):
-                    dpg.add_button(label="OK", width=75, callback=self._clear_logs)
+                    dpg.add_button(label="OK", width=75, callback=self.clear_logs)
                     dpg.add_button(label="Cancel", width=75, callback=lambda: dpg.configure_item("DeleteFiles", show=False))
             dpg.add_spacer()
             with dpg.group(horizontal=True):
@@ -48,7 +55,7 @@ class LogsTab:
                         f = open(f, "r")
                         dpg.add_input_text(multiline=True, default_value=f.read(), height=300, width=600, tab_input=True)
 
-    def _clear_logs(self) -> None:
+    def clear_logs(self) -> None:
         """Empties the log folder"""
         dpg.configure_item("DeleteFiles", show=False)
         folder = constants.LOCAL_LOG_PATH

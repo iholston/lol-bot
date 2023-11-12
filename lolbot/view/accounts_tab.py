@@ -1,17 +1,25 @@
+"""
+View tab that handles creation/editing of accounts
+"""
+
 import os
 import subprocess
+from typing import Any
+
 import dearpygui.dearpygui as dpg
+
 from ..common import account
 
 
 class AccountsTab:
+    """Class that creates the Accounts Tab and handles creation/editing of accounts"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.id = None
         self.accounts = None
         self.accounts_table = None
 
-    def create_tab(self, parent):
+    def create_tab(self, parent: int) -> None:
         """Creates Accounts Tab"""
         with dpg.tab(label="Accounts", parent=parent) as self.id:
             dpg.add_text("Options")
@@ -73,12 +81,12 @@ class AccountsTab:
         dpg.configure_item("LeveledField", default_value=False)
         self.create_accounts_table()
 
-    def edit_account(self, sender, app_data, user_data) -> None:
+    def edit_account(self, sender, app_data, user_data: Any) -> None:
         account.edit_account(user_data, {"username": dpg.get_value("EditUsernameField"), "password": dpg.get_value("EditPasswordField"), "leveled": dpg.get_value("EditLeveledField")})
         dpg.delete_item("EditAccount")
         self.create_accounts_table()
 
-    def edit_account_dialog(self, sender, app_data, user_data) -> None:
+    def edit_account_dialog(self, sender, app_data, user_data: Any) -> None:
         with dpg.window(label="Edit Account", modal=True, show=True, tag="EditAccount", height=125, width=250, pos=[155, 110], on_close=lambda: dpg.delete_item("EditAccount")):
             dpg.add_input_text(tag="EditUsernameField", default_value=user_data['username'], width=234)
             dpg.add_input_text(tag="EditPasswordField", default_value=user_data['password'], width=234)
@@ -87,12 +95,12 @@ class AccountsTab:
                 dpg.add_button(label="Submit", width=113, callback=self.edit_account, user_data=user_data['username'])
                 dpg.add_button(label="Cancel", width=113, callback=lambda: dpg.delete_item("EditAccount"))
 
-    def delete_account(self, sender, app_data, user_data) -> None:
+    def delete_account(self, sender, app_data, user_data: Any) -> None:
         account.delete_account(user_data)
         dpg.delete_item("DeleteAccount")
         self.create_accounts_table()
 
-    def delete_account_dialog(self, sender, app_data, user_data) -> None:
+    def delete_account_dialog(self, sender, app_data, user_data: Any) -> None:
         with dpg.window(label="Delete Account", modal=True, show=True, tag="DeleteAccount", pos=[125, 130], on_close=lambda: dpg.delete_item("DeleteAccount")):
             dpg.add_text("Account: {} will be deleted".format(user_data['username']))
             dpg.add_separator()
@@ -104,5 +112,5 @@ class AccountsTab:
                 dpg.add_button(label="Cancel", width=140, callback=lambda: dpg.delete_item("DeleteAccount"))
 
     @staticmethod
-    def copy_2_clipboard(sender):
+    def copy_2_clipboard(sender: int):
         subprocess.run("clip", text=True, input=dpg.get_item_label(sender))

@@ -2,11 +2,13 @@
 Handles HTTP Requests for Riot Client and League Client
 """
 
-import requests
-import urllib3
 import logging
 from base64 import b64encode
 from time import sleep
+
+import requests
+import urllib3
+
 import lolbot.common.constants as constants
 
 

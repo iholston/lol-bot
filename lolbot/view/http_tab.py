@@ -1,18 +1,26 @@
+"""
+View tab that sends custom HTTP requests to LCU API
+"""
+
 import webbrowser
 import json
 import subprocess
+
 import dearpygui.dearpygui as dpg
+
 from ..common import api
 
 
 class HTTPTab:
+    """Class that displays the HTTPTab and sends custom HTTP requests to the LCU API"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.id = -1
         self.connection = api.Connection()
         self.methods = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE']
 
-    def create_tab(self, parent):
+    def create_tab(self, parent: int) -> None:
+        """Creates the HTTPTab"""
         with dpg.tab(label="HTTP", parent=parent) as self.id:
             dpg.add_text("Method:")
             dpg.add_combo(tag='Method', items=self.methods, default_value='GET', width=569)
@@ -43,7 +51,8 @@ class HTTPTab:
             dpg.add_input_text(tag='ResponseOutput', width=568, height=124, multiline=True)
 
     @staticmethod
-    def format_json():
+    def format_json() -> None:
+        """Formats JSON text in the Body Text Field"""
         json_obj = None
         try:
             body = dpg.get_value('Body')
@@ -57,7 +66,8 @@ class HTTPTab:
         if json_obj is not None:
             dpg.set_value('Body', json.dumps(json_obj, indent=4))
 
-    def request(self):
+    def request(self) -> None:
+        """Sends custom HTTP request to LCU API"""
         try:
             self.connection.set_lcu_headers()
         except FileNotFoundError:
