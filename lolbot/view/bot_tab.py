@@ -84,7 +84,7 @@ class BotTab:
         threading.Thread(target=utils.close_processes).start()
 
     def update_info_panel(self) -> None:
-        """Updates gui info string"""
+        """Updates view info string"""
         if not utils.is_league_running():
             dpg.configure_item("Info", default_value="League is not running")
         else:

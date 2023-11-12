@@ -6,9 +6,9 @@ import logging
 import shutil
 import subprocess
 from time import sleep
-from app.common import api
-from app.common import utils
-from app.common.constants import *
+from lolbot.common import api
+from lolbot.common import utils
+from lolbot.common.constants import *
 
 
 class LauncherError(Exception):

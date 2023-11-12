@@ -10,7 +10,7 @@ import subprocess
 import os
 from time import sleep
 from win32gui import FindWindow, GetWindowRect
-import app.common.constants as constants
+import lolbot.common.constants as constants
 
 log = logging.getLogger(__name__)
 

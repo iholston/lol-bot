@@ -9,13 +9,13 @@ import inspect
 import pyautogui
 from time import sleep
 from datetime import datetime, timedelta
-import app.bot.launcher as launcher
-import app.common.account as account
-from app.common import api
-from app.common import utils
-from app.bot.game import Game
-from app.common.handler import MultiProcessLogHandler
-from app.common.constants import *
+import lolbot.bot.launcher as launcher
+import lolbot.common.account as account
+from lolbot.common import api
+from lolbot.common import utils
+from lolbot.bot.game import Game
+from lolbot.common.handler import MultiProcessLogHandler
+from lolbot.common.constants import *
 
 
 class ClientError(Exception):

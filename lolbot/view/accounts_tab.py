@@ -28,7 +28,7 @@ class AccountsTab:
                     dpg.add_button(label="Cancel", width=113, callback=lambda: dpg.configure_item("AccountSubmit", show=False))
             with dpg.group(horizontal=True):
                 dpg.add_button(label="Add New Account", width=182, callback=lambda: dpg.configure_item("AccountSubmit", show=True))
-                dpg.add_button(label="Show in File Explorer", width=182, callback=lambda: subprocess.Popen('explorer /select, {}'.format(os.getcwd() + "\\app\\resources\\accounts.json")))
+                dpg.add_button(label="Show in File Explorer", width=182, callback=lambda: subprocess.Popen('explorer /select, {}'.format(os.getcwd() + "\\lolbot\\resources\\accounts.json")))
                 dpg.add_button(label="Refresh", width=182, callback=self.create_accounts_table)
             dpg.add_spacer()
             dpg.add_spacer()
@@ -65,7 +65,7 @@ class AccountsTab:
                     dpg.add_button(label="Delete", callback=self.delete_account_dialog, user_data=acc)
 
     def add_account(self) -> None:
-        """Adds a new account to accounts.json and updates gui"""
+        """Adds a new account to accounts.json and updates view"""
         dpg.configure_item("AccountSubmit", show=False)
         account.add_account({"username": dpg.get_value("UsernameField"), "password": dpg.get_value("PasswordField"), "leveled": dpg.get_value("LeveledField")})
         dpg.configure_item("UsernameField", default_value="")

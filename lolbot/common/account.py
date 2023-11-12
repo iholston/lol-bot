@@ -3,7 +3,7 @@ A simple implementation of account.py using a json file
 """
 
 import json
-import app.common.constants as constants
+import lolbot.common.constants as constants
 
 
 def get_username() -> str:

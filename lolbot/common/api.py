@@ -7,7 +7,7 @@ import urllib3
 import logging
 from base64 import b64encode
 from time import sleep
-import app.common.constants as constants
+import lolbot.common.constants as constants
 
 
 class Connection:

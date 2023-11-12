@@ -35,10 +35,10 @@ LEAGUE_CLIENT_PATH = LEAGUE_CLIENT_DIR + '/LeagueClient'
 LEAGUE_GAME_CONFIG_PATH = LEAGUE_CLIENT_DIR + '/Config/game.cfg'
 LEAGUE_CLIENT_LOCKFILE_PATH = LEAGUE_CLIENT_DIR + "/lockfile"
 RIOT_CLIENT_LOCKFILE_PATH = os.getenv('LOCALAPPDATA') + '/Riot Games/Riot Client/Config/lockfile'
-LOCAL_ACCOUNTS_PATH = os.getcwd() + "/app/resources/accounts.json"
-LOCAL_GAME_CONFIG_PATH = os.getcwd() + '/app/resources/game.cfg'
-LOCAL_APP_CONFIG_PATH = os.getcwd() + "/app/resources/config.json"
-LOCAL_ICON_PATH = os.getcwd() + '/app/resources/images/a.ico'
+LOCAL_ACCOUNTS_PATH = os.getcwd() + "/lolbot/resources/accounts.json"
+LOCAL_GAME_CONFIG_PATH = os.getcwd() + '/lolbot/resources/game.cfg'
+LOCAL_APP_CONFIG_PATH = os.getcwd() + "/lolbot/resources/config.json"
+LOCAL_ICON_PATH = os.getcwd() + '/lolbot/resources/images/a.ico'
 LOCAL_LOG_PATH = os.getcwd() + '/logs'
 if not os.path.exists(LOCAL_LOG_PATH):
     os.makedirs(LOCAL_LOG_PATH)
