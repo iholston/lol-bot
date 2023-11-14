@@ -74,6 +74,10 @@ class HTTPTab:
             dpg.configure_item('StatusOutput', label='418')
             dpg.configure_item('ResponseOutput', default_value='League of Legends is not running')
             return
-        r = self.connection.request(dpg.get_value('Method').lower(), dpg.get_value('URL').strip(), data=dpg.get_value('Body').strip())
-        dpg.configure_item('StatusOutput', label=r.status_code)
-        dpg.configure_item('ResponseOutput', default_value=json.dumps(r.json(), indent=4))
+        try:
+            r = self.connection.request(dpg.get_value('Method').lower(), dpg.get_value('URL').strip(), data=dpg.get_value('Body').strip())
+            dpg.configure_item('StatusOutput', label=r.status_code)
+            dpg.configure_item('ResponseOutput', default_value=json.dumps(r.json(), indent=4))
+        except Exception as e:
+            dpg.configure_item('StatusOutput', label='418')
+            dpg.configure_item('ResponseOutput', default_value=e.__str__())
