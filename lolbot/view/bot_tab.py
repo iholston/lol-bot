@@ -10,7 +10,8 @@ from time import sleep
 
 import dearpygui.dearpygui as dpg
 
-from ..common import items, utils, api
+from ..common import utils, api
+from ..common import config
 from ..bot.client import Client
 
 
@@ -34,6 +35,7 @@ class BotTab:
             'Hyper Roll TFT': 1130,
             'Double Up TFT': 1160
         }
+        self.config = config.Config()
         self.terminate = terminate
         self.bot_thread = None
 
@@ -58,7 +60,7 @@ class BotTab:
     def start_bot(self) -> None:
         """Starts bot process"""
         if self.bot_thread is None:
-            if not os.path.exists(constants.LEAGUE_CLIENT_DIR):
+            if not os.path.exists(self.config.get_data('league_dir')):
                 self.message_queue.put("Clear")
                 self.message_queue.put("League Installation Path is Invalid. Update Path to START")
                 return
@@ -97,7 +99,7 @@ class BotTab:
         if not utils.is_league_running():
             dpg.configure_item("Info", default_value="League is not running")
         else:
-            if not os.path.exists(constants.LEAGUE_CLIENT_DIR):
+            if not os.path.exists(self.config.get_data('league_dir')):
                 self.message_queue.put("Clear")
                 self.message_queue.put("League Installation Path is Invalid. Update Path")
                 if not self.terminate:
