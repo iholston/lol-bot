@@ -9,7 +9,7 @@ from time import sleep
 import requests
 import urllib3
 
-import lolbot.common.items as constants
+import lolbot.common.config as config
 
 
 class Connection:
@@ -31,6 +31,7 @@ class Connection:
         self.protocol = ''
         self.headers = ''
         self.session = requests.session()
+        self.config = config.Config()
         self.log = logging.getLogger(__name__)
         urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -41,7 +42,7 @@ class Connection:
         self.client_username = Connection.RCU_USERNAME
 
         # lockfile
-        lockfile = open(constants.RIOT_CLIENT_LOCKFILE_PATH, 'r')
+        lockfile = open(config.RIOT_CLIENT_LOCKFILE_PATH, 'r')
         data = lockfile.read()
         self.log.debug(data)
         lockfile.close()
@@ -63,7 +64,7 @@ class Connection:
         self.client_username = Connection.LCU_USERNAME
 
         # lockfile
-        lockfile = open(constants.LEAGUE_CLIENT_LOCKFILE_PATH, 'r')
+        lockfile = open(self.config.get_data('league_lockfile'), 'r')
         data = lockfile.read()
         self.log.debug(data)
         lockfile.close()
@@ -89,7 +90,7 @@ class Connection:
         self.client_username = Connection.LCU_USERNAME
 
         # lockfile
-        lockfile = open(constants.LEAGUE_CLIENT_LOCKFILE_PATH, 'r')
+        lockfile = open(self.config.get_data('league_lockfile'), 'r')
         data = lockfile.read()
         self.log.debug(data)
         lockfile.close()
