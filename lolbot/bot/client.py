@@ -32,6 +32,13 @@ class ClientError(Exception):
 class Client:
     """Client class that handles the League Client and all tasks needed to start a new game"""
 
+    POST_GAME_OK_RATIO = (0.4996, 0.9397)
+    POST_GAME_SELECT_CHAMP_RATIO = (0.4977, 0.5333)
+    POPUP_SEND_EMAIL_X_RATIO = (0.6960, 0.1238)
+
+    MAX_CLIENT_ERRORS = 5
+    MAX_PHASE_ERRORS = 20
+
     def __init__(self, message_queue) -> None:
         self.connection = api.Connection()
         self.launcher = launcher.Launcher()
@@ -61,7 +68,7 @@ class Client:
             except ClientError as ce:
                 self.log.error(ce.__str__())
                 self.client_errors += 1
-                if self.client_errors == MAX_CLIENT_ERRORS:
+                if self.client_errors == Client.MAX_CLIENT_ERRORS:
                     err_msg = "Max errors reached. Exiting"
                     self.log.error(err_msg)
                     raise ClientError(err_msg)
@@ -124,7 +131,7 @@ class Client:
                 self.log.debug("New Phase: {}, Previous Phase: {}".format(self.phase, self.prev_phase))
                 if self.prev_phase == self.phase and self.phase != "Matchmaking":
                     self.phase_errors += 1
-                    if self.phase_errors == MAX_PHASE_ERRORS:
+                    if self.phase_errors == Client.MAX_PHASE_ERRORS:
                         raise ClientError("Transition error. Phase will not change")
                     else:
                         self.log.debug("Phase same as previous. Phase: {}, Previous Phase: {}, Errno {}".format(self.phase, self.prev_phase, self.phase_errors))
@@ -278,13 +285,13 @@ class Client:
         self.log.info("Honoring teammates and accepting rewards")
         sleep(3)
         try:
-            utils.click(POPUP_SEND_EMAIL_X_RATIO, LEAGUE_CLIENT_WINNAME, 2)
+            utils.click(Client.POPUP_SEND_EMAIL_X_RATIO, LEAGUE_CLIENT_WINNAME, 2)
             self.honor_player()
-            utils.click(POPUP_SEND_EMAIL_X_RATIO, LEAGUE_CLIENT_WINNAME, 2)
+            utils.click(Client.POPUP_SEND_EMAIL_X_RATIO, LEAGUE_CLIENT_WINNAME, 2)
             for i in range(3):
-                utils.click(POST_GAME_SELECT_CHAMP_RATIO, LEAGUE_CLIENT_WINNAME, 1)
-                utils.click(POST_GAME_OK_RATIO, LEAGUE_CLIENT_WINNAME, 1)
-            utils.click(POPUP_SEND_EMAIL_X_RATIO, LEAGUE_CLIENT_WINNAME, 1)
+                utils.click(Client.POST_GAME_SELECT_CHAMP_RATIO, LEAGUE_CLIENT_WINNAME, 1)
+                utils.click(Client.POST_GAME_OK_RATIO, LEAGUE_CLIENT_WINNAME, 1)
+            utils.click(Client.POPUP_SEND_EMAIL_X_RATIO, LEAGUE_CLIENT_WINNAME, 1)
         except (utils.WindowNotFound, pyautogui.FailSafeException):
             sleep(3)
 

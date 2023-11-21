@@ -1,6 +1,5 @@
 """Configuration constants"""
 
-import json
 import os
 
 # ITEMS
@@ -77,54 +76,4 @@ ASK_4_MID_DIALOG = ['mid ples',
                     'howdy, mid',
                     'goin mid',
                     'mid']
-
-# GAME BUTTON RATIOS
-GAME_MINI_MAP_UNDER_TURRET = (0.8760, 0.8846)
-GAME_MINI_MAP_CENTER_MID = (0.8981, 0.8674)
-GAME_MINI_MAP_ENEMY_NEXUS = (0.9628, 0.7852)
-GAME_ULT_RATIO = (0.7298, 0.2689)
-GAME_AFK_OK_RATIO = (0.4981, 0.4647)
-GAME_CENTER_OF_SCREEN = (0.5, 0.5)
-GAME_SYSTEM_MENU_X = (0.7729, 0.2488)
-
-# CLIENT BUTTON RATIOS
-POST_GAME_OK_RATIO = (0.4996, 0.9397)
-POST_GAME_SELECT_CHAMP_RATIO = (0.4977, 0.5333)
-POPUP_SEND_EMAIL_X_RATIO = (0.6960, 0.1238)
-
-# RANDOM
-MAX_CLIENT_ERRORS = 5
-MAX_PHASE_ERRORS = 20
 VERSION = 'v2.0.1'
-
-
-def update():
-    """Either read from config.json or create it with default values"""
-    global LEAGUE_CLIENT_DIR, GAME_LOBBY_ID, ACCOUNT_MAX_LEVEL, CHAMPS, ASK_4_MID_DIALOG
-    global LEAGUE_CLIENT_PATH, LEAGUE_GAME_CONFIG_PATH, LEAGUE_CLIENT_LOCKFILE_PATH
-    if not os.path.exists(LOCAL_APP_CONFIG_PATH):
-        data = {'league_path': LEAGUE_CLIENT_DIR,
-                'lobby': GAME_LOBBY_ID,
-                'max_level': ACCOUNT_MAX_LEVEL,
-                'champs': CHAMPS,
-                'dialog': ASK_4_MID_DIALOG}
-        with open(LOCAL_APP_CONFIG_PATH, "w") as outfile:
-            json.dump(data, outfile, indent=4)
-    else:
-        try:
-            with open(LOCAL_APP_CONFIG_PATH, "r") as readfile:
-                data = json.load(readfile)
-                LEAGUE_CLIENT_DIR = data['league_path']
-                LEAGUE_CLIENT_PATH = LEAGUE_CLIENT_DIR + '/LeagueClient'
-                LEAGUE_GAME_CONFIG_PATH = LEAGUE_CLIENT_DIR + '/Config/game.cfg'
-                LEAGUE_CLIENT_LOCKFILE_PATH = LEAGUE_CLIENT_DIR + "/lockfile"
-                GAME_LOBBY_ID = data['lobby']
-                ACCOUNT_MAX_LEVEL = data['max_level']
-                CHAMPS = data['champs']
-                ASK_4_MID_DIALOG = data['dialog']
-        except:
-            os.remove(LOCAL_APP_CONFIG_PATH)
-            update()
-
-
-update()
