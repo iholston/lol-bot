@@ -8,9 +8,9 @@ CONFIG_DIR = os.path.join(os.getenv('LOCALAPPDATA'), 'lolbot')
 CONFIG_PATH = os.path.join(CONFIG_DIR, 'config.json')
 ACCOUNT_PATH = os.path.join(CONFIG_DIR, 'accounts.json')
 RIOT_CLIENT_LOCKFILE_PATH = os.path.join(os.getenv('LOCALAPPDATA'), '/Riot Games/Riot Client/Config/lockfile')
-LOCAL_GAME_CONFIG_PATH = os.path.join(os.getcwd(), '/lolbot/resources/game.cfg')
-ICON_PATH = os.path.join(os.getcwd(), '/lolbot/resources/images/a.ico')
-LOG_PATH = os.path.join(os.getcwd(), '/logs')
+LOCAL_GAME_CONFIG_PATH = os.getcwd() + '/lolbot/resources/game.cfg'
+ICON_PATH = os.getcwd() + '/lolbot/resources/images/a.ico'
+LOG_PATH = os.getcwd() + '/logs'
 VERSION = '3.0.0'
 DEFAULT_SETTINGS = {'league_dir': 'C:/Riot Games/League of Legends',
                     'lobby': 840,
