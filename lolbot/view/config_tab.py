@@ -61,9 +61,9 @@ class ConfigTab:
 
     def _set_dir(self, sender: int) -> None:
         """Checks if directory exists and sets the Client Directory path"""
-        file = dpg.get_value(sender)  # https://stackoverflow.com/questions/42861643/python-global-variable-modified-prior-to-multiprocessing-call-is-passed-as-ori
-        if os.path.exists(file):
-            self.config.set_data('league_path', file)
+        _dir = dpg.get_value(sender)  # https://stackoverflow.com/questions/42861643/python-global-variable-modified-prior-to-multiprocessing-call-is-passed-as-ori
+        if os.path.exists(_dir):
+            self.config.set_league_dir(_dir)
 
     def _set_mode(self, sender: int) -> None:
         """Sets the game mode"""

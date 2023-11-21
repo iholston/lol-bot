@@ -16,7 +16,7 @@ from .http_tab import HTTPTab
 from .ratio_tab import RatioTab
 from .logs_tab import LogsTab
 from .about_tab import AboutTab
-from ..common.constants import LOCAL_ICON_PATH
+from ..common.config import ICON_PATH
 
 
 class MainWindow:
@@ -57,7 +57,7 @@ class MainWindow:
                 # self.ratio_tab.create_tab(self.tab_bar)
                 self.logs_tab.create_tab(self.tab_bar)
                 self.about_tab.create_tab(self.tab_bar)
-        dpg.create_viewport(title='LoL Bot', width=self.width, height=self.height, small_icon=LOCAL_ICON_PATH, resizable=False)
+        dpg.create_viewport(title='LoL Bot', width=self.width, height=self.height, small_icon=ICON_PATH, resizable=False)
         dpg.setup_dearpygui()
         dpg.show_viewport()
         dpg.set_primary_window('primary window', True)

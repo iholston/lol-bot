@@ -9,7 +9,7 @@ from datetime import datetime
 
 import dearpygui.dearpygui as dpg
 
-from ..common import constants
+from ..common.config import LOG_PATH
 
 
 class LogsTab:
@@ -48,8 +48,8 @@ class LogsTab:
             dpg.delete_item(self.logs_group)
         dpg.set_value('LogUpdatedTime', 'Last Updated: {}'.format(datetime.now()))
         with dpg.group(parent=self.id) as self.logs_group:
-            for filename in os.listdir(constants.LOCAL_LOG_PATH):
-                f = os.path.join(constants.LOCAL_LOG_PATH, filename)
+            for filename in os.listdir(LOG_PATH):
+                f = os.path.join(LOG_PATH, filename)
                 if os.path.isfile(f):
                     with dpg.collapsing_header(label=filename):
                         f = open(f, "r")
@@ -58,7 +58,7 @@ class LogsTab:
     def clear_logs(self) -> None:
         """Empties the log folder"""
         dpg.configure_item("DeleteFiles", show=False)
-        folder = constants.LOCAL_LOG_PATH
+        folder = LOG_PATH
         for filename in os.listdir(folder):
             file_path = os.path.join(folder, filename)
             try:

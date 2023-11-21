@@ -10,7 +10,7 @@ from time import sleep
 
 import dearpygui.dearpygui as dpg
 
-from ..common import constants, utils, api
+from ..common import items, utils, api
 from ..bot.client import Client
 
 

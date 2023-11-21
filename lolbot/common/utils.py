@@ -12,9 +12,22 @@ import mouse
 import pyautogui
 from win32gui import FindWindow, GetWindowRect
 
-import lolbot.common.constants as constants
 
 log = logging.getLogger(__name__)
+
+# WINDOW NAMES
+RIOT_CLIENT_WINNAME = "Riot Client Main"
+LEAGUE_CLIENT_WINNAME = "League of Legends"
+LEAGUE_GAME_CLIENT_WINNAME = "League of Legends (TM) Client"
+
+# PROCESS NAMES
+LEAGUE_PROCESS_NAMES = ["LeagueClient.exe", "League of Legends.exe"]
+RIOT_CLIENT_PROCESS_NAMES = ["RiotClientUx.exe"]
+
+# COMMANDS
+KILL_LEAGUE_CLIENT = 'TASKKILL /F /IM LeagueClient.exe'
+KILL_LEAGUE = 'TASKKILL /F /IM "League of Legends.exe"'
+KILL_RIOT_CLIENT = 'TASKKILL /F /IM RiotClientUx.exe'
 
 
 class WindowNotFound(Exception):
@@ -25,7 +38,7 @@ def is_league_running() -> bool:
     """Checks if league processes exists"""
     res = subprocess.check_output(["TASKLIST"], creationflags=0x08000000)
     output = str(res)
-    for name in constants.LEAGUE_PROCESS_NAMES:
+    for name in LEAGUE_PROCESS_NAMES:
         if name in output:
             return True
     return False
@@ -35,7 +48,7 @@ def is_rc_running() -> bool:
     """Checks if riot client process exists"""
     res = subprocess.check_output(["TASKLIST"], creationflags=0x08000000)
     output = str(res)
-    for name in constants.RIOT_CLIENT_PROCESS_NAMES:
+    for name in RIOT_CLIENT_PROCESS_NAMES:
         if name in output:
             return True
     return False
@@ -50,20 +63,27 @@ def is_game_running() -> bool:
     return False
 
 
-def close_processes() -> None:
+def close_all_processes() -> None:
     """Closes all league related processes"""
     log.info("Terminating league related processes")
-    os.system(constants.KILL_LEAGUE)
-    os.system(constants.KILL_LEAGUE_CLIENT)
-    os.system(constants.KILL_RIOT_CLIENT)
+    os.system(KILL_LEAGUE)
+    os.system(KILL_LEAGUE_CLIENT)
+    os.system(KILL_RIOT_CLIENT)
     sleep(5)
 
 
 def close_game() -> None:
     """Closes the League of Legends game process"""
     log.info("Terminating game instance")
-    os.system(constants.KILL_LEAGUE)
+    os.system(KILL_LEAGUE)
     sleep(15)
+
+
+def close_riot_client() -> None:
+    """Closes the League of Legends game process"""
+    log.info("Terminating game instance")
+    os.system(KILL_RIOT_CLIENT)
+    sleep(2)
 
 
 def screenshot(img_name: str, path: str = '') -> None:
@@ -75,7 +95,7 @@ def screenshot(img_name: str, path: str = '') -> None:
         im.save(path + img_name)
 
 
-def size(window_title: str = constants.LEAGUE_CLIENT_WINNAME) -> tuple:
+def size(window_title: str = LEAGUE_CLIENT_WINNAME) -> tuple:
     """Gets the size of an open window"""
     window_handle = FindWindow(None, window_title)
     if window_handle == 0:
@@ -99,10 +119,10 @@ def click(ratio: tuple, expected_window_name: str = '', wait: int or float = 1) 
     elif expected_window_name != '':
         window_name = expected_window_name
     else:  # check if game is running and default to game otherwise set window to league client
-        if exists(constants.LEAGUE_GAME_CLIENT_WINNAME):
-            window_name = constants.LEAGUE_GAME_CLIENT_WINNAME
-        elif exists(constants.LEAGUE_CLIENT_WINNAME):
-            window_name = constants.LEAGUE_CLIENT_WINNAME
+        if exists(LEAGUE_GAME_CLIENT_WINNAME):
+            window_name = LEAGUE_GAME_CLIENT_WINNAME
+        elif exists(LEAGUE_CLIENT_WINNAME):
+            window_name = LEAGUE_CLIENT_WINNAME
         else:
             log.debug("Cannot click on {}, no available window".format(ratio))
             return
@@ -124,10 +144,10 @@ def right_click(ratio: tuple, expected_window: str = '', wait: int or float = 1)
     elif expected_window != '':
         window_name = expected_window
     else:  # check if game is running and default to game otherwise set window to league client
-        if exists(constants.LEAGUE_GAME_CLIENT_WINNAME):
-            window_name = constants.LEAGUE_GAME_CLIENT_WINNAME
-        elif exists(constants.LEAGUE_CLIENT_WINNAME):
-            window_name = constants.LEAGUE_CLIENT_WINNAME
+        if exists(LEAGUE_GAME_CLIENT_WINNAME):
+            window_name = LEAGUE_GAME_CLIENT_WINNAME
+        elif exists(LEAGUE_CLIENT_WINNAME):
+            window_name = LEAGUE_CLIENT_WINNAME
         else:
             log.debug("Cannot click on {}, no available window".format(ratio))
             return
@@ -143,11 +163,11 @@ def right_click(ratio: tuple, expected_window: str = '', wait: int or float = 1)
 
 def attack_move_click(ratio: tuple, wait: int or float = 1) -> None:
     """Attack move clicks in an open League of Legends game window"""
-    if not exists(constants.LEAGUE_GAME_CLIENT_WINNAME):
+    if not exists(LEAGUE_GAME_CLIENT_WINNAME):
         log.debug("Cannot attack move when game is not running")
         raise WindowNotFound
     log.debug('Attack Moving on ratio {}: {}, {}. Waiting: {}'.format(ratio, ratio[0], ratio[1], wait))
-    x, y, l, h = size(constants.LEAGUE_GAME_CLIENT_WINNAME)
+    x, y, l, h = size(LEAGUE_GAME_CLIENT_WINNAME)
     updated_x = ((l - x) * ratio[0]) + x
     updated_y = ((h - y) * ratio[1]) + y
     pyautogui.moveTo(updated_x, updated_y)

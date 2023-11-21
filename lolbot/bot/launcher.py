@@ -2,6 +2,7 @@
 Handles Riot Client and login to launch the League Client
 """
 
+import os
 import logging
 import shutil
 import subprocess
@@ -9,7 +10,7 @@ from time import sleep
 
 from lolbot.common import api
 from lolbot.common import utils
-from lolbot.common.constants import *
+from lolbot.common import config
 
 
 class LauncherError(Exception):
@@ -28,6 +29,7 @@ class Launcher:
         self.connection = api.Connection()
         self.username = ""
         self.password = ""
+        self.config = config.Config()
 
     def launch_league(self, username: str, password: str) -> None:
         """Runs setup logic and starts launch sequence"""
@@ -39,10 +41,10 @@ class Launcher:
     def set_game_config(self) -> None:
         """Overwrites the League of Legends game config"""
         self.log.info("Overwriting/creating game config")
-        if os.path.exists(LEAGUE_GAME_CONFIG_PATH):
-            shutil.copy(LOCAL_GAME_CONFIG_PATH, LEAGUE_GAME_CONFIG_PATH)
+        if os.path.exists(self.config.get_data('league_config')):
+            shutil.copy(config.LOCAL_GAME_CONFIG_PATH, self.config.get_data('league_config'))
         else:
-            shutil.copy2(LOCAL_GAME_CONFIG_PATH, LEAGUE_GAME_CONFIG_PATH)
+            shutil.copy2(config.LOCAL_GAME_CONFIG_PATH, self.config.get_data('league_config'))
 
     def launch_loop(self) -> None:
         """Handles tasks necessary to open the League of Legends client"""
@@ -53,8 +55,7 @@ class Launcher:
             if utils.is_league_running() and logged_in:
                 self.log.info("Launch Success")
                 try:
-                    output = subprocess.check_output(KILL_RIOT_CLIENT, shell=False)
-                    self.log.info(str(output, 'utf-8').rstrip())
+                    utils.close_riot_client()
                 except:
                     self.log.warning("Could not kill riot client")
                 return
@@ -74,7 +75,7 @@ class Launcher:
                 # Already logged in
                 if r.status_code == 200 and not logged_in:
                     self.log.info("Already logged in. Launching League")
-                    subprocess.run([LEAGUE_CLIENT_PATH])
+                    subprocess.run([self.config.get_data(['league_path'])])
                     sleep(3)
 
                 # Not logged in and haven't logged in
@@ -86,13 +87,13 @@ class Launcher:
                 # Logged in
                 elif r.status_code == 200 and logged_in:
                     self.log.info("Authenticated. Attempting to Launch League")
-                    subprocess.run([LEAGUE_CLIENT_PATH])
+                    subprocess.run([self.config.get_data('league_path')])
                     sleep(3)
 
             # Nothing is running
             elif not utils.is_league_running() and not utils.is_rc_running():
                 self.log.info("Attempting to Launch League")
-                subprocess.run([LEAGUE_CLIENT_PATH])
+                subprocess.run([self.config.get_data('league_path')])
                 sleep(3)
             sleep(2)
 
