@@ -1,52 +1,58 @@
+"""
+Handles creating/writing configurations to json file
+"""
+
 import os
 import json
 
 import requests
 
 
-CONFIG_DIR = os.path.join(os.getenv('LOCALAPPDATA'), 'lolbot')
-CONFIG_PATH = os.path.join(CONFIG_DIR, 'config.json')
-ACCOUNT_PATH = os.path.join(CONFIG_DIR, 'accounts.json')
-RIOT_CLIENT_LOCKFILE_PATH = os.path.join(os.getenv('LOCALAPPDATA'), '/Riot Games/Riot Client/Config/lockfile')
-LOCAL_GAME_CONFIG_PATH = os.getcwd() + '/lolbot/resources/game.cfg'
-ICON_PATH = os.getcwd() + '/lolbot/resources/images/a.ico'
-LOG_PATH = os.getcwd() + '/logs'
-VERSION = '3.0.0'
-DEFAULT_SETTINGS = {'league_dir': 'C:/Riot Games/League of Legends',
-                    'lobby': 840,
-                    'max_level': 30,
-                    'champs': [21, 18, 22, 67],
-                    'patch': '13.21.1',
-                    'dialog': ["mid ples",
-                               "plannin on goin mid team",
-                               "mid por favor",
-                               "bienvenidos, mid",
-                               "howdy, mid",
-                               "goin mid",
-                               "mid"]
-                    }
+class DefaultSettings:
+    """Default settings for bot"""
 
-if not os.path.exists(LOG_PATH):
-    os.makedirs(LOG_PATH)
-if not os.path.exists(CONFIG_DIR):
-    os.makedirs(CONFIG_DIR)
-if not os.path.exists(CONFIG_PATH):
-    with open(CONFIG_PATH, 'w+') as f:
-        json.dump(DEFAULT_SETTINGS, f, indent=4)
-if not os.path.exists(ACCOUNT_PATH):
-    with open(ACCOUNT_PATH, 'w+') as f:
-        pass
+    # Paths
+    CONFIG_DIR = os.path.join(os.getenv('LOCALAPPDATA'), 'lolbot')
+    LOG_DIR = os.path.join(CONFIG_DIR, 'logs')
+    CONFIG_PATH = os.path.join(CONFIG_DIR, 'configs.json')
+    ACCOUNT_PATH = os.path.join(CONFIG_DIR, 'accounts.json')
+    RIOT_LOCKFILE = os.path.join(os.getenv('LOCALAPPDATA'), '/Riot Games/Riot Client/Config/lockfile')
+    GAME_CFG = os.getcwd() + '/lolbot/resources/game.cfg'
+    ICON_PATH = os.getcwd() + '/lolbot/resources/images/a.ico'
+
+    # Bot
+    LEAGUE_DIR = 'C:/Riot Games/League of Legends'
+    LOBBY = 840
+    MAX_LEVEL = 30
+    PATCH = '13.21.1'
+    CHAMPS = []
+    DIALOG = ["mid ples", "plannin on goin mid team", "mid por favor", "bienvenidos, mid", "howdy, mid", "goin mid", "mid"]
+
+    # Other
+    VERSION = '2.2.1'
 
 
-class Config:
-    """Creates/updates configurations required by bot"""
+class ConfigRW:
+    """Reads/Writes configurations required by bot"""
 
     def __init__(self):
-        self.file = open(CONFIG_PATH, 'r+')
+        if not os.path.exists(DefaultSettings.CONFIG_DIR):
+            os.makedirs(DefaultSettings.CONFIG_DIR)
+        if not os.path.exists(DefaultSettings.CONFIG_PATH):
+            open(DefaultSettings.CONFIG_PATH, 'w+')
+        if not os.path.exists(DefaultSettings.LOG_DIR):
+            os.makedirs(DefaultSettings.LOG_DIR)
+        self.file = open(DefaultSettings.CONFIG_PATH, 'r+')
         try:
             self.settings = json.load(self.file)
-        except:
-            self.settings = DEFAULT_SETTINGS
+        except json.decoder.JSONDecodeError:
+            self.settings = {}
+            self.settings['league_dir'] = DefaultSettings.LEAGUE_DIR
+            self.settings['lobby'] = DefaultSettings.LOBBY
+            self.settings['max_level'] = DefaultSettings.MAX_LEVEL
+            self.settings['patch'] = DefaultSettings.PATCH
+            self.settings['champs'] = DefaultSettings.CHAMPS
+            self.settings['dialog'] = DefaultSettings.DIALOG
         try:
             r = requests.get('http://ddragon.leagueoflegends.com/api/versions.json')
             self.settings['patch'] = r.json()[0]
@@ -71,6 +77,6 @@ class Config:
         self._json_update()
 
     def get_data(self, key):
-        for k, v in self.settings.items():
-            if key == k:
+        for sk, sv in self.settings.items():
+            if sk == key:
                 return self.settings[key]

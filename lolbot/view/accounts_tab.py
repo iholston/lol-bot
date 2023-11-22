@@ -7,8 +7,9 @@ import subprocess
 from typing import Any
 
 import dearpygui.dearpygui as dpg
-
+from ..common.config import DefaultSettings
 from ..common import account
+from ..common.account import Account
 
 
 class AccountsTab:
@@ -16,6 +17,7 @@ class AccountsTab:
 
     def __init__(self) -> None:
         self.id = None
+        self.am = account.AccountManager(DefaultSettings.ACCOUNT_PATH, 30)
         self.accounts = None
         self.accounts_table = None
 
@@ -51,7 +53,7 @@ class AccountsTab:
         """Creates a table from account data"""
         if self.accounts_table is not None:
             dpg.delete_item(self.accounts_table)
-        self.accounts = account.get_all_accounts()
+        self.accounts = self.am.get_all_accounts()
         with dpg.group(parent=self.id) as self.accounts_table:
             with dpg.group(horizontal=True):
                 dpg.add_input_text(default_value="      Username", width=147)
@@ -60,7 +62,7 @@ class AccountsTab:
                 dpg.bind_item_theme(dpg.last_item(), "clear_background")
                 dpg.add_input_text(default_value="      Leveled", width=147)
                 dpg.bind_item_theme(dpg.last_item(), "clear_background")
-            for acc in reversed(self.accounts['accounts']):
+            for acc in reversed(self.accounts):
                 with dpg.group(horizontal=True):
                     dpg.add_button(label=acc['username'], width=147, callback=self.copy_2_clipboard)
                     with dpg.tooltip(dpg.last_item()):
@@ -75,14 +77,14 @@ class AccountsTab:
     def add_account(self) -> None:
         """Adds a new account to accounts.json and updates view"""
         dpg.configure_item("AccountSubmit", show=False)
-        account.add_account({"username": dpg.get_value("UsernameField"), "password": dpg.get_value("PasswordField"), "leveled": dpg.get_value("LeveledField")})
+        self.am.add_account(Account(dpg.get_value("UsernameField"), dpg.get_value("PasswordField"), dpg.get_value("LeveledField")))
         dpg.configure_item("UsernameField", default_value="")
         dpg.configure_item("PasswordField", default_value="")
         dpg.configure_item("LeveledField", default_value=False)
         self.create_accounts_table()
 
     def edit_account(self, sender, app_data, user_data: Any) -> None:
-        account.edit_account(user_data, {"username": dpg.get_value("EditUsernameField"), "password": dpg.get_value("EditPasswordField"), "leveled": dpg.get_value("EditLeveledField")})
+        self.am.edit_account(user_data, Account(dpg.get_value("EditUsernameField"), dpg.get_value("EditPasswordField"), dpg.get_value("EditLeveledField")))
         dpg.delete_item("EditAccount")
         self.create_accounts_table()
 
@@ -96,7 +98,7 @@ class AccountsTab:
                 dpg.add_button(label="Cancel", width=113, callback=lambda: dpg.delete_item("EditAccount"))
 
     def delete_account(self, sender, app_data, user_data: Any) -> None:
-        account.delete_account(user_data)
+        self.am.delete_account(user_data)
         dpg.delete_item("DeleteAccount")
         self.create_accounts_table()
 

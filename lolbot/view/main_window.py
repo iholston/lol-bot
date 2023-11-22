@@ -8,7 +8,8 @@ import multiprocessing
 
 import dearpygui.dearpygui as dpg
 
-from lolbot.common import api, account
+from lolbot.common import api
+from lolbot.common.account import AccountManager
 from .bot_tab import BotTab
 from .accounts_tab import AccountsTab
 from .config_tab import ConfigTab
@@ -16,14 +17,15 @@ from .http_tab import HTTPTab
 from .ratio_tab import RatioTab
 from .logs_tab import LogsTab
 from .about_tab import AboutTab
-from ..common.config import ICON_PATH
+from ..common.config import DefaultSettings
 
 
 class MainWindow:
     """Class that displays the view"""
 
     def __init__(self, width: int, height: int) -> None:
-        self.accounts = account.get_all_accounts()
+        self.account_manager = AccountManager(DefaultSettings.ACCOUNT_PATH, 30)
+        self.accounts = self.account_manager.get_all_accounts()
         self.message_queue = multiprocessing.Queue()
         self.output_queue = []
         self.connection = api.Connection()
@@ -57,7 +59,7 @@ class MainWindow:
                 # self.ratio_tab.create_tab(self.tab_bar)
                 self.logs_tab.create_tab(self.tab_bar)
                 self.about_tab.create_tab(self.tab_bar)
-        dpg.create_viewport(title='LoL Bot', width=self.width, height=self.height, small_icon=ICON_PATH, resizable=False)
+        dpg.create_viewport(title='LoL Bot', width=self.width, height=self.height, small_icon=DefaultSettings.ICON_PATH, resizable=False)
         dpg.setup_dearpygui()
         dpg.show_viewport()
         dpg.set_primary_window('primary window', True)

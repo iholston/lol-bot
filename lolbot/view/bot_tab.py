@@ -35,7 +35,7 @@ class BotTab:
             'Hyper Roll TFT': 1130,
             'Double Up TFT': 1160
         }
-        self.config = config.Config()
+        self.config = config.ConfigRW()
         self.terminate = terminate
         self.bot_thread = None
 
@@ -92,7 +92,7 @@ class BotTab:
     def close_client_callback(self) -> None:
         """Closes all league related processes"""
         self.message_queue.put('Closing League Processes')
-        threading.Thread(target=utils.close_processes).start()
+        threading.Thread(target=utils.close_all_processes).start()
 
     def update_info_panel(self) -> None:
         """Updates info panel text"""

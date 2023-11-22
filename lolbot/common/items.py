@@ -1,6 +1,3 @@
-"""Configuration constants"""
-
-# ITEMS
 STARTER_ITEMS = ["Cull",
                  "Doran's Blade",
                  "Doran's Ring",

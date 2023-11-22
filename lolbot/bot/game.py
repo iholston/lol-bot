@@ -90,10 +90,10 @@ class Game:
         self.log.debug("Waiting for game window to open")
         for i in range(120):
             sleep(1)
-            if utils.exists(utils.utils.LEAGUE_GAME_CLIENT_WINNAME):
+            if utils.exists(utils.LEAGUE_GAME_CLIENT_WINNAME):
                 self.log.debug("Game window open")
-                utils.click(Game.GAME_CENTER_OF_SCREEN, utils.utils.LEAGUE_GAME_CLIENT_WINNAME, 2)
-                utils.click(Game.GAME_CENTER_OF_SCREEN, utils.utils.LEAGUE_GAME_CLIENT_WINNAME)
+                utils.click(Game.GAME_CENTER_OF_SCREEN, utils.LEAGUE_GAME_CLIENT_WINNAME, 2)
+                utils.click(Game.GAME_CENTER_OF_SCREEN, utils.LEAGUE_GAME_CLIENT_WINNAME)
                 return
         raise GameError("Game window did not open")
 

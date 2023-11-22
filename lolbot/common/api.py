@@ -31,7 +31,7 @@ class Connection:
         self.protocol = ''
         self.headers = ''
         self.session = requests.session()
-        self.config = config.Config()
+        self.config = config.ConfigRW()
         self.log = logging.getLogger(__name__)
         urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -42,7 +42,7 @@ class Connection:
         self.client_username = Connection.RCU_USERNAME
 
         # lockfile
-        lockfile = open(config.RIOT_CLIENT_LOCKFILE_PATH, 'r')
+        lockfile = open(config.DefaultSettings.RIOT_LOCKFILE, 'r')
         data = lockfile.read()
         self.log.debug(data)
         lockfile.close()

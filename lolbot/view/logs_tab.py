@@ -9,7 +9,7 @@ from datetime import datetime
 
 import dearpygui.dearpygui as dpg
 
-from ..common.config import LOG_PATH
+from ..common.config import DefaultSettings
 
 
 class LogsTab:
@@ -36,7 +36,7 @@ class LogsTab:
                 dpg.add_text(tag="LogUpdatedTime", default_value='Last Updated: {}'.format(datetime.now()))
                 dpg.add_button(label='Update', width=54, callback=self.create_log_table)
                 dpg.add_button(label='Clear', width=54, callback=lambda: dpg.configure_item("DeleteFiles", show=True))
-                dpg.add_button(label='Show in File Explorer', callback=lambda: subprocess.Popen('explorer /select, {}'.format(os.getcwd() + '\\logs\\')))
+                dpg.add_button(label='Show in File Explorer', callback=lambda: subprocess.Popen('explorer /select, {}'.format(DefaultSettings.LOG_DIR)))
             dpg.add_spacer()
             dpg.add_separator()
             dpg.add_spacer()
@@ -48,8 +48,8 @@ class LogsTab:
             dpg.delete_item(self.logs_group)
         dpg.set_value('LogUpdatedTime', 'Last Updated: {}'.format(datetime.now()))
         with dpg.group(parent=self.id) as self.logs_group:
-            for filename in os.listdir(LOG_PATH):
-                f = os.path.join(LOG_PATH, filename)
+            for filename in os.listdir(DefaultSettings.LOG_DIR):
+                f = os.path.join(DefaultSettings.LOG_DIR, filename)
                 if os.path.isfile(f):
                     with dpg.collapsing_header(label=filename):
                         f = open(f, "r")
@@ -58,7 +58,7 @@ class LogsTab:
     def clear_logs(self) -> None:
         """Empties the log folder"""
         dpg.configure_item("DeleteFiles", show=False)
-        folder = LOG_PATH
+        folder = DefaultSettings.LOG_DIR
         for filename in os.listdir(folder):
             file_path = os.path.join(folder, filename)
             try:

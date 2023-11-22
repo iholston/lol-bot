@@ -7,7 +7,7 @@ import os
 
 import dearpygui.dearpygui as dpg
 
-from ..common.config import Config
+from ..common.config import ConfigRW
 
 
 class ConfigTab:
@@ -20,7 +20,7 @@ class ConfigTab:
             'Beginner': 840,
             'Intermediate': 850
         }
-        self.config = Config()
+        self.config = ConfigRW()
 
     def create_tab(self, parent: int) -> None:
         """Creates Settings Tab"""

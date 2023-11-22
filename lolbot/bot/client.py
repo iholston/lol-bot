@@ -12,11 +12,10 @@ from datetime import datetime, timedelta
 import pyautogui
 
 import lolbot.bot.launcher as launcher
-import lolbot.common.account as account
-from lolbot.common import api
-from lolbot.common import utils
-from lolbot.common import config
+from lolbot.common import api, utils
 from lolbot.bot.game import Game
+from lolbot.common.account import AccountManager
+from lolbot.common.config import DefaultSettings, ConfigRW
 from lolbot.common.handler import MultiProcessLogHandler
 
 
@@ -35,16 +34,17 @@ class Client:
     POST_GAME_OK_RATIO = (0.4996, 0.9397)
     POST_GAME_SELECT_CHAMP_RATIO = (0.4977, 0.5333)
     POPUP_SEND_EMAIL_X_RATIO = (0.6960, 0.1238)
-
     MAX_CLIENT_ERRORS = 5
     MAX_PHASE_ERRORS = 20
 
     def __init__(self, message_queue) -> None:
+        self.config = ConfigRW()
         self.connection = api.Connection()
         self.launcher = launcher.Launcher()
         self.log = logging.getLogger(__name__)
-        self.handler = MultiProcessLogHandler(message_queue, config.LOG_PATH)
-        self.config = config.Config()
+        self.handler = MultiProcessLogHandler(message_queue, DefaultSettings.LOG_DIR)
+        self.account_manager = AccountManager(DefaultSettings.ACCOUNT_PATH, self.config.get_data('max_level'))
+        self.account = None
         self.username = ""
         self.password = ""
         self.account_level = 0
@@ -61,9 +61,10 @@ class Client:
         """Main loop, gets an account, launches league, levels the account, and repeats"""
         while True:
             try:
-                self.launcher.launch_league(account.get_username(), account.get_password())
+                self.account = self.account_manager.get_account()
+                self.launcher.launch_league(self.account.username, self.account.password)
                 self.leveling_loop()
-                account.set_account_as_leveled()
+                self.account_manager.set_account_as_leveled(self.account)
                 utils.close_all_processes()
                 self.client_errors = 0
             except ClientError as ce:
