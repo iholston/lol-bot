@@ -7,6 +7,8 @@ import json
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, asdict
 
+from lolbot.common.config import Constants
+
 
 @dataclass
 class Account:
@@ -43,37 +45,35 @@ class AccountGenerator(ABC):
 
 
 class AccountManager(AccountGenerator):
-    """Class that manages account persistence"""
+    """Class that handles account persistence"""
 
-    def __init__(self, path, max_level):
-        self.path = path
-        if not os.path.exists(self.path):
+    def __init__(self):
+        if not os.path.exists(Constants.ACCOUNT_PATH):
             data = {'Accounts': []}
-            with open(self.path, 'w+') as f:
+            with open(Constants.ACCOUNT_PATH, 'w+') as f:
                 json.dump(data, f, indent=4)
-        self.max_level = max_level
 
-    def get_account(self) -> Account:
-        """Gets an account username from JSON file where level is < self.max_level"""
-        with open(self.path, "r") as f:
+    def get_account(self, max_level: int) -> Account:
+        """Gets an account username from JSON file where level is < max_level"""
+        with open(Constants.ACCOUNT_PATH, "r") as f:
             data = json.load(f)
             for account in data['Accounts']:
-                if account['level'] < self.max_level:
+                if account['level'] < max_level:
                     return Account(account['username'], account['password'], account['level'])
 
     def add_account(self, account: Account):
         """Writes account to JSON, will not write duplicates"""
-        with open(self.path, 'r+') as f:
+        with open(Constants.ACCOUNT_PATH, 'r+') as f:
             data = json.load(f)
         if asdict(account) in data['Accounts']:
             return
         data['Accounts'].append(asdict(account))
-        with open(self.path, 'r+') as outfile:
+        with open(Constants.ACCOUNT_PATH, 'r+') as outfile:
             outfile.write(json.dumps(data, indent=4))
 
     def edit_account(self, og_uname: str, account: Account):
         """Edit an account"""
-        with open(self.path, 'r') as f:
+        with open(Constants.ACCOUNT_PATH, 'r') as f:
             data = json.load(f)
         index = -1
         for i in range(len(data['Accounts'])):
@@ -83,30 +83,30 @@ class AccountManager(AccountGenerator):
         data['Accounts'][index]['username'] = account.username
         data['Accounts'][index]['password'] = account.password
         data['Accounts'][index]['level'] = account.level
-        with open(self.path, 'w') as outfile:
+        with open(Constants.ACCOUNT_PATH, 'w') as outfile:
             outfile.write(json.dumps(data, indent=4))
 
     def delete_account(self, account: Account):
         """Deletes account"""
-        with open(self.path, 'r') as f:
+        with open(Constants.ACCOUNT_PATH, 'r') as f:
             data = json.load(f)
         data['Accounts'].remove(asdict(account))
-        with open(self.path, 'w') as outfile:
+        with open(Constants.ACCOUNT_PATH, 'w') as outfile:
             outfile.write(json.dumps(data, indent=4))
 
     def get_all_accounts(self) -> dict:
-        """Returns all account information"""
-        with open(self.path, 'r') as f:
+        """Returns all accounts as dictionary"""
+        with open(Constants.ACCOUNT_PATH, 'r') as f:
             data = json.load(f)
         return data['Accounts']
 
-    def set_account_as_leveled(self, account: Account):
-        """Sets account level to max level in the JSON file"""
-        with open(self.path, 'r') as f:
+    def set_account_as_leveled(self, account: Account, max_level: int):
+        """Sets account level to user configured max level in the JSON file"""
+        with open(Constants.ACCOUNT_PATH, 'r') as f:
             data = json.load(f)
         for account in data['Accounts']:
             if account['username'] == account.username:
-                account['level'] = self.max_level
-                with open(self.path, 'w') as json_file:
+                account['level'] = max_level
+                with open(Constants.ACCOUNT_PATH, 'w') as json_file:
                     json.dump(data, json_file)
                 return

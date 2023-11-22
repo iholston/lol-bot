@@ -30,8 +30,7 @@ class MultiProcessLogHandler(logging.Handler):
             os.makedirs(self.log_dir)
 
         filename = os.path.join(self.log_dir, datetime.now().strftime('%d%m%Y_%H%M.log'))
-        formatter = logging.Formatter(fmt='[%(asctime)s] [%(levelname)-7s] [%(funcName)-21s] %(message)s',
-                                      datefmt='%d %b %Y %H:%M:%S')
+        formatter = logging.Formatter(fmt='[%(asctime)s] [%(levelname)-7s] [%(funcName)-21s] %(message)s',datefmt='%d %b %Y %H:%M:%S')
         logging.getLogger().setLevel(logging.DEBUG)
 
         fh = RotatingFileHandler(filename=filename, maxBytes=1000000, backupCount=1)
