@@ -99,7 +99,7 @@ class Launcher:
 
     def start_league(self):
         self.log.info('Launching League')
-        subprocess.run([self.config.get_data('league_dir')])
+        subprocess.run([self.config.get_data('league_path')])
         sleep(3)
 
     def login(self) -> None:
