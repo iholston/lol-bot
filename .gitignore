@@ -1,5 +1,6 @@
 /.idea
 __pycache__/
 /logs
-lolbot/resources/accounts.json
-lolbot/resources/config.json
+/dist
+/build
+*.spec

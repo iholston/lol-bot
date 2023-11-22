@@ -1,0 +1,43 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - '*'
+
+jobs:
+  build:
+    runs-on: [windows-latest]
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+      - name: Setup Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.12
+      - name: Build artifact
+        run: |
+          pip install -r requirements.txt pillow pyinstaller
+          pyinstaller --onefile --noconsole --name "LoL Bot" --icon=lolbot/resources/images/a.ico --add-data "lolbot/resources/images/a.ico:." main.py
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: lolbot
+          path: dist/*
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+    - name: Download artifact
+      uses: actions/download-artifact@v3
+      with:
+        name: lolbot
+    - name: Push to release
+      uses: ncipollo/release-action@v1
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        replacesArtifacts: false
+        artifacts: LoL Bot.exe
