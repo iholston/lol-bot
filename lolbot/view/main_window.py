@@ -17,7 +17,7 @@ from .http_tab import HTTPTab
 from .ratio_tab import RatioTab
 from .logs_tab import LogsTab
 from .about_tab import AboutTab
-from ..common.config import DefaultSettings
+from lolbot.common.config import DefaultSettings
 
 
 class MainWindow:

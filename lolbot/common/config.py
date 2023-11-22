@@ -42,6 +42,8 @@ class ConfigRW:
             open(DefaultSettings.CONFIG_PATH, 'w+')
         if not os.path.exists(DefaultSettings.LOG_DIR):
             os.makedirs(DefaultSettings.LOG_DIR)
+        if not os.path.exists(DefaultSettings.ACCOUNT_PATH):
+            open(DefaultSettings.ACCOUNT_PATH, 'w+')
         self.file = open(DefaultSettings.CONFIG_PATH, 'r+')
         try:
             self.settings = json.load(self.file)
