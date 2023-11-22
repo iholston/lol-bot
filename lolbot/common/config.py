@@ -16,7 +16,7 @@ class DefaultSettings:
     LOG_DIR = os.path.join(CONFIG_DIR, 'logs')
     CONFIG_PATH = os.path.join(CONFIG_DIR, 'configs.json')
     ACCOUNT_PATH = os.path.join(CONFIG_DIR, 'accounts.json')
-    RIOT_LOCKFILE = os.path.join(os.getenv('LOCALAPPDATA'), '/Riot Games/Riot Client/Config/lockfile')
+    RIOT_LOCKFILE = os.getenv('LOCALAPPDATA') + '/Riot Games/Riot Client/Config/lockfile'
     GAME_CFG = os.getcwd() + '/lolbot/resources/game.cfg'
     ICON_PATH = os.getcwd() + '/lolbot/resources/images/a.ico'
 
