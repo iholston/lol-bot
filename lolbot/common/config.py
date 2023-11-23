@@ -30,7 +30,8 @@ class Constants:
         if not os.path.exists(Constants.CONFIG_PATH):
             open(Constants.CONFIG_PATH, 'w+')
         if not os.path.exists(Constants.ACCOUNT_PATH):
-            open(Constants.ACCOUNT_PATH, 'w+')
+            with open(Constants.ACCOUNT_PATH, 'w+') as outfile:
+                json.dump({'Accounts': []}, outfile, indent=4)
 
 
 class DefaultSettings:

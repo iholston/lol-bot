@@ -42,7 +42,7 @@ class Connection:
         self.client_username = Connection.RCU_USERNAME
 
         # lockfile
-        lockfile = open(config.DefaultSettings.RIOT_LOCKFILE, 'r')
+        lockfile = open(config.Constants.RIOT_LOCKFILE, 'r')
         data = lockfile.read()
         self.log.debug(data)
         lockfile.close()

@@ -18,7 +18,7 @@ jobs:
       - name: Build artifact
         run: |
           pip install -r requirements.txt pillow pyinstaller
-          pyinstaller --onefile --noconsole --name "LoL Bot" --icon=lolbot/resources/images/a.ico --add-data "lolbot/resources/images/a.ico:." main.py
+          pyinstaller --onefile --noconsole --name "LoL Bot" --icon=lolbot/resources/images/a.ico --add-data "lolbot/resources/images/a.ico:." main.pyw
       - name: Upload artifact
         uses: actions/upload-artifact@v3
         with:
