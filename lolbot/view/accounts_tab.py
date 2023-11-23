@@ -2,13 +2,12 @@
 View tab that handles creation/editing of accounts
 """
 
-import os
 import subprocess
 from typing import Any
 
 import dearpygui.dearpygui as dpg
-
-from ..common import account
+from lolbot.common.config import Constants
+from lolbot.common.account import Account, AccountManager
 
 
 class AccountsTab:
@@ -16,6 +15,7 @@ class AccountsTab:
 
     def __init__(self) -> None:
         self.id = None
+        self.am = AccountManager()
         self.accounts = None
         self.accounts_table = None
 
@@ -30,13 +30,13 @@ class AccountsTab:
             with dpg.window(label="Add New Account", modal=True, show=False, tag="AccountSubmit", height=125, width=250, pos=[155, 110]):
                 dpg.add_input_text(tag="UsernameField", hint="Username", width=234)
                 dpg.add_input_text(tag="PasswordField", hint="Password", width=234)
-                dpg.add_checkbox(tag="LeveledField", label="Leveled", default_value=False)
+                dpg.add_input_int(tag="LevelField", default_value=0, width=234)
                 with dpg.group(horizontal=True):
                     dpg.add_button(label="Submit", width=113, callback=self.add_account)
                     dpg.add_button(label="Cancel", width=113, callback=lambda: dpg.configure_item("AccountSubmit", show=False))
             with dpg.group(horizontal=True):
                 dpg.add_button(label="Add New Account", width=182, callback=lambda: dpg.configure_item("AccountSubmit", show=True))
-                dpg.add_button(label="Show in File Explorer", width=182, callback=lambda: subprocess.Popen('explorer /select, {}'.format(os.getcwd() + "\\lolbot\\resources\\accounts.json")))
+                dpg.add_button(label="Show in File Explorer", width=182, callback=lambda: subprocess.Popen('explorer /select, {}'.format(Constants.ACCOUNT_PATH)))
                 dpg.add_button(label="Refresh", width=182, callback=self.create_accounts_table)
             dpg.add_spacer()
             dpg.add_spacer()
@@ -51,16 +51,16 @@ class AccountsTab:
         """Creates a table from account data"""
         if self.accounts_table is not None:
             dpg.delete_item(self.accounts_table)
-        self.accounts = account.get_all_accounts()
+        self.accounts = self.am.get_all_accounts()
         with dpg.group(parent=self.id) as self.accounts_table:
             with dpg.group(horizontal=True):
                 dpg.add_input_text(default_value="      Username", width=147)
                 dpg.bind_item_theme(dpg.last_item(), "clear_background")
                 dpg.add_input_text(default_value="      Password", width=147)
                 dpg.bind_item_theme(dpg.last_item(), "clear_background")
-                dpg.add_input_text(default_value="      Leveled", width=147)
+                dpg.add_input_text(default_value="        Level", width=147)
                 dpg.bind_item_theme(dpg.last_item(), "clear_background")
-            for acc in reversed(self.accounts['accounts']):
+            for acc in reversed(self.accounts):
                 with dpg.group(horizontal=True):
                     dpg.add_button(label=acc['username'], width=147, callback=self.copy_2_clipboard)
                     with dpg.tooltip(dpg.last_item()):
@@ -68,21 +68,21 @@ class AccountsTab:
                     dpg.add_button(label=acc['password'], width=147, callback=self.copy_2_clipboard)
                     with dpg.tooltip(dpg.last_item()):
                         dpg.add_text("Copy")
-                    dpg.add_button(label=acc['leveled'], width=147)
+                    dpg.add_button(label=acc['level'], width=147)
                     dpg.add_button(label="Edit", callback=self.edit_account_dialog, user_data=acc)
                     dpg.add_button(label="Delete", callback=self.delete_account_dialog, user_data=acc)
 
     def add_account(self) -> None:
         """Adds a new account to accounts.json and updates view"""
         dpg.configure_item("AccountSubmit", show=False)
-        account.add_account({"username": dpg.get_value("UsernameField"), "password": dpg.get_value("PasswordField"), "leveled": dpg.get_value("LeveledField")})
+        self.am.add_account(Account(dpg.get_value("UsernameField"), dpg.get_value("PasswordField"), dpg.get_value("LevelField")))
         dpg.configure_item("UsernameField", default_value="")
         dpg.configure_item("PasswordField", default_value="")
-        dpg.configure_item("LeveledField", default_value=False)
+        dpg.configure_item("LevelField", default_value=False)
         self.create_accounts_table()
 
     def edit_account(self, sender, app_data, user_data: Any) -> None:
-        account.edit_account(user_data, {"username": dpg.get_value("EditUsernameField"), "password": dpg.get_value("EditPasswordField"), "leveled": dpg.get_value("EditLeveledField")})
+        self.am.edit_account(user_data, Account(dpg.get_value("EditUsernameField"), dpg.get_value("EditPasswordField"), dpg.get_value("EditLevelField")))
         dpg.delete_item("EditAccount")
         self.create_accounts_table()
 
@@ -90,13 +90,13 @@ class AccountsTab:
         with dpg.window(label="Edit Account", modal=True, show=True, tag="EditAccount", height=125, width=250, pos=[155, 110], on_close=lambda: dpg.delete_item("EditAccount")):
             dpg.add_input_text(tag="EditUsernameField", default_value=user_data['username'], width=234)
             dpg.add_input_text(tag="EditPasswordField", default_value=user_data['password'], width=234)
-            dpg.add_checkbox(tag="EditLeveledField", label="Leveled", default_value=user_data['leveled'])
+            dpg.add_input_int(tag="EditLevelField", default_value=user_data['level'], width=234)
             with dpg.group(horizontal=True):
                 dpg.add_button(label="Submit", width=113, callback=self.edit_account, user_data=user_data['username'])
                 dpg.add_button(label="Cancel", width=113, callback=lambda: dpg.delete_item("EditAccount"))
 
     def delete_account(self, sender, app_data, user_data: Any) -> None:
-        account.delete_account(user_data)
+        self.am.delete_account(Account(user_data['username'], user_data['password'], user_data['level']))
         dpg.delete_item("DeleteAccount")
         self.create_accounts_table()
 

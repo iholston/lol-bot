@@ -26,24 +26,35 @@
 - End game, earn experience, collect rewards
 - Loop 🥡🧋
 
+## Usage
+- Download the [latest release](https://github.com/iholston/lol-bot/releases)
+- Run LoL Bot.exe 👍
 
-## Requirements
+## League Account Requirements
+League accounts should have already completed:
+- Riot Promise
+- Set Username
+- Skipped Tutorials
+
+NOTE: The bot will automatically change your league settings/configuration and the game window (not the client) should open as a 1024x768 window
+
+## Development Requirements
 - [Python >= 3.10](https://www.python.org/downloads/)
 - [League of Legends](https://signup.leagueoflegends.com/en-us/signup/download)
 - [League of Legends Account](https://signup.leagueoflegends.com/en-us/signup/index)
 
-## Setup
+## Development Setup
 - Ensure Python is added to your PATH, check "Add Python to PATH" when [installing](https://youtu.be/nU2Egc3Zx3Q)
 - Clone the repo or download the [latest release](https://github.com/iholston/lol-bot/releases)
 - In command prompt, run ```pip install -r requirements.txt```
 - In some cases, it may be necessary to download and install [Microsoft C and C++ (MSVC) runtime libraries](https://learn.microsoft.com/en-GB/cpp/windows/latest-supported-vc-redist?view=msvc-170)
 
+## Packaging to .exe
+- ```pip install pyinstaller```
+- ```pyinstaller --onefile --noconsole --name "LoL Bot" --add-data "lolbot/resources:lolbot/resources" main.pyw```
+
 ## Optional Configuration
 For Virtual Machine setups, I recommend starting with [this forum](https://www.unknowncheats.me/forum/league-of-legends/480977-run-league-legends-virtual-machine-vmware.html). *Note:* I will not be fixing/troubleshooting VM related issues as there are far too many VM implementation/platform specific issues
-
-The League of Legends accounts should already have accepted the riot promise, set a username, and skipped the tutorials. The bot will automatically change your league settings/configuration and the game window (not the client) should open as a 1024x768 window
-
-*Note:* v2.0.0+ has a gui and will not display a terminal window as shown in the gif. The gif is based on a sub 2.0.0 version
 
 ## Disclaimer
 Another LoL Bot isn’t endorsed by Riot Games and doesn’t reflect the views or opinions of Riot Games or anyone officially involved in producing or managing League of Legends. League of Legends and Riot Games are trademarks or registered trademarks of Riot Games, Inc. League of Legends © Riot Games, Inc.

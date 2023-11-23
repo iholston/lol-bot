@@ -3,39 +3,44 @@ User interface module that contains the main window
 """
 
 import ctypes; ctypes.windll.shcore.SetProcessDpiAwareness(0)  # This must be set before importing pyautogui/dpg
+import threading
 import datetime
 import multiprocessing
 
 import dearpygui.dearpygui as dpg
 
-from lolbot.common import api, account
-from .bot_tab import BotTab
-from .accounts_tab import AccountsTab
-from .config_tab import ConfigTab
-from .http_tab import HTTPTab
-from .ratio_tab import RatioTab
-from .logs_tab import LogsTab
-from .about_tab import AboutTab
-from ..common.constants import LOCAL_ICON_PATH
+from lolbot.common import api
+from lolbot.common import utils
+from lolbot.common.account import AccountManager
+from lolbot.common.config import Constants
+from lolbot.view.bot_tab import BotTab
+from lolbot.view.accounts_tab import AccountsTab
+from lolbot.view.config_tab import ConfigTab
+from lolbot.view.http_tab import HTTPTab
+from lolbot.view.logs_tab import LogsTab
+from lolbot.view.about_tab import AboutTab
 
 
 class MainWindow:
     """Class that displays the view"""
 
     def __init__(self, width: int, height: int) -> None:
-        self.accounts = account.get_all_accounts()
+        multiprocessing.freeze_support()  # https://stackoverflow.com/questions/24944558/pyinstaller-built-windows-exe-fails-with-multiprocessing
+        Constants.create_dirs()
+
+        self.account_manager = AccountManager()
+        self.accounts = self.account_manager.get_all_accounts()
         self.message_queue = multiprocessing.Queue()
         self.output_queue = []
         self.connection = api.Connection()
         self.width = width
         self.height = height
-        self.terminate = False
+        self.terminate = threading.Event()
         self.tab_bar = None
         self.bot_tab = BotTab(self.message_queue, self.terminate)
         self.accounts_tab = AccountsTab()
         self.config_tab = ConfigTab()
         self.https_tab = HTTPTab()
-        self.ratio_tab = RatioTab()
         self.logs_tab = LogsTab()
         self.about_tab = AboutTab()
 
@@ -54,10 +59,9 @@ class MainWindow:
                 self.accounts_tab.create_tab(self.tab_bar)
                 self.config_tab.create_tab(self.tab_bar)
                 self.https_tab.create_tab(self.tab_bar)
-                # self.ratio_tab.create_tab(self.tab_bar)
                 self.logs_tab.create_tab(self.tab_bar)
                 self.about_tab.create_tab(self.tab_bar)
-        dpg.create_viewport(title='LoL Bot', width=self.width, height=self.height, small_icon=LOCAL_ICON_PATH, resizable=False)
+        dpg.create_viewport(title='LoL Bot', width=self.width, height=self.height, small_icon=utils.resource_path(Constants.ICON_PATH), resizable=False)
         dpg.setup_dearpygui()
         dpg.show_viewport()
         dpg.set_primary_window('primary window', True)
@@ -65,7 +69,7 @@ class MainWindow:
         while dpg.is_dearpygui_running():
             self._gui_updater()
             dpg.render_dearpygui_frame()
-        self.terminate = True
+        self.terminate.set()
         dpg.destroy_context()
 
     def _gui_updater(self) -> None:

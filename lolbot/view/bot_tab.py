@@ -10,14 +10,15 @@ from time import sleep
 
 import dearpygui.dearpygui as dpg
 
-from ..common import constants, utils, api
-from ..bot.client import Client
+from lolbot.common import utils, api
+from lolbot.common.config import ConfigRW
+from lolbot.bot.client import Client
 
 
 class BotTab:
     """Class that displays the BotTab and handles bot controls/output"""
 
-    def __init__(self, message_queue: multiprocessing.Queue, terminate: bool) -> None:
+    def __init__(self, message_queue: multiprocessing.Queue, terminate: threading.Event) -> None:
         self.message_queue = message_queue
         self.connection = api.Connection()
         self.lobbies = {
@@ -34,6 +35,7 @@ class BotTab:
             'Hyper Roll TFT': 1130,
             'Double Up TFT': 1160
         }
+        self.config = ConfigRW()
         self.terminate = terminate
         self.bot_thread = None
 
@@ -58,7 +60,7 @@ class BotTab:
     def start_bot(self) -> None:
         """Starts bot process"""
         if self.bot_thread is None:
-            if not os.path.exists(constants.LEAGUE_CLIENT_DIR):
+            if not os.path.exists(self.config.get_data('league_dir')):
                 self.message_queue.put("Clear")
                 self.message_queue.put("League Installation Path is Invalid. Update Path to START")
                 return
@@ -90,17 +92,17 @@ class BotTab:
     def close_client_callback(self) -> None:
         """Closes all league related processes"""
         self.message_queue.put('Closing League Processes')
-        threading.Thread(target=utils.close_processes).start()
+        threading.Thread(target=utils.close_all_processes).start()
 
     def update_info_panel(self) -> None:
         """Updates info panel text"""
-        if not utils.is_league_running():
+        if not self.terminate.is_set() and not utils.is_league_running():
             dpg.configure_item("Info", default_value="League is not running")
         else:
-            if not os.path.exists(constants.LEAGUE_CLIENT_DIR):
+            if not self.terminate.is_set() and not os.path.exists(self.config.get_data('league_dir')):
                 self.message_queue.put("Clear")
                 self.message_queue.put("League Installation Path is Invalid. Update Path")
-                if not self.terminate:
+                if not self.terminate.is_set():
                     threading.Timer(2, self.update_info_panel).start()
                 else:
                     self.stop_bot()
@@ -165,9 +167,8 @@ class BotTab:
                 msg = msg + "Phase: {}\n".format(phase)
                 msg = msg + "Patch: {}\n".format(league_patch)
                 msg = msg + "Level: {}".format(level)
-            dpg.configure_item("Info", default_value=msg)
+            if not self.terminate.is_set():
+                dpg.configure_item("Info", default_value=msg)
 
-        if not self.terminate:
+        if not self.terminate.is_set():
             threading.Timer(2, self.update_info_panel).start()
-        else:
-            self.stop_bot()

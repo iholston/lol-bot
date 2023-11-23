@@ -1,76 +1,112 @@
 """
-A simple implementation of account.py using a json file
+Handles accounts for the bot, persists to a JSON file
 """
 
+import os
 import json
+from abc import ABC, abstractmethod
+from dataclasses import dataclass, asdict
 
-import lolbot.common.constants as constants
-
-
-def get_username() -> str:
-    """Gets an available account username from JSON file"""
-    with open(constants.LOCAL_ACCOUNTS_PATH, 'r') as f:
-        data = json.load(f)
-    for account in data['accounts']:
-        if not account['leveled']:
-            return account['username']
+from lolbot.common.config import Constants
 
 
-def get_password() -> str:
-    """Gets an available account password from JSON file"""
-    with open(constants.LOCAL_ACCOUNTS_PATH, 'r') as f:
-        data = json.load(f)
-    for account in data['accounts']:
-        if not account['leveled']:
-            return account['password']
+@dataclass
+class Account:
+    username: str
+    password: str
+    level: int
 
 
-def set_account_as_leveled() -> None:
-    """Sets account as leveled in the JSON file"""
-    with open(constants.LOCAL_ACCOUNTS_PATH, 'r') as f:
-        data = json.load(f)
-    for account in data['accounts']:
-        if not account['leveled']:
-            account['leveled'] = True
-            with open(constants.LOCAL_ACCOUNTS_PATH, 'w') as json_file:
-                json.dump(data, json_file)
+class AccountGenerator(ABC):
+
+    @abstractmethod
+    def get_account(self) -> Account:
+        pass
+
+    @abstractmethod
+    def get_all_accounts(self) -> dict:
+        pass
+
+    @abstractmethod
+    def add_account(self):
+        pass
+
+    @abstractmethod
+    def edit_account(self):
+        pass
+
+    @abstractmethod
+    def delete_account(self):
+        pass
+
+    @abstractmethod
+    def set_account_as_leveled(self):
+        pass
+
+
+class AccountManager(AccountGenerator):
+    """Class that handles account persistence"""
+
+    def __init__(self):
+        if not os.path.exists(Constants.ACCOUNT_PATH):
+            data = {'Accounts': []}
+            with open(Constants.ACCOUNT_PATH, 'w+') as f:
+                json.dump(data, f, indent=4)
+
+    def get_account(self, max_level: int) -> Account:
+        """Gets an account username from JSON file where level is < max_level"""
+        with open(Constants.ACCOUNT_PATH, "r") as f:
+            data = json.load(f)
+            for account in data['Accounts']:
+                if account['level'] < max_level:
+                    return Account(account['username'], account['password'], account['level'])
+
+    def add_account(self, account: Account):
+        """Writes account to JSON, will not write duplicates"""
+        with open(Constants.ACCOUNT_PATH, 'r+') as f:
+            data = json.load(f)
+        if asdict(account) in data['Accounts']:
             return
+        data['Accounts'].append(asdict(account))
+        with open(Constants.ACCOUNT_PATH, 'r+') as outfile:
+            outfile.write(json.dumps(data, indent=4))
 
+    def edit_account(self, og_uname: str, account: Account):
+        """Edit an account"""
+        with open(Constants.ACCOUNT_PATH, 'r') as f:
+            data = json.load(f)
+        index = -1
+        for i in range(len(data['Accounts'])):
+            if data['Accounts'][i]['username'] == og_uname:
+                index = i
+                break
+        data['Accounts'][index]['username'] = account.username
+        data['Accounts'][index]['password'] = account.password
+        data['Accounts'][index]['level'] = account.level
+        with open(Constants.ACCOUNT_PATH, 'w') as outfile:
+            outfile.write(json.dumps(data, indent=4))
 
-def add_account(account) -> None:
-    """Writes account to JSON"""
-    with open(constants.LOCAL_ACCOUNTS_PATH, 'r') as f:
-        data = json.load(f)
-    data['accounts'].append(account)
-    with open(constants.LOCAL_ACCOUNTS_PATH, 'w') as outfile:
-        outfile.write(json.dumps(data, indent=4))
+    def delete_account(self, account: Account):
+        """Deletes account"""
+        with open(Constants.ACCOUNT_PATH, 'r') as f:
+            data = json.load(f)
+        data['Accounts'].remove(asdict(account))
+        with open(Constants.ACCOUNT_PATH, 'w') as outfile:
+            outfile.write(json.dumps(data, indent=4))
 
+    def get_all_accounts(self) -> dict:
+        """Returns all accounts as dictionary"""
+        with open(Constants.ACCOUNT_PATH, 'r') as f:
+            data = json.load(f)
+        return data['Accounts']
 
-def edit_account(og_name, account) -> None:
-    with open(constants.LOCAL_ACCOUNTS_PATH, 'r') as f:
-        data = json.load(f)
-    index = -1
-    for i in range(len(data['accounts'])):
-        if data['accounts'][i]['username'] == og_name:
-            index = i
-            break
-    data['accounts'][index]['username'] = account['username']
-    data['accounts'][index]['password'] = account['password']
-    data['accounts'][index]['leveled'] = account['leveled']
-    with open(constants.LOCAL_ACCOUNTS_PATH, 'w') as outfile:
-        outfile.write(json.dumps(data, indent=4))
-
-
-def delete_account(account) -> None:
-    with open(constants.LOCAL_ACCOUNTS_PATH, 'r') as f:
-        data = json.load(f)
-    data['accounts'].remove(account)
-    with open(constants.LOCAL_ACCOUNTS_PATH, 'w') as outfile:
-        outfile.write(json.dumps(data, indent=4))
-
-
-def get_all_accounts() -> dict:
-    """Returns all account information"""
-    with open(constants.LOCAL_ACCOUNTS_PATH, 'r') as f:
-        accounts = json.load(f)
-    return accounts
+    def set_account_as_leveled(self, account: Account, max_level: int):
+        """Sets account level to user configured max level in the JSON file"""
+        with open(Constants.ACCOUNT_PATH, 'r') as f:
+            data = json.load(f)
+        for account in data['Accounts']:
+            if account['username'] == account.username:
+                account['level'] = max_level
+                with open(Constants.ACCOUNT_PATH, 'w') as json_file:
+                    json.dump(data, json_file)
+                return

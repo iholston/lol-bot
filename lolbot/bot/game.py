@@ -13,7 +13,7 @@ import pyautogui
 import requests
 
 from lolbot.common import utils
-from lolbot.common.constants import *
+from lolbot.common.items import *
 
 
 class GameState(Enum):
@@ -34,6 +34,17 @@ class GameError(Exception):
 
 class Game:
     """Game class that handles the tasks needed to play/win a bot game of League of Legends"""
+
+    GAME_MINI_MAP_UNDER_TURRET = (0.8760, 0.8846)
+    GAME_MINI_MAP_CENTER_MID = (0.8981, 0.8674)
+    GAME_MINI_MAP_ENEMY_NEXUS = (0.9628, 0.7852)
+    GAME_ULT_RATIO = (0.7298, 0.2689)
+    GAME_AFK_OK_RATIO = (0.4981, 0.4647)
+    GAME_CENTER_OF_SCREEN = (0.5, 0.5)
+    GAME_SYSTEM_MENU_X = (0.7729, 0.2488)
+
+    EARLY_GAME_END_TIME = 630
+    MAX_GAME_TIME = 2400
     
     def __init__(self) -> None:
         self.log = logging.getLogger(__name__)
@@ -63,9 +74,9 @@ class Game:
                     case GameState.PRE_MINIONS:
                         self.game_start()
                     case GameState.EARLY_GAME:
-                        self.play(GAME_MINI_MAP_CENTER_MID, GAME_MINI_MAP_UNDER_TURRET, 20)
+                        self.play(Game.GAME_MINI_MAP_CENTER_MID, Game.GAME_MINI_MAP_UNDER_TURRET, 20)
                     case GameState.LATE_GAME:
-                        self.play(GAME_MINI_MAP_ENEMY_NEXUS, GAME_MINI_MAP_CENTER_MID, 35)
+                        self.play(Game.GAME_MINI_MAP_ENEMY_NEXUS, Game.GAME_MINI_MAP_CENTER_MID, 35)
         except GameError as e:
             self.log.warning(e.__str__())
             utils.close_game()
@@ -79,10 +90,10 @@ class Game:
         self.log.debug("Waiting for game window to open")
         for i in range(120):
             sleep(1)
-            if utils.exists(LEAGUE_GAME_CLIENT_WINNAME):
+            if utils.exists(utils.LEAGUE_GAME_CLIENT_WINNAME):
                 self.log.debug("Game window open")
-                utils.click(GAME_CENTER_OF_SCREEN, LEAGUE_GAME_CLIENT_WINNAME, 2)
-                utils.click(GAME_CENTER_OF_SCREEN, LEAGUE_GAME_CLIENT_WINNAME)
+                utils.click(Game.GAME_CENTER_OF_SCREEN, utils.LEAGUE_GAME_CLIENT_WINNAME, 2)
+                utils.click(Game.GAME_CENTER_OF_SCREEN, utils.LEAGUE_GAME_CLIENT_WINNAME)
                 return
         raise GameError("Game window did not open")
 
@@ -108,7 +119,7 @@ class Game:
             if datetime.now() - start > timedelta(minutes=10):
                 raise GameError("Loading Screen max time limit exceeded")
             self.update_state(postpone_update=2)
-        utils.click(GAME_CENTER_OF_SCREEN, LEAGUE_GAME_CLIENT_WINNAME, 2)
+        utils.click(Game.GAME_CENTER_OF_SCREEN, utils.LEAGUE_GAME_CLIENT_WINNAME, 2)
 
     def game_start(self) -> None:
         """Buys starter items and waits for minions to clash (minions clash at 90 seconds)"""
@@ -118,8 +129,8 @@ class Game:
         self.lock_screen()
         self.upgrade_abilities()
         while self.game_state == GameState.PRE_MINIONS:
-            utils.right_click(GAME_MINI_MAP_UNDER_TURRET, LEAGUE_GAME_CLIENT_WINNAME, 2)  # to prevent afk warning popup
-            utils.click(GAME_AFK_OK_RATIO, LEAGUE_GAME_CLIENT_WINNAME)
+            utils.right_click(Game.GAME_MINI_MAP_UNDER_TURRET, utils.LEAGUE_GAME_CLIENT_WINNAME, 2)  # to prevent afk warning popup
+            utils.click(Game.GAME_AFK_OK_RATIO, utils.LEAGUE_GAME_CLIENT_WINNAME)
             self.update_state()
         self.in_lane = True
 
@@ -131,52 +142,52 @@ class Game:
         self.upgrade_abilities()
         while self.is_dead:
             self.update_state()
-        utils.click(GAME_AFK_OK_RATIO, LEAGUE_GAME_CLIENT_WINNAME)
+        utils.click(Game.GAME_AFK_OK_RATIO, utils.LEAGUE_GAME_CLIENT_WINNAME)
         if not self.in_lane:
             utils.attack_move_click(attack_position)
-            utils.press('d', LEAGUE_GAME_CLIENT_WINNAME)  # ghost
+            utils.press('d', utils.LEAGUE_GAME_CLIENT_WINNAME)  # ghost
             sleep(time_to_lane)
             self.in_lane = True
 
         # Main attack move loop. This sequence attacks and then de-aggros to prevent them from dying 50 times.
         for i in range(7):
             utils.attack_move_click(attack_position, 8)
-            utils.right_click(retreat_position, LEAGUE_GAME_CLIENT_WINNAME, 2.5)
+            utils.right_click(retreat_position, utils.LEAGUE_GAME_CLIENT_WINNAME, 2.5)
 
         # Ult and back
-        utils.press('f', LEAGUE_GAME_CLIENT_WINNAME)
-        utils.attack_move_click(GAME_ULT_RATIO)
-        utils.press('r', LEAGUE_GAME_CLIENT_WINNAME, 4)
-        utils.right_click(GAME_MINI_MAP_UNDER_TURRET, LEAGUE_GAME_CLIENT_WINNAME, 6)
-        utils.press('b', LEAGUE_GAME_CLIENT_WINNAME, 10)
+        utils.press('f', utils.LEAGUE_GAME_CLIENT_WINNAME)
+        utils.attack_move_click(Game.GAME_ULT_RATIO)
+        utils.press('r', utils.LEAGUE_GAME_CLIENT_WINNAME, 4)
+        utils.right_click(Game.GAME_MINI_MAP_UNDER_TURRET, utils.LEAGUE_GAME_CLIENT_WINNAME, 6)
+        utils.press('b', utils.LEAGUE_GAME_CLIENT_WINNAME, 10)
         self.in_lane = False
 
     def buy_item(self) -> None:
         """Opens the shop and attempts to purchase items via default shop hotkeys"""
         self.log.debug("Attempting to purchase an item from build order")
-        utils.press('p', LEAGUE_GAME_CLIENT_WINNAME, 1.5)
-        utils.press('ctrl+l', LEAGUE_GAME_CLIENT_WINNAME, 1.5)
-        utils.write(self.build_order[0], LEAGUE_GAME_CLIENT_WINNAME, 1.5)
-        utils.press('enter', LEAGUE_GAME_CLIENT_WINNAME, 1.5)
+        utils.press('p', utils.LEAGUE_GAME_CLIENT_WINNAME, 1.5)
+        utils.press('ctrl+l', utils.LEAGUE_GAME_CLIENT_WINNAME, 1.5)
+        utils.write(self.build_order[0], utils.LEAGUE_GAME_CLIENT_WINNAME, 1.5)
+        utils.press('enter', utils.LEAGUE_GAME_CLIENT_WINNAME, 1.5)
         self.update_state()
         if self.build_order[0] in self.inventory:
             self.log.debug("Successfully purchased: {}".format(self.build_order[0]))
             self.build_order.remove(self.build_order[0])
-        utils.press('esc', LEAGUE_GAME_CLIENT_WINNAME, 1.5)
-        utils.click(GAME_SYSTEM_MENU_X, LEAGUE_GAME_CLIENT_WINNAME, 1.5)
+        utils.press('esc', utils.LEAGUE_GAME_CLIENT_WINNAME, 1.5)
+        utils.click(Game.GAME_SYSTEM_MENU_X, utils.LEAGUE_GAME_CLIENT_WINNAME, 1.5)
 
     def lock_screen(self) -> None:
         """Locks screen on champion"""
         if not self.screen_locked:
             self.log.debug("Locking screen")
-            utils.press('y', LEAGUE_GAME_CLIENT_WINNAME)
+            utils.press('y', utils.LEAGUE_GAME_CLIENT_WINNAME)
             self.screen_locked = True
 
     def upgrade_abilities(self) -> None:
         """Upgrades abilities and then rotates which ability will be upgraded first next time"""
         self.log.debug("Upgrading abilities. Second Ability: {}".format(self.ability_upgrades[1]))
         for upgrade in self.ability_upgrades:
-            utils.press(upgrade, LEAGUE_GAME_CLIENT_WINNAME)
+            utils.press(upgrade, utils.LEAGUE_GAME_CLIENT_WINNAME)
         self.ability_upgrades = ([self.ability_upgrades[0]] + [self.ability_upgrades[-1]] + self.ability_upgrades[1:-1])  # r is always first
 
     def create_build_order(self) -> list[str]:
@@ -197,7 +208,7 @@ class Game:
         except requests.ConnectionError:
             self.log.debug("Connection error. Could not get game data")
             self.connection_errors += 1
-            if not utils.exists(LEAGUE_GAME_CLIENT_WINNAME):
+            if not utils.exists(utils.LEAGUE_GAME_CLIENT_WINNAME):
                 raise utils.WindowNotFound
             if self.connection_errors == 15:
                 raise GameError("Connection Error. Could not connect to game")
@@ -205,7 +216,7 @@ class Game:
         if response.status_code != 200:
             self.log.debug("Connection error. Response status code: {}".format(response.status_code))
             self.connection_errors += 1
-            if not utils.exists(LEAGUE_GAME_CLIENT_WINNAME):
+            if not utils.exists(utils.LEAGUE_GAME_CLIENT_WINNAME):
                 raise utils.WindowNotFound
             if self.connection_errors == 15:
                 raise GameError("Bad Response. Could not connect to game")
@@ -223,11 +234,11 @@ class Game:
             self.game_state = GameState.LOADING_SCREEN
         elif self.game_time < 85:
             self.game_state = GameState.PRE_MINIONS
-        elif self.game_time < EARLY_GAME_END_TIME:
+        elif self.game_time < Game.EARLY_GAME_END_TIME:
             if self.game_state != GameState.EARLY_GAME:
                 self.log.info("Early Game. Pushing center mid. Game Time: {}".format(self.formatted_game_time))
             self.game_state = GameState.EARLY_GAME
-        elif self.game_time < MAX_GAME_TIME:
+        elif self.game_time < Game.MAX_GAME_TIME:
             if self.game_state != GameState.LATE_GAME:
                 self.log.info("Mid Game. Pushing enemy nexus. Game Time: {}".format(self.formatted_game_time))
             self.game_state = GameState.LATE_GAME

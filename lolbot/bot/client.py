@@ -12,12 +12,11 @@ from datetime import datetime, timedelta
 import pyautogui
 
 import lolbot.bot.launcher as launcher
-import lolbot.common.account as account
-from lolbot.common import api
-from lolbot.common import utils
+from lolbot.common import api, utils
 from lolbot.bot.game import Game
+from lolbot.common.account import AccountManager
+from lolbot.common.config import Constants, ConfigRW
 from lolbot.common.handler import MultiProcessLogHandler
-from lolbot.common.constants import *
 
 
 class ClientError(Exception):
@@ -32,20 +31,30 @@ class ClientError(Exception):
 class Client:
     """Client class that handles the League Client and all tasks needed to start a new game"""
 
+    POST_GAME_OK_RATIO = (0.4996, 0.9397)
+    POST_GAME_SELECT_CHAMP_RATIO = (0.4977, 0.5333)
+    POPUP_SEND_EMAIL_X_RATIO = (0.6960, 0.1238)
+    MAX_CLIENT_ERRORS = 5
+    MAX_PHASE_ERRORS = 20
+
     def __init__(self, message_queue) -> None:
+        self.handler = MultiProcessLogHandler(message_queue, Constants.LOG_DIR)
+        self.log = logging.getLogger(__name__)
+        self.handler.set_logs()
+        self.account_manager = AccountManager()
         self.connection = api.Connection()
         self.launcher = launcher.Launcher()
-        self.log = logging.getLogger(__name__)
-        self.handler = MultiProcessLogHandler(message_queue, LOCAL_LOG_PATH)
-        self.username = ""
-        self.password = ""
-        self.account_level = 0
+        self.config = ConfigRW()
+        self.max_level = self.config.get_data('max_level')
+        self.lobby = self.config.get_data('lobby')
+        self.champs = self.config.get_data('champs')
+        self.dialog = self.config.get_data('dialog')
+        self.account = None
         self.phase = ""
         self.prev_phase = None
         self.client_errors = 0
         self.phase_errors = 0
         self.game_errors = 0
-        self.handler.set_logs()
         utils.print_ascii()
         self.account_loop()
 
@@ -53,19 +62,20 @@ class Client:
         """Main loop, gets an account, launches league, levels the account, and repeats"""
         while True:
             try:
-                self.launcher.launch_league(account.get_username(), account.get_password())
+                self.account = self.account_manager.get_account(self.max_level)
+                self.launcher.launch_league(self.account.username, self.account.password)
                 self.leveling_loop()
-                account.set_account_as_leveled()
-                utils.close_processes()
+                self.account_manager.set_account_as_leveled(self.account, self.max_level)
+                utils.close_all_processes()
                 self.client_errors = 0
             except ClientError as ce:
                 self.log.error(ce.__str__())
                 self.client_errors += 1
-                if self.client_errors == MAX_CLIENT_ERRORS:
+                if self.client_errors == Client.MAX_CLIENT_ERRORS:
                     err_msg = "Max errors reached. Exiting"
                     self.log.error(err_msg)
                     raise ClientError(err_msg)
-                utils.close_processes()
+                utils.close_all_processes()
             except launcher.LauncherError as le:
                 self.log.error(le.__str__())
                 self.log.error("Launcher Error. Exiting")
@@ -86,9 +96,9 @@ class Client:
         while not self.account_leveled():
             match self.get_phase():
                 case 'None':
-                    self.create_lobby(GAME_LOBBY_ID)
+                    self.create_lobby(self.lobby)
                 case 'Lobby':
-                    self.start_matchmaking(GAME_LOBBY_ID)
+                    self.start_matchmaking(self.lobby)
                 case 'Matchmaking':
                     self.queue()
                 case 'ReadyCheck':
@@ -124,7 +134,7 @@ class Client:
                 self.log.debug("New Phase: {}, Previous Phase: {}".format(self.phase, self.prev_phase))
                 if self.prev_phase == self.phase and self.phase != "Matchmaking":
                     self.phase_errors += 1
-                    if self.phase_errors == MAX_PHASE_ERRORS:
+                    if self.phase_errors == Client.MAX_PHASE_ERRORS:
                         raise ClientError("Transition error. Phase will not change")
                     else:
                         self.log.debug("Phase same as previous. Phase: {}, Previous Phase: {}, Errno {}".format(self.phase, self.prev_phase, self.phase_errors))
@@ -158,21 +168,9 @@ class Client:
             self.log.info("Dodge Timer. Time Remaining: {}".format(utils.seconds_to_min_sec(dodge_timer)))
             sleep(dodge_timer)
 
-        # Check if queue times are too long. If so, start a draft pick and don't accept (should reset high queue time in bot mode)
         if r.status_code == 200:
             if float(r.json()['estimatedQueueTime']) > 6000:
                 self.log.warning("Queue times are too long")
-        #         self.connection.request('delete', '/lol-lobby/v2/lobby/matchmaking/search')
-        #         sleep(1)
-        #         self.create_lobby(400)
-        #         data = {"firstPreference": "MIDDLE", "secondPreference": "BOTTOM"}
-        #         self.connection.request('put', "/lol-lobby/v1/lobby/members/localMember/position-preferences", data=data)
-        #         sleep(1)
-        #         self.connection.request('post', '/lol-lobby/v2/lobby/matchmaking/search')
-        #         sleep(3)
-        #         while self.get_phase() == 'Matchmaking':
-        #             sleep(1)
-        #         self.connection.request('post', '/lol-matchmaking/v1/ready-check/decline')
 
     def queue(self) -> None:
         """Waits until the League Client Phase changes to something other than 'Matchmaking'"""
@@ -222,8 +220,8 @@ class Client:
                     # Select Champ or Lock in champ that has already been selected
                     if action['championId'] == 0:  # no champ selected, attempt to select a champ
                         self.log.debug("Lobby State: {}. Time Left in Lobby: {}s. Action: Hovering champ".format(lobby_state, lobby_time_left))
-                        if champ_index < len(CHAMPS):
-                            champion_id = CHAMPS[champ_index]
+                        if champ_index < len(self.champs):
+                            champion_id = self.champs[champ_index]
                             champ_index += 1
                         else:
                             champion_id = f2p[f2p_index]
@@ -241,7 +239,7 @@ class Client:
                         if not requested:
                             sleep(1)
                             try:
-                                self.chat(random.choice(ASK_4_MID_DIALOG))
+                                self.chat(random.choice(self.dialog))
                             except IndexError:
                                 pass
                             requested = True
@@ -278,13 +276,13 @@ class Client:
         self.log.info("Honoring teammates and accepting rewards")
         sleep(3)
         try:
-            utils.click(POPUP_SEND_EMAIL_X_RATIO, LEAGUE_CLIENT_WINNAME, 2)
+            utils.click(Client.POPUP_SEND_EMAIL_X_RATIO, utils.LEAGUE_CLIENT_WINNAME, 2)
             self.honor_player()
-            utils.click(POPUP_SEND_EMAIL_X_RATIO, LEAGUE_CLIENT_WINNAME, 2)
+            utils.click(Client.POPUP_SEND_EMAIL_X_RATIO, utils.LEAGUE_CLIENT_WINNAME, 2)
             for i in range(3):
-                utils.click(POST_GAME_SELECT_CHAMP_RATIO, LEAGUE_CLIENT_WINNAME, 1)
-                utils.click(POST_GAME_OK_RATIO, LEAGUE_CLIENT_WINNAME, 1)
-            utils.click(POPUP_SEND_EMAIL_X_RATIO, LEAGUE_CLIENT_WINNAME, 1)
+                utils.click(Client.POST_GAME_SELECT_CHAMP_RATIO, utils.LEAGUE_CLIENT_WINNAME, 1)
+                utils.click(Client.POST_GAME_OK_RATIO, utils.LEAGUE_CLIENT_WINNAME, 1)
+            utils.click(Client.POPUP_SEND_EMAIL_X_RATIO, utils.LEAGUE_CLIENT_WINNAME, 1)
         except (utils.WindowNotFound, pyautogui.FailSafeException):
             sleep(3)
 
@@ -298,7 +296,7 @@ class Client:
             if not posted:
                 self.connection.request('post', '/lol-lobby/v2/play-again')
             else:
-                self.create_lobby(GAME_LOBBY_ID)
+                self.create_lobby(self.lobby)
             posted = not posted
             sleep(1)
         raise ClientError("Could not exit play-again screen")
@@ -307,9 +305,9 @@ class Client:
         """Checks if account has reached the constants.MAX_LEVEL (default 30)"""
         r = self.connection.request('get', '/lol-chat/v1/me')
         if r.status_code == 200:
-            self.account_level = int(r.json()['lol']['level'])
-            if self.account_level < ACCOUNT_MAX_LEVEL:
-                self.log.debug("Account Level: {}.".format(self.account_level))
+            self.account.level = int(r.json()['lol']['level'])
+            if self.account.level < self.max_level:
+                self.log.debug("Account Level: {}.".format(self.account.level))
                 return False
             else:
                 self.log.info("SUCCESS: Account Leveled")

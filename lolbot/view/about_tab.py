@@ -1,5 +1,5 @@
 """
-View tab that displays informationa about the bot
+View tab that displays information about the bot
 """
 
 import webbrowser
@@ -7,7 +7,7 @@ import requests
 
 import dearpygui.dearpygui as dpg
 
-from ..common import constants
+from lolbot.common.config import Constants
 
 
 class AboutTab:
@@ -15,7 +15,7 @@ class AboutTab:
 
     def __init__(self) -> None:
         response = requests.get("https://api.github.com/repos/iholston/lol-bot/releases/latest")
-        self.version = constants.VERSION
+        self.version = Constants.VERSION
         self.latest_version = response.json()["name"]
         self.need_update = False
         if self.latest_version != self.version:
