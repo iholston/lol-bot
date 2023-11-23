@@ -7,7 +7,7 @@ import os
 
 import dearpygui.dearpygui as dpg
 
-from ..common.config import ConfigRW
+from lolbot.common.config import ConfigRW
 
 
 class ConfigTab:

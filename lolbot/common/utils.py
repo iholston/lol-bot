@@ -16,7 +16,6 @@ from win32gui import FindWindow, GetWindowRect
 log = logging.getLogger(__name__)
 
 # WINDOW NAMES
-RIOT_CLIENT_WINNAME = "Riot Client Main"
 LEAGUE_CLIENT_WINNAME = "League of Legends"
 LEAGUE_GAME_CLIENT_WINNAME = "League of Legends (TM) Client"
 
@@ -84,15 +83,6 @@ def close_riot_client() -> None:
     log.info("Terminating game instance")
     os.system(KILL_RIOT_CLIENT)
     sleep(2)
-
-
-def screenshot(img_name: str, path: str = '') -> None:
-    """Takes a screenshot and saves to desktop"""
-    im = pyautogui.screenshot()
-    if not path:
-        im.save(os.path.join(os.path.join(os.path.expanduser('~')), 'Desktop') + img_name + ".png")
-    else:
-        im.save(path + img_name)
 
 
 def size(window_title: str = LEAGUE_CLIENT_WINNAME) -> tuple:

@@ -2,14 +2,12 @@
 View tab that handles creation/editing of accounts
 """
 
-import os
 import subprocess
 from typing import Any
 
 import dearpygui.dearpygui as dpg
-from ..common.config import DefaultSettings
-from ..common import account
-from ..common.account import Account
+from lolbot.common.config import Constants
+from lolbot.common.account import Account, AccountManager
 
 
 class AccountsTab:
@@ -17,7 +15,7 @@ class AccountsTab:
 
     def __init__(self) -> None:
         self.id = None
-        self.am = account.AccountManager(DefaultSettings.ACCOUNT_PATH, 30)
+        self.am = AccountManager()
         self.accounts = None
         self.accounts_table = None
 
@@ -38,7 +36,7 @@ class AccountsTab:
                     dpg.add_button(label="Cancel", width=113, callback=lambda: dpg.configure_item("AccountSubmit", show=False))
             with dpg.group(horizontal=True):
                 dpg.add_button(label="Add New Account", width=182, callback=lambda: dpg.configure_item("AccountSubmit", show=True))
-                dpg.add_button(label="Show in File Explorer", width=182, callback=lambda: subprocess.Popen('explorer /select, {}'.format(DefaultSettings.ACCOUNT_PATH)))
+                dpg.add_button(label="Show in File Explorer", width=182, callback=lambda: subprocess.Popen('explorer /select, {}'.format(Constants.ACCOUNT_PATH)))
                 dpg.add_button(label="Refresh", width=182, callback=self.create_accounts_table)
             dpg.add_spacer()
             dpg.add_spacer()

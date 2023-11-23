@@ -10,7 +10,7 @@ from time import sleep
 
 from lolbot.common import api
 from lolbot.common import utils
-from lolbot.common.config import DefaultSettings, ConfigRW
+from lolbot.common.config import Constants, ConfigRW
 
 
 class LauncherError(Exception):
@@ -42,9 +42,9 @@ class Launcher:
         """Overwrites the League of Legends game config"""
         self.log.info("Overwriting/creating game config")
         if os.path.exists(self.config.get_data('league_config')):
-            shutil.copy(DefaultSettings.GAME_CFG, self.config.get_data('league_config'))
+            shutil.copy(Constants.GAME_CFG, self.config.get_data('league_config'))
         else:
-            shutil.copy2(DefaultSettings.GAME_CFG, self.config.get_data('league_config'))
+            shutil.copy2(Constants.GAME_CFG, self.config.get_data('league_config'))
 
     def launch_loop(self) -> None:
         """Handles tasks necessary to open the League of Legends client"""
@@ -95,7 +95,6 @@ class Launcher:
             raise LauncherError("Launch Error. Most likely the Riot Client needs an update or League needs an update from within Riot Client")
         else:
             raise LauncherError("Could not launch League of legends")
-
 
     def start_league(self):
         self.log.info('Launching League')

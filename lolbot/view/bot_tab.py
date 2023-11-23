@@ -10,9 +10,9 @@ from time import sleep
 
 import dearpygui.dearpygui as dpg
 
-from ..common import utils, api
-from ..common import config
-from ..bot.client import Client
+from lolbot.common import utils, api
+from lolbot.common.config import ConfigRW
+from lolbot.bot.client import Client
 
 
 class BotTab:
@@ -35,7 +35,7 @@ class BotTab:
             'Hyper Roll TFT': 1130,
             'Double Up TFT': 1160
         }
-        self.config = config.ConfigRW()
+        self.config = ConfigRW()
         self.terminate = terminate
         self.bot_thread = None
 

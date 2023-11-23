@@ -7,7 +7,7 @@ from time import sleep
 
 import dearpygui.dearpygui as dpg
 
-from ..common import utils
+from lolbot.common import utils
 
 
 class RatioTab:

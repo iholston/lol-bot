@@ -15,7 +15,7 @@ import lolbot.bot.launcher as launcher
 from lolbot.common import api, utils
 from lolbot.bot.game import Game
 from lolbot.common.account import AccountManager
-from lolbot.common.config import DefaultSettings, ConfigRW
+from lolbot.common.config import Constants, ConfigRW
 from lolbot.common.handler import MultiProcessLogHandler
 
 
@@ -38,22 +38,23 @@ class Client:
     MAX_PHASE_ERRORS = 20
 
     def __init__(self, message_queue) -> None:
-        self.config = ConfigRW()
+        self.handler = MultiProcessLogHandler(message_queue, Constants.LOG_DIR)
+        self.log = logging.getLogger(__name__)
+        self.handler.set_logs()
+        self.account_manager = AccountManager()
         self.connection = api.Connection()
         self.launcher = launcher.Launcher()
-        self.log = logging.getLogger(__name__)
-        self.handler = MultiProcessLogHandler(message_queue, DefaultSettings.LOG_DIR)
-        self.account_manager = AccountManager(DefaultSettings.ACCOUNT_PATH, self.config.get_data('max_level'))
+        self.config = ConfigRW()
+        self.max_level = self.config.get_data('max_level')
+        self.lobby = self.config.get_data('lobby')
+        self.champs = self.config.get_data('champs')
+        self.dialog = self.config.get_data('dialog')
         self.account = None
-        self.username = ""
-        self.password = ""
-        self.account_level = 0
         self.phase = ""
         self.prev_phase = None
         self.client_errors = 0
         self.phase_errors = 0
         self.game_errors = 0
-        self.handler.set_logs()
         utils.print_ascii()
         self.account_loop()
 
@@ -61,10 +62,10 @@ class Client:
         """Main loop, gets an account, launches league, levels the account, and repeats"""
         while True:
             try:
-                self.account = self.account_manager.get_account()
+                self.account = self.account_manager.get_account(self.max_level)
                 self.launcher.launch_league(self.account.username, self.account.password)
                 self.leveling_loop()
-                self.account_manager.set_account_as_leveled(self.account)
+                self.account_manager.set_account_as_leveled(self.account, self.max_level)
                 utils.close_all_processes()
                 self.client_errors = 0
             except ClientError as ce:
@@ -95,9 +96,9 @@ class Client:
         while not self.account_leveled():
             match self.get_phase():
                 case 'None':
-                    self.create_lobby(self.config.get_data('lobby'))
+                    self.create_lobby(self.lobby)
                 case 'Lobby':
-                    self.start_matchmaking(self.config.get_data('lobby'))
+                    self.start_matchmaking(self.lobby)
                 case 'Matchmaking':
                     self.queue()
                 case 'ReadyCheck':
@@ -219,8 +220,8 @@ class Client:
                     # Select Champ or Lock in champ that has already been selected
                     if action['championId'] == 0:  # no champ selected, attempt to select a champ
                         self.log.debug("Lobby State: {}. Time Left in Lobby: {}s. Action: Hovering champ".format(lobby_state, lobby_time_left))
-                        if champ_index < len(self.config.get_data('champs')):
-                            champion_id = self.config.get_data('champs')[champ_index]
+                        if champ_index < len(self.champs):
+                            champion_id = self.champs[champ_index]
                             champ_index += 1
                         else:
                             champion_id = f2p[f2p_index]
@@ -238,7 +239,7 @@ class Client:
                         if not requested:
                             sleep(1)
                             try:
-                                self.chat(random.choice(self.config.get_data('dialog')))
+                                self.chat(random.choice(self.dialog))
                             except IndexError:
                                 pass
                             requested = True
@@ -295,7 +296,7 @@ class Client:
             if not posted:
                 self.connection.request('post', '/lol-lobby/v2/play-again')
             else:
-                self.create_lobby(self.config.get_data('lobby'))
+                self.create_lobby(self.lobby)
             posted = not posted
             sleep(1)
         raise ClientError("Could not exit play-again screen")
@@ -304,9 +305,9 @@ class Client:
         """Checks if account has reached the constants.MAX_LEVEL (default 30)"""
         r = self.connection.request('get', '/lol-chat/v1/me')
         if r.status_code == 200:
-            self.account_level = int(r.json()['lol']['level'])
-            if self.account_level < self.config.get_data('max_level'):
-                self.log.debug("Account Level: {}.".format(self.account_level))
+            self.account.level = int(r.json()['lol']['level'])
+            if self.account.level < self.max_level:
+                self.log.debug("Account Level: {}.".format(self.account.level))
                 return False
             else:
                 self.log.info("SUCCESS: Account Leveled")

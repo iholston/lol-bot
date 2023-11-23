@@ -8,7 +8,7 @@ import subprocess
 
 import dearpygui.dearpygui as dpg
 
-from ..common import api
+from lolbot.common import api
 
 
 class HTTPTab:
