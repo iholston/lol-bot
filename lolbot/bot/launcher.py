@@ -3,6 +3,7 @@ Handles Riot Client and login to launch the League Client
 """
 
 import os
+import sys
 import logging
 import shutil
 import subprocess
@@ -42,9 +43,9 @@ class Launcher:
         """Overwrites the League of Legends game config"""
         self.log.info("Overwriting/creating game config")
         if os.path.exists(self.config.get_data('league_config')):
-            shutil.copy(Constants.GAME_CFG, self.config.get_data('league_config'))
+            shutil.copy(utils.resource_path(Constants.GAME_CFG), self.config.get_data('league_config'))
         else:
-            shutil.copy2(Constants.GAME_CFG, self.config.get_data('league_config'))
+            shutil.copy2(utils.resource_path(Constants.GAME_CFG), self.config.get_data('league_config'))
 
     def launch_loop(self) -> None:
         """Handles tasks necessary to open the League of Legends client"""

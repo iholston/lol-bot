@@ -16,8 +16,8 @@ class Constants:
     ACCOUNT_PATH = os.path.join(CONFIG_DIR, 'accounts.json')
 
     RIOT_LOCKFILE = os.getenv('LOCALAPPDATA') + '/Riot Games/Riot Client/Config/lockfile'
-    GAME_CFG = os.getcwd() + '/lolbot/resources/game.cfg'
-    ICON_PATH = os.getcwd() + '/lolbot/resources/images/a.ico'
+    GAME_CFG = 'lolbot/resources/game.cfg'
+    ICON_PATH = 'lolbot/resources/images/a.ico'
 
     VERSION = '2.2.1'
 

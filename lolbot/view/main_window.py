@@ -3,12 +3,14 @@ User interface module that contains the main window
 """
 
 import ctypes; ctypes.windll.shcore.SetProcessDpiAwareness(0)  # This must be set before importing pyautogui/dpg
+import threading
 import datetime
 import multiprocessing
 
 import dearpygui.dearpygui as dpg
 
 from lolbot.common import api
+from lolbot.common import utils
 from lolbot.common.account import AccountManager
 from lolbot.common.config import Constants
 from lolbot.view.bot_tab import BotTab
@@ -24,6 +26,7 @@ class MainWindow:
     """Class that displays the view"""
 
     def __init__(self, width: int, height: int) -> None:
+        multiprocessing.freeze_support()  # https://stackoverflow.com/questions/24944558/pyinstaller-built-windows-exe-fails-with-multiprocessing
         Constants.create_dirs()
         self.account_manager = AccountManager()
         self.accounts = self.account_manager.get_all_accounts()
@@ -32,7 +35,7 @@ class MainWindow:
         self.connection = api.Connection()
         self.width = width
         self.height = height
-        self.terminate = False
+        self.terminate = threading.Event()
         self.tab_bar = None
         self.bot_tab = BotTab(self.message_queue, self.terminate)
         self.accounts_tab = AccountsTab()
@@ -60,7 +63,7 @@ class MainWindow:
                 # self.ratio_tab.create_tab(self.tab_bar)
                 self.logs_tab.create_tab(self.tab_bar)
                 self.about_tab.create_tab(self.tab_bar)
-        dpg.create_viewport(title='LoL Bot', width=self.width, height=self.height, small_icon=Constants.ICON_PATH, resizable=False)
+        dpg.create_viewport(title='LoL Bot', width=self.width, height=self.height, small_icon=utils.resource_path(Constants.ICON_PATH), resizable=False)
         dpg.setup_dearpygui()
         dpg.show_viewport()
         dpg.set_primary_window('primary window', True)
@@ -68,7 +71,7 @@ class MainWindow:
         while dpg.is_dearpygui_running():
             self._gui_updater()
             dpg.render_dearpygui_frame()
-        self.terminate = True
+        self.terminate.set()
         dpg.destroy_context()
 
     def _gui_updater(self) -> None:

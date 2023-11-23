@@ -5,6 +5,7 @@ Utility functions that interact with game windows and processes
 import logging
 import subprocess
 import os
+import sys
 from time import sleep
 
 import keyboard
@@ -76,6 +77,12 @@ def close_game() -> None:
     log.info("Terminating game instance")
     os.system(KILL_LEAGUE)
     sleep(15)
+
+
+def resource_path(relative_path: str) -> str:
+    if hasattr(sys, '_MEIPASS'):
+        return os.path.join(sys._MEIPASS, relative_path)
+    return os.path.join(os.path.abspath("."), relative_path)
 
 
 def close_riot_client() -> None:
