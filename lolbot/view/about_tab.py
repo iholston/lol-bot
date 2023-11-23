@@ -1,5 +1,5 @@
 """
-View tab that displays informationa about the bot
+View tab that displays information about the bot
 """
 
 import webbrowser

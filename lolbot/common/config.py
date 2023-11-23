@@ -9,17 +9,19 @@ from typing import Any
 
 class Constants:
     """Constant settings"""
+    # Constant paths
+    RIOT_LOCKFILE = os.path.join(os.getenv('LOCALAPPDATA'), 'Riot Games/Riot Client/Config/lockfile')
     CONFIG_DIR = os.path.join(os.getenv('LOCALAPPDATA'), 'LoL Bot')
     LOG_DIR = os.path.join(CONFIG_DIR, 'logs')
-
     CONFIG_PATH = os.path.join(CONFIG_DIR, 'configs.json')
     ACCOUNT_PATH = os.path.join(CONFIG_DIR, 'accounts.json')
 
-    RIOT_LOCKFILE = os.getenv('LOCALAPPDATA') + '/Riot Games/Riot Client/Config/lockfile'
+    # Pyinstaller dependant paths
     GAME_CFG = 'lolbot/resources/game.cfg'
     ICON_PATH = 'lolbot/resources/images/a.ico'
 
-    VERSION = '2.2.1'
+    # Other
+    VERSION = '2.1.0'
 
     @staticmethod
     def create_dirs():
