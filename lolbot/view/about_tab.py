@@ -44,4 +44,19 @@ class AboutTab:
     @staticmethod
     def _notes_text() -> str:
         """Sets text in About Text box"""
-        return "\t\t\t\t\t\t\t\t\tNotes\n\nIf you have any problems create an issue on the github repo.\n\nLeave a star maybe <3"
+        notes = "\t\t\t\t\t\t\t\t\tNotes\n"
+
+        notes += """
+Version 2.1.0+ processes accounts differently. Accounts must unfortunately 
+be added through the accounts tab manually a single time to convert them to 
+the new format. After that it should work normally.        
+
+Alternatively, you can copy the old 'lolbot/resources/account.json' file to
+the new location (select 'Show in Finder' on account tab). If you do this,
+make sure to find and replace all instances of 'leveled' with 'level' and
+'true' with 30 (or your max level) and false with 0.
+
+If you have any problems create an issue on the github repo.
+"""
+
+        return notes
