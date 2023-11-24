@@ -33,7 +33,7 @@ class ConfigTab:
             dpg.add_spacer()
             with dpg.group(horizontal=True):
                 dpg.add_input_text(default_value='League Installation Path', width=180, enabled=False)
-                dpg.add_input_text(tag="LeaguePath", default_value=self.config.get_data('league_path'), width=380, callback=self._set_dir)
+                dpg.add_input_text(tag="LeaguePath", default_value=self.config.get_data('league_dir'), width=380, callback=self._set_dir)
             with dpg.group(horizontal=True):
                 dpg.add_input_text(default_value='Game Mode', width=180, readonly=True)
                 dpg.add_combo(tag="GameMode", items=list(self.lobbies.keys()), default_value=list(self.lobbies.keys())[

@@ -48,16 +48,16 @@ class AccountManager(AccountGenerator):
     """Class that handles account persistence"""
 
     def __init__(self):
-        data = {'accounts': []}
+        self.default_data = {'accounts': []}
         if not os.path.exists(Constants.ACCOUNT_PATH):
             with open(Constants.ACCOUNT_PATH, 'w+') as f:
-                json.dump(data, f, indent=4)
-        else:
-            with open(Constants.ACCOUNT_PATH, 'w+') as f:
-                try:
-                    json.load(f)
-                except:
-                    json.dump(data, f, indent=4)
+                json.dump(self.default_data, f, indent=4)
+        try:
+            with open(Constants.ACCOUNT_PATH, 'r') as f:
+                json.load(f)
+        except:
+            with open(Constants.ACCOUNT_PATH, 'w') as f:
+                json.dump(self.default_data, f, indent=4)
 
     def get_account(self, max_level: int) -> Account:
         """Gets an account username from JSON file where level is < max_level"""
