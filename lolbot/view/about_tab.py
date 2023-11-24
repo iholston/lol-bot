@@ -15,7 +15,7 @@ class AboutTab:
 
     def __init__(self) -> None:
         response = requests.get("https://api.github.com/repos/iholston/lol-bot/releases/latest")
-        self.version = Constants.VERSION
+        self.version = 'v' + Constants.VERSION
         self.latest_version = response.json()["name"]
         self.need_update = False
         if self.latest_version != self.version:
