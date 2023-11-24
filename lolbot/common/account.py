@@ -48,16 +48,22 @@ class AccountManager(AccountGenerator):
     """Class that handles account persistence"""
 
     def __init__(self):
+        data = {'accounts': []}
         if not os.path.exists(Constants.ACCOUNT_PATH):
-            data = {'Accounts': []}
             with open(Constants.ACCOUNT_PATH, 'w+') as f:
                 json.dump(data, f, indent=4)
+        else:
+            with open(Constants.ACCOUNT_PATH, 'w+') as f:
+                try:
+                    json.load(f)
+                except:
+                    json.dump(data, f, indent=4)
 
     def get_account(self, max_level: int) -> Account:
         """Gets an account username from JSON file where level is < max_level"""
         with open(Constants.ACCOUNT_PATH, "r") as f:
             data = json.load(f)
-            for account in data['Accounts']:
+            for account in data['accounts']:
                 if account['level'] < max_level:
                     return Account(account['username'], account['password'], account['level'])
 
@@ -65,9 +71,9 @@ class AccountManager(AccountGenerator):
         """Writes account to JSON, will not write duplicates"""
         with open(Constants.ACCOUNT_PATH, 'r+') as f:
             data = json.load(f)
-        if asdict(account) in data['Accounts']:
+        if asdict(account) in data['accounts']:
             return
-        data['Accounts'].append(asdict(account))
+        data['accounts'].append(asdict(account))
         with open(Constants.ACCOUNT_PATH, 'r+') as outfile:
             outfile.write(json.dumps(data, indent=4))
 
@@ -76,13 +82,13 @@ class AccountManager(AccountGenerator):
         with open(Constants.ACCOUNT_PATH, 'r') as f:
             data = json.load(f)
         index = -1
-        for i in range(len(data['Accounts'])):
-            if data['Accounts'][i]['username'] == og_uname:
+        for i in range(len(data['accounts'])):
+            if data['accounts'][i]['username'] == og_uname:
                 index = i
                 break
-        data['Accounts'][index]['username'] = account.username
-        data['Accounts'][index]['password'] = account.password
-        data['Accounts'][index]['level'] = account.level
+        data['accounts'][index]['username'] = account.username
+        data['accounts'][index]['password'] = account.password
+        data['accounts'][index]['level'] = account.level
         with open(Constants.ACCOUNT_PATH, 'w') as outfile:
             outfile.write(json.dumps(data, indent=4))
 
@@ -90,7 +96,7 @@ class AccountManager(AccountGenerator):
         """Deletes account"""
         with open(Constants.ACCOUNT_PATH, 'r') as f:
             data = json.load(f)
-        data['Accounts'].remove(asdict(account))
+        data['accounts'].remove(asdict(account))
         with open(Constants.ACCOUNT_PATH, 'w') as outfile:
             outfile.write(json.dumps(data, indent=4))
 
@@ -98,13 +104,13 @@ class AccountManager(AccountGenerator):
         """Returns all accounts as dictionary"""
         with open(Constants.ACCOUNT_PATH, 'r') as f:
             data = json.load(f)
-        return data['Accounts']
+        return data['accounts']
 
     def set_account_as_leveled(self, account: Account, max_level: int):
         """Sets account level to user configured max level in the JSON file"""
         with open(Constants.ACCOUNT_PATH, 'r') as f:
             data = json.load(f)
-        for account in data['Accounts']:
+        for account in data['accounts']:
             if account['username'] == account.username:
                 account['level'] = max_level
                 with open(Constants.ACCOUNT_PATH, 'w') as json_file:

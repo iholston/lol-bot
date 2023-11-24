@@ -11,7 +11,7 @@ class Constants:
     """Constant settings"""
     # Constant paths
     RIOT_LOCKFILE = os.path.join(os.getenv('LOCALAPPDATA'), 'Riot Games/Riot Client/Config/lockfile')
-    CONFIG_DIR = os.path.join(os.getenv('LOCALAPPDATA'), 'LoL Bot')
+    CONFIG_DIR = os.path.join(os.getenv('LOCALAPPDATA'), 'LoLBot')
     LOG_DIR = os.path.join(CONFIG_DIR, 'logs')
     CONFIG_PATH = os.path.join(CONFIG_DIR, 'configs.json')
     ACCOUNT_PATH = os.path.join(CONFIG_DIR, 'accounts.json')
@@ -21,7 +21,7 @@ class Constants:
     ICON_PATH = 'lolbot/resources/images/a.ico'
 
     # Other
-    VERSION = '2.1.0'
+    VERSION = '2.1.1'
 
     @staticmethod
     def create_dirs():
@@ -32,8 +32,7 @@ class Constants:
         if not os.path.exists(Constants.CONFIG_PATH):
             open(Constants.CONFIG_PATH, 'w+')
         if not os.path.exists(Constants.ACCOUNT_PATH):
-            with open(Constants.ACCOUNT_PATH, 'w+') as outfile:
-                json.dump({'Accounts': []}, outfile, indent=4)
+            open(Constants.ACCOUNT_PATH, 'w+')
 
 
 class DefaultSettings:

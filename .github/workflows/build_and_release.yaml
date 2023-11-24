@@ -18,11 +18,11 @@ jobs:
       - name: Build artifact
         run: |
           pip install -r requirements.txt pillow pyinstaller
-          pyinstaller --onefile --noconsole --name "LoL Bot" --icon=lolbot/resources/images/a.ico --add-data "lolbot/resources:lolbot/resources" main.pyw
+          pyinstaller --onefile --noconsole --name "LoLBot" --icon=lolbot/resources/images/a.ico --add-data "lolbot/resources:lolbot/resources" main.pyw
       - name: Upload artifact
         uses: actions/upload-artifact@v3
         with:
-          name: lolbot
+          name: LoLBot
           path: dist/*
 
   release:
@@ -34,10 +34,10 @@ jobs:
     - name: Download artifact
       uses: actions/download-artifact@v3
       with:
-        name: lolbot
+        name: LoLBot
     - name: Push to release
       uses: ncipollo/release-action@v1
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
         replacesArtifacts: false
-        artifacts: LoL Bot.exe
+        artifacts: LoLBot.exe
