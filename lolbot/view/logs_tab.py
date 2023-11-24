@@ -48,12 +48,37 @@ class LogsTab:
             dpg.delete_item(self.logs_group)
         dpg.set_value('LogUpdatedTime', 'Last Updated: {}'.format(datetime.now()))
         with dpg.group(parent=self.id) as self.logs_group:
-            for filename in os.listdir(Constants.LOG_DIR):
+            for filename in self.sorted_dir_creation_time(Constants.LOG_DIR):
                 f = os.path.join(Constants.LOG_DIR, filename)
+                if f.endswith('.1'):
+                    os.unlink(f)
+                    continue
                 if os.path.isfile(f):
                     with dpg.collapsing_header(label=filename):
                         f = open(f, "r")
                         dpg.add_input_text(multiline=True, default_value=f.read(), height=300, width=600, tab_input=True)
+
+    @staticmethod
+    def sorted_dir_creation_time(directory: str) -> list:
+        """Sorts directory by creation time. recent first"""
+        def get_creation_time(item):
+            item_path = os.path.join(directory, item)
+            return os.path.getctime(item_path)
+
+        items = os.listdir(directory)
+        sorted_items = list(reversed(sorted(items, key=get_creation_time)))
+        return sorted_items
+
+    @staticmethod
+    def clear_bkps() -> None:
+        folder = Constants.LOG_DIR
+        for filename in os.listdir(folder):
+            file_path = os.path.join(folder, filename)
+            try:
+                if filename.endswith('.1'):
+                    os.unlink(file_path)
+            except Exception as e:
+                print('Failed to delete %s. Reason: %s' % (file_path, e))
 
     def clear_logs(self) -> None:
         """Empties the log folder"""
