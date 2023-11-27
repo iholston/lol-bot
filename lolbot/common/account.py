@@ -76,7 +76,7 @@ class AccountManager(AccountGenerator):
             return
         data['accounts'].append(asdict(account))
         with open(Constants.ACCOUNT_PATH, 'r+') as outfile:
-            outfile.write(json.dumps(data, indent=4))
+            json.dump(data, outfile, indent=4)
 
     def edit_account(self, og_uname: str, account: Account) -> None:
         """Edit an account"""
@@ -91,7 +91,7 @@ class AccountManager(AccountGenerator):
         data['accounts'][index]['password'] = account.password
         data['accounts'][index]['level'] = account.level
         with open(Constants.ACCOUNT_PATH, 'w') as outfile:
-            outfile.write(json.dumps(data, indent=4))
+            json.dump(data, outfile, indent=4)
 
     def delete_account(self, account: Account) -> None:
         """Deletes account"""
@@ -99,7 +99,7 @@ class AccountManager(AccountGenerator):
             data = json.load(f)
         data['accounts'].remove(asdict(account))
         with open(Constants.ACCOUNT_PATH, 'w') as outfile:
-            outfile.write(json.dumps(data, indent=4))
+            json.dump(data, outfile, indent=4)
 
     def get_all_accounts(self) -> list:
         """Returns all accounts as dictionary"""
@@ -111,9 +111,9 @@ class AccountManager(AccountGenerator):
         """Sets account level to user configured max level in the JSON file"""
         with open(Constants.ACCOUNT_PATH, 'r') as f:
             data = json.load(f)
-        for account in data['accounts']:
-            if account['username'] == account.username:
-                account['level'] = max_level
-                with open(Constants.ACCOUNT_PATH, 'w') as json_file:
-                    json.dump(data, json_file)
+        for _account in data['accounts']:
+            if _account['username'] == account.username:
+                _account['level'] = max_level
+                with open(Constants.ACCOUNT_PATH, 'w') as outfile:
+                    json.dump(data, outfile, indent=4)
                 return
