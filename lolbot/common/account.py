@@ -24,7 +24,7 @@ class AccountGenerator(ABC):
         pass
 
     @abstractmethod
-    def get_all_accounts(self) -> dict:
+    def get_all_accounts(self) -> list:
         pass
 
     @abstractmethod
@@ -66,8 +66,9 @@ class AccountManager(AccountGenerator):
             for account in data['accounts']:
                 if account['level'] < max_level:
                     return Account(account['username'], account['password'], account['level'])
+        return Account('', '', 0)
 
-    def add_account(self, account: Account):
+    def add_account(self, account: Account) -> None:
         """Writes account to JSON, will not write duplicates"""
         with open(Constants.ACCOUNT_PATH, 'r+') as f:
             data = json.load(f)
@@ -77,7 +78,7 @@ class AccountManager(AccountGenerator):
         with open(Constants.ACCOUNT_PATH, 'r+') as outfile:
             outfile.write(json.dumps(data, indent=4))
 
-    def edit_account(self, og_uname: str, account: Account):
+    def edit_account(self, og_uname: str, account: Account) -> None:
         """Edit an account"""
         with open(Constants.ACCOUNT_PATH, 'r') as f:
             data = json.load(f)
@@ -92,7 +93,7 @@ class AccountManager(AccountGenerator):
         with open(Constants.ACCOUNT_PATH, 'w') as outfile:
             outfile.write(json.dumps(data, indent=4))
 
-    def delete_account(self, account: Account):
+    def delete_account(self, account: Account) -> None:
         """Deletes account"""
         with open(Constants.ACCOUNT_PATH, 'r') as f:
             data = json.load(f)
@@ -100,13 +101,13 @@ class AccountManager(AccountGenerator):
         with open(Constants.ACCOUNT_PATH, 'w') as outfile:
             outfile.write(json.dumps(data, indent=4))
 
-    def get_all_accounts(self) -> dict:
+    def get_all_accounts(self) -> list:
         """Returns all accounts as dictionary"""
         with open(Constants.ACCOUNT_PATH, 'r') as f:
             data = json.load(f)
         return data['accounts']
 
-    def set_account_as_leveled(self, account: Account, max_level: int):
+    def set_account_as_leveled(self, account: Account, max_level: int) -> None:
         """Sets account level to user configured max level in the JSON file"""
         with open(Constants.ACCOUNT_PATH, 'r') as f:
             data = json.load(f)

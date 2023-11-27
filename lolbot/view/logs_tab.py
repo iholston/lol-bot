@@ -58,28 +58,6 @@ class LogsTab:
                         f = open(f, "r")
                         dpg.add_input_text(multiline=True, default_value=f.read(), height=300, width=600, tab_input=True)
 
-    @staticmethod
-    def sorted_dir_creation_time(directory: str) -> list:
-        """Sorts directory by creation time. recent first"""
-        def get_creation_time(item):
-            item_path = os.path.join(directory, item)
-            return os.path.getctime(item_path)
-
-        items = os.listdir(directory)
-        sorted_items = list(reversed(sorted(items, key=get_creation_time)))
-        return sorted_items
-
-    @staticmethod
-    def clear_bkps() -> None:
-        folder = Constants.LOG_DIR
-        for filename in os.listdir(folder):
-            file_path = os.path.join(folder, filename)
-            try:
-                if filename.endswith('.1'):
-                    os.unlink(file_path)
-            except Exception as e:
-                print('Failed to delete %s. Reason: %s' % (file_path, e))
-
     def clear_logs(self) -> None:
         """Empties the log folder"""
         dpg.configure_item("DeleteFiles", show=False)
@@ -94,3 +72,14 @@ class LogsTab:
             except Exception as e:
                 print('Failed to delete %s. Reason: %s' % (file_path, e))
         self.create_log_table()
+
+    @staticmethod
+    def sorted_dir_creation_time(directory: str) -> list:
+        """Sorts directory by creation time. recent first"""
+        def get_creation_time(item):
+            item_path = os.path.join(directory, item)
+            return os.path.getctime(item_path)
+
+        items = os.listdir(directory)
+        sorted_items = list(reversed(sorted(items, key=get_creation_time)))
+        return sorted_items
