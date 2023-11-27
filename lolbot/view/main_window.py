@@ -54,7 +54,7 @@ class MainWindow:
                     dpg.add_theme_color(dpg.mvThemeCol_ButtonActive, [0, 0, 0, 0])
                     dpg.add_theme_color(dpg.mvThemeCol_ButtonHovered, [29, 151, 236, 25])
                     dpg.add_theme_color(dpg.mvThemeCol_Text, [29, 151, 236])
-            with dpg.tab_bar() as self.tab_bar:
+            with dpg.tab_bar(callback=self._tab_selected) as self.tab_bar:
                 self.bot_tab.create_tab(self.tab_bar)
                 self.accounts_tab.create_tab(self.tab_bar)
                 self.config_tab.create_tab(self.tab_bar)
@@ -71,6 +71,11 @@ class MainWindow:
             dpg.render_dearpygui_frame()
         self.terminate.set()
         dpg.destroy_context()
+
+    def _tab_selected(self, sender, app_data, user_data) -> None:
+        """Callback for tab select"""
+        if app_data == self.logs_tab.id:
+            self.logs_tab.create_log_table()
 
     def _gui_updater(self) -> None:
         """Updates view each frame, displays up-to-date bot info"""
