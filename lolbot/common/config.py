@@ -12,6 +12,7 @@ class Constants:
     # Constant paths
     RIOT_LOCKFILE = os.path.join(os.getenv('LOCALAPPDATA'), 'Riot Games/Riot Client/Config/lockfile')
     CONFIG_DIR = os.path.join(os.getenv('LOCALAPPDATA'), 'LoLBot')
+    BAK_DIR = os.path.join(CONFIG_DIR, 'bak')
     LOG_DIR = os.path.join(CONFIG_DIR, 'logs')
     CONFIG_PATH = os.path.join(CONFIG_DIR, 'configs.json')
     ACCOUNT_PATH = os.path.join(CONFIG_DIR, 'accounts.json')
@@ -29,6 +30,8 @@ class Constants:
             os.makedirs(Constants.CONFIG_DIR)
         if not os.path.exists(Constants.LOG_DIR):
             os.makedirs(Constants.LOG_DIR)
+        if not os.path.exists(Constants.BAK_DIR):
+            os.makedirs(Constants.BAK_DIR)
         if not os.path.exists(Constants.CONFIG_PATH):
             open(Constants.CONFIG_PATH, 'w+')
         if not os.path.exists(Constants.ACCOUNT_PATH):

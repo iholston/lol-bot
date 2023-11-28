@@ -76,6 +76,8 @@ class MainWindow:
         """Callback for tab select"""
         if app_data == self.logs_tab.id:
             self.logs_tab.create_log_table()
+        if app_data == self.accounts_tab.id:
+            self.accounts_tab.create_accounts_table()
 
     def _gui_updater(self) -> None:
         """Updates view each frame, displays up-to-date bot info"""

@@ -3,6 +3,9 @@ View tab that handles creation/editing of accounts
 """
 
 import subprocess
+import time
+import shutil
+import threading
 from typing import Any
 
 import dearpygui.dearpygui as dpg
@@ -35,9 +38,11 @@ class AccountsTab:
                     dpg.add_button(label="Submit", width=113, callback=self.add_account)
                     dpg.add_button(label="Cancel", width=113, callback=lambda: dpg.configure_item("AccountSubmit", show=False))
             with dpg.group(horizontal=True):
-                dpg.add_button(label="Add New Account", width=182, callback=lambda: dpg.configure_item("AccountSubmit", show=True))
-                dpg.add_button(label="Show in File Explorer", width=182, callback=lambda: subprocess.Popen('explorer /select, {}'.format(Constants.ACCOUNT_PATH)))
-                dpg.add_button(label="Refresh", width=182, callback=self.create_accounts_table)
+                dpg.add_button(label="Add New Account", width=184, callback=lambda: dpg.configure_item("AccountSubmit", show=True))
+                dpg.add_button(label="Show in File Explorer", width=184, callback=lambda: subprocess.Popen('explorer /select, {}'.format(Constants.ACCOUNT_PATH)))
+                dpg.add_button(tag="BackupButton", label="Create Backup", width=184, callback=self.create_backup)
+                with dpg.tooltip(dpg.last_item()):
+                    dpg.add_text("Creates a backup of the accounts.json file in the bak folder")
             dpg.add_spacer()
             dpg.add_spacer()
             dpg.add_text("Accounts")
@@ -110,6 +115,13 @@ class AccountsTab:
             with dpg.group(horizontal=True):
                 dpg.add_button(label="OK", width=140, callback=self.delete_account, user_data=user_data)
                 dpg.add_button(label="Cancel", width=140, callback=lambda: dpg.delete_item("DeleteAccount"))
+
+    @staticmethod
+    def create_backup(sender: int) -> None:
+        bak = "{}{}".format(time.strftime("%Y%m%d-%H%M%S"), ".json")
+        shutil.copyfile(Constants.ACCOUNT_PATH, '{}/{}'.format(Constants.BAK_DIR, bak))
+        dpg.configure_item("BackupButton", label="Backup Created!")
+        threading.Timer(1, lambda: dpg.configure_item("BackupButton", label="Create Backup")).start()
 
     @staticmethod
     def copy_2_clipboard(sender: int):
