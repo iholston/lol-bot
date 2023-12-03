@@ -45,10 +45,7 @@ class Launcher:
             # League is running and there was a successful login attempt
             if utils.is_league_running() and logged_in:
                 self.log.info("Launch Success")
-                try:
-                    utils.close_riot_client()
-                except:
-                    self.log.warning("Could not kill riot client")
+                utils.close_riot_client()
                 return
 
             # League is running without a login attempt

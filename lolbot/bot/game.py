@@ -60,7 +60,6 @@ class Game:
         self.in_lane = False
         self.is_dead = False
         self.ability_upgrades = ['ctrl+r', 'ctrl+q', 'ctrl+w', 'ctrl+e']
-        self.log.info("Game player initialized")
 
     def play_game(self) -> bool:
         """Plays a single game of League of Legends, takes actions based on game time"""
