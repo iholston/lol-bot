@@ -2,11 +2,7 @@
 Handles Riot Client and login to launch the League Client
 """
 
-import os
-import sys
-import stat
 import logging
-import shutil
 import subprocess
 from time import sleep
 
@@ -41,16 +37,6 @@ class Launcher:
         self.username = username
         self.password = password
         self.launch_loop()
-
-    def set_game_config(self) -> None:
-        """Overwrites the League of Legends game config"""
-        self.log.info("Overwriting/creating game config")
-        path = self.config.get_data('league_config')
-        if os.path.exists(path):
-            os.chmod(path, stat.S_IWRITE)
-            shutil.copy(utils.resource_path(Constants.GAME_CFG), path)
-        else:
-            shutil.copy2(utils.resource_path(Constants.GAME_CFG), path)
 
     def launch_loop(self) -> None:
         """Handles tasks necessary to open the League of Legends client"""
@@ -121,13 +107,15 @@ class Launcher:
         elif r.json()['error'] == 'auth_failure':
             raise LauncherError("Invalid username or password")
 
-    def verify_account(self) -> None:
+    def verify_account(self) -> bool:
         """Checks if account credentials match the account on the League Client"""
         self.log.info("Verifying logged-in account credentials")
         connection = api.Connection()
         connection.connect_lcu(verbose=False)
         r = connection.request('get', '/lol-login/v1/session')
         if r.json()['username'] != self.username:
-            self.log.warning("Incorrect Account! Proceeding anyways")
+            self.log.warning("Accounts do not match! Proceeding anyways")
+            return False
         else:
             self.log.info("Account Verified")
+            return True

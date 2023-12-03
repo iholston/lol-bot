@@ -2,6 +2,8 @@
 Controls the League Client and continually starts League of Legends games
 """
 
+import os
+import shutil
 import logging
 import random
 import traceback
@@ -365,3 +367,17 @@ class Client:
             self.log.warning('Could not send message. HTTP STATUS: {} - {}, Caller: {}'.format(r.status_code, r.json(), inspect.stack()[1][3]))
         else:
             self.log.debug("Message success. Msg: {}. Caller: {}".format(msg, inspect.stack()[1][3]))
+
+    def set_game_config(self) -> None:
+        """Overwrites the League of Legends game config"""
+        self.log.info("Overwriting game configs")
+        path = self.config.get_data('league_config')
+        folder = os.path.abspath(os.path.join(path, os.pardir))
+        for filename in os.listdir(folder):
+            file_path = os.path.join(folder, filename)
+            try:
+                if os.path.isfile(file_path) or os.path.islink(file_path):
+                    os.unlink(file_path)
+            except Exception as e:
+                print('Failed to delete %s. Reason: %s' % (file_path, e))
+        shutil.copy(utils.resource_path(Constants.GAME_CFG), path)
