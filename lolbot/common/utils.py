@@ -159,6 +159,26 @@ def right_click(ratio: tuple, expected_window: str = '', wait: int or float = 1)
     sleep(wait)
 
 
+def attack_move_click(ratio: tuple, wait: int or float = 1) -> None:
+    """Attack move clicks in an open League of Legends game window"""
+    if not exists(LEAGUE_GAME_CLIENT_WINNAME):
+        log.debug("Cannot attack move when game is not running")
+        raise WindowNotFound
+    log.debug('Attack Moving on ratio {}: {}, {}. Waiting: {}'.format(ratio, ratio[0], ratio[1], wait))
+    x, y, l, h = size(LEAGUE_GAME_CLIENT_WINNAME)
+    updated_x = ((l - x) * ratio[0]) + x
+    updated_y = ((h - y) * ratio[1]) + y
+    pyautogui.moveTo(updated_x, updated_y)
+    sleep(.5)
+    keyboard.press('a')
+    sleep(.1)
+    mouse.click()
+    sleep(.1)
+    mouse.click()
+    keyboard.release('a')
+    sleep(wait)
+
+
 def press(key: str, expected_window: str = '', wait: int or float = 1) -> None:
     """Sends a keypress to a window"""
     if expected_window != '' and not exists(expected_window):
