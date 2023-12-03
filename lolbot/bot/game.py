@@ -35,15 +35,15 @@ class GameError(Exception):
 class Game:
     """Game class that handles the tasks needed to play/win a bot game of League of Legends"""
 
-    GAME_MINI_MAP_UNDER_TURRET = (0.8760, 0.8846)
-    GAME_MINI_MAP_CENTER_MID = (0.8981, 0.8674)
-    GAME_MINI_MAP_ENEMY_NEXUS = (0.9628, 0.7852)
-    GAME_ULT_RATIO = (0.7298, 0.2689)
-    GAME_AFK_OK_RATIO = (0.4981, 0.4647)
-    GAME_CENTER_OF_SCREEN = (0.5, 0.5)
-    GAME_SYSTEM_MENU_X = (0.7729, 0.2488)
-    GAME_ITEMS = [(0.3216, 0.5036), (0.4084, 0.5096), (0.4943, 0.4928)]
-    PURCHASE_ITEM_BUTTON = (0.7586, 0.8221)
+    MINI_MAP_UNDER_TURRET = (0.8760, 0.8846)
+    MINI_MAP_CENTER_MID = (0.8981, 0.8674)
+    MINI_MAP_ENEMY_NEXUS = (0.9628, 0.7852)
+    CENTER_OF_SCREEN = (0.5, 0.5)
+    ULT_POSITION = (0.7298, 0.2689)
+    AFK_OK_BUTTON = (0.4981, 0.4647)
+    SYSTEM_MENU_X_BUTTON = (0.7729, 0.2488)
+    SHOP_RECOMMENDED_ITEM_BUTTONS = [(0.3216, 0.5036), (0.4084, 0.5096), (0.4943, 0.4928)]
+    SHOP_PURCHASE_ITEM_BUTTON = (0.7586, 0.8221)
 
     EARLY_GAME_END_TIME = 630
     MAX_GAME_TIME = 2400
@@ -74,9 +74,9 @@ class Game:
                     case GameState.PRE_MINIONS:
                         self.game_start()
                     case GameState.EARLY_GAME:
-                        self.play(Game.GAME_MINI_MAP_CENTER_MID, Game.GAME_MINI_MAP_UNDER_TURRET, 20)
+                        self.play(Game.MINI_MAP_CENTER_MID, Game.MINI_MAP_UNDER_TURRET, 20)
                     case GameState.LATE_GAME:
-                        self.play(Game.GAME_MINI_MAP_ENEMY_NEXUS, Game.GAME_MINI_MAP_CENTER_MID, 35)
+                        self.play(Game.MINI_MAP_ENEMY_NEXUS, Game.MINI_MAP_CENTER_MID, 35)
         except GameError as e:
             self.log.warning(e.__str__())
             utils.close_game()
@@ -92,8 +92,8 @@ class Game:
             sleep(1)
             if utils.exists(utils.LEAGUE_GAME_CLIENT_WINNAME):
                 self.log.debug("Game window open")
-                utils.click(Game.GAME_CENTER_OF_SCREEN, utils.LEAGUE_GAME_CLIENT_WINNAME, 2)
-                utils.click(Game.GAME_CENTER_OF_SCREEN, utils.LEAGUE_GAME_CLIENT_WINNAME)
+                utils.click(Game.CENTER_OF_SCREEN, utils.LEAGUE_GAME_CLIENT_WINNAME, 2)
+                utils.click(Game.CENTER_OF_SCREEN, utils.LEAGUE_GAME_CLIENT_WINNAME)
                 return
         raise GameError("Game window did not open")
 
@@ -119,7 +119,7 @@ class Game:
             if datetime.now() - start > timedelta(minutes=10):
                 raise GameError("Loading Screen max time limit exceeded")
             self.update_state(postpone_update=2)
-        utils.click(Game.GAME_CENTER_OF_SCREEN, utils.LEAGUE_GAME_CLIENT_WINNAME, 2)
+        utils.click(Game.CENTER_OF_SCREEN, utils.LEAGUE_GAME_CLIENT_WINNAME, 2)
 
     def game_start(self) -> None:
         """Buys starter items and waits for minions to clash (minions clash at 90 seconds)"""
@@ -129,8 +129,8 @@ class Game:
         self.lock_screen()
         self.upgrade_abilities()
         while self.game_state == GameState.PRE_MINIONS:
-            utils.right_click(Game.GAME_MINI_MAP_UNDER_TURRET, utils.LEAGUE_GAME_CLIENT_WINNAME, 2)  # to prevent afk warning popup
-            utils.click(Game.GAME_AFK_OK_RATIO, utils.LEAGUE_GAME_CLIENT_WINNAME)
+            utils.right_click(Game.MINI_MAP_UNDER_TURRET, utils.LEAGUE_GAME_CLIENT_WINNAME, 2)  # to prevent afk warning popup
+            utils.click(Game.AFK_OK_BUTTON, utils.LEAGUE_GAME_CLIENT_WINNAME)
             self.update_state()
         self.in_lane = True
 
@@ -142,23 +142,23 @@ class Game:
         self.upgrade_abilities()
         while self.is_dead:
             self.update_state()
-        utils.click(Game.GAME_AFK_OK_RATIO, utils.LEAGUE_GAME_CLIENT_WINNAME)
+        utils.click(Game.AFK_OK_BUTTON, utils.LEAGUE_GAME_CLIENT_WINNAME)
         if not self.in_lane:
-            utils.attack_move_click(attack_position)
+            utils.click(attack_position, utils.LEAGUE_GAME_CLIENT_WINNAME)
             utils.press('d', utils.LEAGUE_GAME_CLIENT_WINNAME)  # ghost
             sleep(time_to_lane)
             self.in_lane = True
 
         # Main attack move loop. This sequence attacks and then de-aggros to prevent them from dying 50 times.
         for i in range(7):
-            utils.attack_move_click(attack_position, 8)
+            utils.click(attack_position, utils.LEAGUE_GAME_CLIENT_WINNAME, 8)
             utils.right_click(retreat_position, utils.LEAGUE_GAME_CLIENT_WINNAME, 2.5)
 
         # Ult and back
         utils.press('f', utils.LEAGUE_GAME_CLIENT_WINNAME)
-        utils.attack_move_click(Game.GAME_ULT_RATIO)
+        utils.click(Game.ULT_POSITION, utils.LEAGUE_GAME_CLIENT_WINNAME)
         utils.press('r', utils.LEAGUE_GAME_CLIENT_WINNAME, 4)
-        utils.right_click(Game.GAME_MINI_MAP_UNDER_TURRET, utils.LEAGUE_GAME_CLIENT_WINNAME, 6)
+        utils.right_click(Game.MINI_MAP_UNDER_TURRET, utils.LEAGUE_GAME_CLIENT_WINNAME, 6)
         utils.press('b', utils.LEAGUE_GAME_CLIENT_WINNAME, 10)
         self.in_lane = False
 
@@ -166,10 +166,10 @@ class Game:
         """Opens the shop and attempts to purchase items via default shop hotkeys"""
         self.log.debug("Attempting to purchase an item from build order")
         utils.press('p', utils.LEAGUE_GAME_CLIENT_WINNAME, 1.5)
-        utils.click(random.choice(Game.GAME_ITEMS), utils.LEAGUE_GAME_CLIENT_WINNAME, 1.5)
-        utils.click(Game.PURCHASE_ITEM_BUTTON, utils.LEAGUE_GAME_CLIENT_WINNAME, 1.5)
+        utils.click(random.choice(Game.SHOP_RECOMMENDED_ITEM_BUTTONS), utils.LEAGUE_GAME_CLIENT_WINNAME, 1.5)
+        utils.click(Game.SHOP_PURCHASE_ITEM_BUTTON, utils.LEAGUE_GAME_CLIENT_WINNAME, 1.5)
         utils.press('esc', utils.LEAGUE_GAME_CLIENT_WINNAME, 1.5)
-        utils.click(Game.GAME_SYSTEM_MENU_X, utils.LEAGUE_GAME_CLIENT_WINNAME, 1.5)
+        utils.click(Game.SYSTEM_MENU_X_BUTTON, utils.LEAGUE_GAME_CLIENT_WINNAME, 1.5)
 
     def lock_screen(self) -> None:
         """Locks screen on champion"""
