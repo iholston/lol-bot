@@ -31,7 +31,6 @@ class Launcher:
 
     def launch_league(self, username: str, password: str) -> None:
         """Runs setup logic and starts launch sequence"""
-        self.set_game_config()
         if not username or not password:
             self.log.warning('No account set. Add accounts on account page')
         self.username = username
