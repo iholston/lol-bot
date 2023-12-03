@@ -9,6 +9,7 @@
 - This bot has leveled up [thousands of league accounts](https://www.playerauctions.com/lol-account/) and is still going strong.
 - No pixel botting and/or image recognition makes it easy to run on any setup.
 
+
 </br>
 <p align="left">
   <img src="https://user-images.githubusercontent.com/32341824/231916860-8cdaa0bb-c808-48f7-8afe-5cd151501a98.gif">
@@ -19,6 +20,7 @@
 
 [More Screenshots](https://imgur.com/a/8PlsMmi)
 
+
 ## Current Features
 - Start League and Login
 - Start a Bot Game
@@ -28,7 +30,7 @@
 
 ## Usage
 - Download the [latest release](https://github.com/iholston/lol-bot/releases)
-- Run LoL Bot.exe 👍
+- Run LoLBot.exe 👍
 
 ## League Account Requirements
 League accounts should have already completed:
@@ -39,19 +41,24 @@ League accounts should have already completed:
 NOTE: The bot will automatically change your league settings/configuration and the game window (not the client) should open as a 1024x768 window
 
 ## Development Requirements
-- [Python >= 3.10](https://www.python.org/downloads/)
-- [League of Legends](https://signup.leagueoflegends.com/en-us/signup/download)
-- [League of Legends Account](https://signup.leagueoflegends.com/en-us/signup/index)
+- [Python >= 3.10](https://www.python.org/downloads/)  
+- [League of Legends](https://signup.leagueoflegends.com/en-us/signup/download)  
+- [League of Legends Account](https://signup.leagueoflegends.com/en-us/signup/index)  
 
 ## Development Setup
-- Ensure Python is added to your PATH, check "Add Python to PATH" when [installing](https://youtu.be/nU2Egc3Zx3Q)
-- Clone the repo or download the [latest release](https://github.com/iholston/lol-bot/releases)
-- In command prompt, run ```pip install -r requirements.txt```
-- In some cases, it may be necessary to download and install [Microsoft C and C++ (MSVC) runtime libraries](https://learn.microsoft.com/en-GB/cpp/windows/latest-supported-vc-redist?view=msvc-170)
+Clone the repo or download the [latest release](https://github.com/iholston/lol-bot/releases)
+```sh
+pip install -r requirements.txt
+```
+In some cases, it may be necessary to download and install [Microsoft C and C++ (MSVC) runtime libraries](https://learn.microsoft.com/en-GB/cpp/windows/latest-supported-vc-redist?view=msvc-170)
 
 ## Packaging to .exe
-- ```pip install pyinstaller```
-- ```pyinstaller --onefile --noconsole --name "LoL Bot" --add-data "lolbot/resources:lolbot/resources" main.pyw```
+```sh
+pip install pyinstaller
+```
+```sh
+pyinstaller --onefile --noconsole --name "LoLBot" --icon=lolbot/resources/images/a.ico --add-data "lolbot/resources:lolbot/resources" main.pyw
+```
 
 ## Optional Configuration
 For Virtual Machine setups, I recommend starting with [this forum](https://www.unknowncheats.me/forum/league-of-legends/480977-run-league-legends-virtual-machine-vmware.html). *Note:* I will not be fixing/troubleshooting VM related issues as there are far too many VM implementation/platform specific issues
