@@ -2,11 +2,7 @@
 Handles Riot Client and login to launch the League Client
 """
 
-import os
-import sys
-import stat
 import logging
-import shutil
 import subprocess
 from time import sleep
 
@@ -35,22 +31,11 @@ class Launcher:
 
     def launch_league(self, username: str, password: str) -> None:
         """Runs setup logic and starts launch sequence"""
-        self.set_game_config()
         if not username or not password:
             self.log.warning('No account set. Add accounts on account page')
         self.username = username
         self.password = password
         self.launch_loop()
-
-    def set_game_config(self) -> None:
-        """Overwrites the League of Legends game config"""
-        self.log.info("Overwriting/creating game config")
-        path = self.config.get_data('league_config')
-        if os.path.exists(path):
-            os.chmod(path, stat.S_IWRITE)
-            shutil.copy(utils.resource_path(Constants.GAME_CFG), path)
-        else:
-            shutil.copy2(utils.resource_path(Constants.GAME_CFG), path)
 
     def launch_loop(self) -> None:
         """Handles tasks necessary to open the League of Legends client"""
@@ -60,10 +45,7 @@ class Launcher:
             # League is running and there was a successful login attempt
             if utils.is_league_running() and logged_in:
                 self.log.info("Launch Success")
-                try:
-                    utils.close_riot_client()
-                except:
-                    self.log.warning("Could not kill riot client")
+                utils.close_riot_client()
                 return
 
             # League is running without a login attempt
@@ -121,13 +103,15 @@ class Launcher:
         elif r.json()['error'] == 'auth_failure':
             raise LauncherError("Invalid username or password")
 
-    def verify_account(self) -> None:
+    def verify_account(self) -> bool:
         """Checks if account credentials match the account on the League Client"""
         self.log.info("Verifying logged-in account credentials")
         connection = api.Connection()
         connection.connect_lcu(verbose=False)
         r = connection.request('get', '/lol-login/v1/session')
         if r.json()['username'] != self.username:
-            self.log.warning("Incorrect Account! Proceeding anyways")
+            self.log.warning("Accounts do not match! Proceeding anyways")
+            return False
         else:
             self.log.info("Account Verified")
+            return True

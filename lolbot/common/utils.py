@@ -88,8 +88,11 @@ def resource_path(relative_path: str) -> str:
 
 def close_riot_client() -> None:
     """Closes the League of Legends game process"""
-    log.info("Terminating game instance")
-    os.system(KILL_RIOT_CLIENT)
+    log.info("Closing riot client")
+    try:
+        os.system(KILL_RIOT_CLIENT)
+    except:
+        log.warning("Could not kill riot client")
     sleep(2)
 
 
