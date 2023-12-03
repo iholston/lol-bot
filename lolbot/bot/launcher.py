@@ -8,7 +8,7 @@ from time import sleep
 
 from lolbot.common import api
 from lolbot.common import utils
-from lolbot.common.config import Constants, ConfigRW
+from lolbot.common.config import ConfigRW
 
 
 class LauncherError(Exception):
