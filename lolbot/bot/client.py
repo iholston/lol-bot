@@ -95,6 +95,7 @@ class Client:
         phase = self.get_phase()
         if phase != 'InProgress' and phase != 'Reconnect':
             self.check_patch()
+        self.set_game_config()
         while not self.account_leveled():
             match self.get_phase():
                 case 'None':
