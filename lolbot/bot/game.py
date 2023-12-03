@@ -42,6 +42,8 @@ class Game:
     GAME_AFK_OK_RATIO = (0.4981, 0.4647)
     GAME_CENTER_OF_SCREEN = (0.5, 0.5)
     GAME_SYSTEM_MENU_X = (0.7729, 0.2488)
+    GAME_ITEMS = [(0.3216, 0.5036), (0.4084, 0.5096), (0.4943, 0.4928)]
+    PURCHASE_ITEM_BUTTON = (0.7586, 0.8221)
 
     EARLY_GAME_END_TIME = 630
     MAX_GAME_TIME = 2400
@@ -56,8 +58,6 @@ class Game:
         self.screen_locked = False
         self.in_lane = False
         self.is_dead = False
-        self.inventory = set()
-        self.build_order = self.create_build_order()
         self.ability_upgrades = ['ctrl+r', 'ctrl+q', 'ctrl+w', 'ctrl+e']
         self.log.info("Game player initialized")
 
@@ -166,13 +166,8 @@ class Game:
         """Opens the shop and attempts to purchase items via default shop hotkeys"""
         self.log.debug("Attempting to purchase an item from build order")
         utils.press('p', utils.LEAGUE_GAME_CLIENT_WINNAME, 1.5)
-        utils.press('ctrl+l', utils.LEAGUE_GAME_CLIENT_WINNAME, 1.5)
-        utils.write(self.build_order[0], utils.LEAGUE_GAME_CLIENT_WINNAME, 1.5)
-        utils.press('enter', utils.LEAGUE_GAME_CLIENT_WINNAME, 1.5)
-        self.update_state()
-        if self.build_order[0] in self.inventory:
-            self.log.debug("Successfully purchased: {}".format(self.build_order[0]))
-            self.build_order.remove(self.build_order[0])
+        utils.click(random.choice(Game.GAME_ITEMS), utils.LEAGUE_GAME_CLIENT_WINNAME, 1.5)
+        utils.click(Game.PURCHASE_ITEM_BUTTON, utils.LEAGUE_GAME_CLIENT_WINNAME, 1.5)
         utils.press('esc', utils.LEAGUE_GAME_CLIENT_WINNAME, 1.5)
         utils.click(Game.GAME_SYSTEM_MENU_X, utils.LEAGUE_GAME_CLIENT_WINNAME, 1.5)
 
@@ -226,8 +221,6 @@ class Game:
         for player in self.game_data['allPlayers']:
             if player['summonerName'] == self.game_data['activePlayer']['summonerName']:
                 self.is_dead = bool(player['isDead'])
-                for item in player['items']:
-                    self.inventory.add(item['displayName'])
         self.game_time = int(self.game_data['gameData']['gameTime'])
         self.formatted_game_time = utils.seconds_to_min_sec(self.game_time)
         if self.game_time < 3:
@@ -245,5 +238,5 @@ class Game:
         else:
             raise GameError("Game has exceeded the max time limit")
         self.connection_errors = 0
-        self.log.debug("State Updated. Game Time: {}, Game State: {}, IsDead: {}, Inventory: {}".format(self.game_time, self.game_state, self.is_dead, self.inventory))
+        self.log.debug("State Updated. Game Time: {}, Game State: {}, IsDead: {}".format(self.game_time, self.game_state, self.is_dead))
         return True
