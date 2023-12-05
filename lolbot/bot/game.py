@@ -80,6 +80,7 @@ class Game:
         except GameError as e:
             self.log.warning(e.__str__())
             utils.close_game()
+            sleep(30)
             return False
         except (utils.WindowNotFound, pyautogui.FailSafeException):
             self.log.info("Game Complete. Game Time: {}".format(self.formatted_game_time))

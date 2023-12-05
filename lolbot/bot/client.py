@@ -67,7 +67,8 @@ class Client:
                 self.account = self.account_manager.get_account(self.max_level)
                 self.launcher.launch_league(self.account.username, self.account.password)
                 self.leveling_loop()
-                self.account_manager.set_account_as_leveled(self.account, self.max_level)
+                if self.launcher.verify_account():
+                    self.account_manager.set_account_as_leveled(self.account, self.max_level)
                 utils.close_all_processes()
                 self.client_errors = 0
             except ClientError as ce:

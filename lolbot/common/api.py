@@ -33,6 +33,7 @@ class Connection:
         self.session = requests.session()
         self.config = config.ConfigRW()
         self.log = logging.getLogger(__name__)
+        logging.getLogger('urllib3').setLevel(logging.INFO)
         urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
     def set_rc_headers(self) -> None:
@@ -114,7 +115,6 @@ class Connection:
             except:
                 continue
             if r.json()['state'] == 'SUCCEEDED':
-                self.log.debug(r.json())
                 if verbose:
                     self.log.info("Connection Successful")
                 else:
