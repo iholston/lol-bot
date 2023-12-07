@@ -25,6 +25,7 @@ LEAGUE_PROCESS_NAMES = ["LeagueClient.exe", "League of Legends.exe"]
 RIOT_CLIENT_PROCESS_NAMES = ["RiotClientUx.exe"]
 
 # COMMANDS
+KILL_CRASH_HANDLER = 'TASKKILL /F /IM LeagueCrashHandler64.exe'
 KILL_LEAGUE_CLIENT = 'TASKKILL /F /IM LeagueClient.exe'
 KILL_LEAGUE = 'TASKKILL /F /IM "League of Legends.exe"'
 KILL_RIOT_CLIENT = 'TASKKILL /F /IM RiotClientUx.exe'
@@ -66,6 +67,7 @@ def is_game_running() -> bool:
 def close_all_processes() -> None:
     """Closes all league related processes"""
     log.info("Terminating league related processes")
+    os.system(KILL_CRASH_HANDLER)
     os.system(KILL_LEAGUE)
     os.system(KILL_LEAGUE_CLIENT)
     os.system(KILL_RIOT_CLIENT)

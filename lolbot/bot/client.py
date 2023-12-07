@@ -71,9 +71,13 @@ class Client:
                     self.account_manager.set_account_as_leveled(self.account, self.max_level)
                 utils.close_all_processes()
                 self.client_errors = 0
+                self.phase_errors = 0
+                self.game_errors = 0
             except ClientError as ce:
                 self.log.error(ce.__str__())
                 self.client_errors += 1
+                self.phase_errors = 0
+                self.game_errors = 0
                 if self.client_errors == Client.MAX_CLIENT_ERRORS:
                     err_msg = "Max errors reached. Exiting"
                     self.log.error(err_msg)
