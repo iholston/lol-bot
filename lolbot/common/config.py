@@ -22,7 +22,7 @@ class Constants:
     ICON_PATH = 'lolbot/resources/images/a.ico'
 
     # Other
-    VERSION = '2.2.1'
+    VERSION = '2.2.2'
 
     @staticmethod
     def create_dirs():
