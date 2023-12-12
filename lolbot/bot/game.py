@@ -192,7 +192,7 @@ class Game:
         sleep(postpone_update)
         try:
             response = requests.get('https://127.0.0.1:2999/liveclientdata/allgamedata', timeout=10, verify=False)
-        except requests.ConnectionError:
+        except:
             self.log.debug("Connection error. Could not get game data")
             self.connection_errors += 1
             if not utils.exists(utils.LEAGUE_GAME_CLIENT_WINNAME):
