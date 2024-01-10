@@ -144,6 +144,11 @@ class Game:
     def play(self, attack_position: tuple, retreat_position: tuple, time_to_lane: int) -> None:
         """A set of player actions. Buys items, levels up abilities, heads to lane, attacks, then retreats"""
         self.log.debug("Main player loop. GameState: {}".format(self.game_state))
+
+        if attack_position == Game.MINI_MAP_CENTER_MID and self.game_state == GameState.LATE_GAME:
+            return
+
+        self.update_state()
         self.upgrade_abilities()
 
         if self.is_dead:
