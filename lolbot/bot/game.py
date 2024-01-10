@@ -177,7 +177,7 @@ class Game:
         """Activities while waiting for respawn"""
         self.buy_item()
         self.update_state()
-        if self.respawn_in > 0:
+        if self.respawn_in is not None and self.respawn_in > 0:
             self.log.debug("Dead, waiting for {} seconds", format(self.respawn_in))
             sleep(self.respawn_in + .3)
             self.update_state()
