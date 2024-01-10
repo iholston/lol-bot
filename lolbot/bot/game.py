@@ -17,13 +17,14 @@ from lolbot.common import utils
 
 class GameState(Enum):
     LOADING_SCREEN = 0  # 0 sec -> 3 sec
-    PRE_MINIONS = 1     # 3 sec -> 90 sec
-    EARLY_GAME = 2      # 90 sec -> constants.EARLY_GAME_END_TIME
-    LATE_GAME = 3       # constants.EARLY_GAME_END_TIME -> end of game
+    PRE_MINIONS = 1  # 3 sec -> 90 sec
+    EARLY_GAME = 2  # 90 sec -> constants.EARLY_GAME_END_TIME
+    LATE_GAME = 3  # constants.EARLY_GAME_END_TIME -> end of game
 
 
 class GameError(Exception):
     """Indicates the game should be terminated"""
+
     def __init__(self, msg=''):
         self.msg = msg
 
@@ -34,31 +35,36 @@ class GameError(Exception):
 class Game:
     """Game class that handles the tasks needed to play/win a bot game of League of Legends"""
 
-    MINI_MAP_UNDER_TURRET = (0.8760, 0.8846)
-    MINI_MAP_CENTER_MID = (0.8981, 0.8674)
+    MINI_MAP_UNDER_TURRET = (0.8980, 0.8810)
+    MINI_MAP_CENTER_MID = (0.9150, 0.8610)
     MINI_MAP_ENEMY_NEXUS = (0.9628, 0.7852)
-    
+
     ULT_DIRECTION = (0.7298, 0.2689)
     CENTER_OF_SCREEN = (0.5, 0.5)
-    
+
     AFK_OK_BUTTON = (0.4981, 0.4647)
     SYSTEM_MENU_X_BUTTON = (0.7729, 0.2488)
     SHOP_ITEM_BUTTONS = [(0.3216, 0.5036), (0.4084, 0.5096), (0.4943, 0.4928)]
     SHOP_PURCHASE_ITEM_BUTTON = (0.7586, 0.8221)
 
     EARLY_GAME_END_TIME = 630
-    MAX_GAME_TIME = 2400
-    
+    MAX_GAME_TIME = 3000
+
     def __init__(self) -> None:
         self.log = logging.getLogger(__name__)
         self.connection_errors = 0
         self.game_data = None
+        self.current_player = None
         self.game_time = None
         self.formatted_game_time = None
         self.game_state = None
-        self.screen_locked = False
+        self.mid_turret_destroyed = False
+        self.screen_locked = True
         self.in_lane = False
         self.is_dead = False
+        self.respawn_in = None
+        self.low_hp = False
+        self.buying_items = False
         self.ability_upgrades = ['ctrl+r', 'ctrl+q', 'ctrl+w', 'ctrl+e']
 
     def play_game(self) -> bool:
@@ -125,7 +131,7 @@ class Game:
     def game_start(self) -> None:
         """Buys starter items and waits for minions to clash (minions clash at 90 seconds)"""
         self.log.info("Game start. Waiting for minions")
-        sleep(10)
+        sleep(7)
         self.buy_item()
         self.lock_screen()
         self.upgrade_abilities()
@@ -138,11 +144,11 @@ class Game:
     def play(self, attack_position: tuple, retreat_position: tuple, time_to_lane: int) -> None:
         """A set of player actions. Buys items, levels up abilities, heads to lane, attacks, then retreats"""
         self.log.debug("Main player loop. GameState: {}".format(self.game_state))
-        self.buy_item()
-        self.lock_screen()
         self.upgrade_abilities()
-        while self.is_dead:
-            self.update_state()
+
+        if self.is_dead:
+            self.dead_activities()
+
         utils.click(Game.AFK_OK_BUTTON, utils.LEAGUE_GAME_CLIENT_WINNAME)
         if not self.in_lane:
             utils.attack_move_click(attack_position)
@@ -151,16 +157,36 @@ class Game:
             self.in_lane = True
 
         # Main attack move loop. This sequence attacks and then de-aggros to prevent them from dying 50 times.
-        for i in range(7):
-            utils.attack_move_click(attack_position, 8)
-            utils.right_click(retreat_position, utils.LEAGUE_GAME_CLIENT_WINNAME, 2.5)
+        while not self.buying_items and not self.low_hp:
+            utils.attack_move_click(attack_position, random.uniform(7, 12))
+            utils.right_click(retreat_position, utils.LEAGUE_GAME_CLIENT_WINNAME, random.uniform(0.8, 1.8))
+            self.update_state()
+            if self.is_dead:
+                self.dead_activities()
+                return
+            self.log.debug(f"Waiting for gold {self.buying_items} or hp {self.low_hp}")
 
         # Ult and back
         utils.press('f', utils.LEAGUE_GAME_CLIENT_WINNAME)
         utils.attack_move_click(Game.ULT_DIRECTION)
         utils.press('r', utils.LEAGUE_GAME_CLIENT_WINNAME, 4)
-        utils.right_click(Game.MINI_MAP_UNDER_TURRET, utils.LEAGUE_GAME_CLIENT_WINNAME, 6)
-        utils.press('b', utils.LEAGUE_GAME_CLIENT_WINNAME, 10)
+        self.going_back()
+        self.buy_item()
+
+    def dead_activities(self):
+        """Activities while waiting for respawn"""
+        self.buy_item()
+        self.update_state()
+        if self.respawn_in > 0:
+            self.log.debug("Dead, waiting for {} seconds", format(self.respawn_in))
+            sleep(self.respawn_in + .3)
+            self.update_state()
+        self.respawn_in = None
+        self.in_lane = False
+
+    def going_back(self):
+        utils.right_click(Game.MINI_MAP_UNDER_TURRET, utils.LEAGUE_GAME_CLIENT_WINNAME, 5)
+        utils.press('b', utils.LEAGUE_GAME_CLIENT_WINNAME, 9)
         self.in_lane = False
 
     def buy_item(self) -> None:
@@ -171,6 +197,7 @@ class Game:
         utils.click(Game.SHOP_PURCHASE_ITEM_BUTTON, utils.LEAGUE_GAME_CLIENT_WINNAME, 1.5)
         utils.press('esc', utils.LEAGUE_GAME_CLIENT_WINNAME, 1.5)
         utils.click(Game.SYSTEM_MENU_X_BUTTON, utils.LEAGUE_GAME_CLIENT_WINNAME, 1.5)
+        self.buying_items = False
 
     def lock_screen(self) -> None:
         """Locks screen on champion"""
@@ -210,25 +237,39 @@ class Game:
             return False
 
         self.game_data = response.json()
+        self.current_player = self.game_data['activePlayer']
+
         for player in self.game_data['allPlayers']:
-            if player['summonerName'] == self.game_data['activePlayer']['summonerName']:
+            if player['summonerName'] in self.game_data['activePlayer']['summonerName']:
                 self.is_dead = bool(player['isDead'])
+                self.buying_items = self.current_player['currentGold'] > 1300 and \
+                                    len(player['items']) < 7
+
+        self.low_hp = 0.001 < self.current_player['championStats']['currentHealth'] / \
+                      self.current_player['championStats']['maxHealth'] < 0.25
+        if not self.mid_turret_destroyed:
+            for event in self.game_data["events"]["Events"]:
+                if 'TurretKilled' in event.keys() and event['TurretKilled'] == 'Turret_T2_C_05_A':
+                    self.mid_turret_destroyed = True
         self.game_time = int(self.game_data['gameData']['gameTime'])
         self.formatted_game_time = utils.seconds_to_min_sec(self.game_time)
+
         if self.game_time < 3:
             self.game_state = GameState.LOADING_SCREEN
         elif self.game_time < 85:
             self.game_state = GameState.PRE_MINIONS
-        elif self.game_time < Game.EARLY_GAME_END_TIME:
+        elif self.game_time < Game.EARLY_GAME_END_TIME and not self.mid_turret_destroyed:
             if self.game_state != GameState.EARLY_GAME:
                 self.log.info("Early Game. Pushing center mid. Game Time: {}".format(self.formatted_game_time))
-            self.game_state = GameState.EARLY_GAME
-        elif self.game_time < Game.MAX_GAME_TIME:
+                self.game_state = GameState.EARLY_GAME
+        elif self.game_time < Game.MAX_GAME_TIME or self.mid_turret_destroyed:
             if self.game_state != GameState.LATE_GAME:
                 self.log.info("Mid Game. Pushing enemy nexus. Game Time: {}".format(self.formatted_game_time))
             self.game_state = GameState.LATE_GAME
         else:
             raise GameError("Game has exceeded the max time limit")
         self.connection_errors = 0
-        self.log.debug("State Updated. Game Time: {}, Game State: {}, IsDead: {}".format(self.game_time, self.game_state, self.is_dead))
+        self.log.debug(
+            "State Updated. Game Time: {}, Game State: {}, IsDead: {}".format(self.game_time, self.game_state,
+                                                                              self.is_dead))
         return True

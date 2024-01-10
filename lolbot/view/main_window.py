@@ -19,6 +19,7 @@ from lolbot.view.config_tab import ConfigTab
 from lolbot.view.http_tab import HTTPTab
 from lolbot.view.logs_tab import LogsTab
 from lolbot.view.about_tab import AboutTab
+from lolbot.view.debug_tab import DebugTab
 
 
 class MainWindow:
@@ -43,6 +44,7 @@ class MainWindow:
         self.https_tab = HTTPTab()
         self.logs_tab = LogsTab()
         self.about_tab = AboutTab()
+        self.debug_tab = DebugTab()
 
     def show(self) -> None:
         """Renders view"""
@@ -61,6 +63,7 @@ class MainWindow:
                 self.https_tab.create_tab(self.tab_bar)
                 self.logs_tab.create_tab(self.tab_bar)
                 self.about_tab.create_tab(self.tab_bar)
+                self.debug_tab.create_tab(self.tab_bar)
         dpg.create_viewport(title='LoL Bot', width=self.width, height=self.height, small_icon=utils.resource_path(Constants.ICON_PATH), resizable=False)
         dpg.setup_dearpygui()
         dpg.show_viewport()
