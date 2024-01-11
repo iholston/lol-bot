@@ -143,13 +143,8 @@ class Game:
 
     def play(self, attack_position: tuple, retreat_position: tuple, time_to_lane: int) -> None:
         """A set of player actions. Buys items, levels up abilities, heads to lane, attacks, then retreats"""
-        self.log.debug("Main player loop. GameState: {}".format(self.game_state))
-
-        if attack_position == Game.MINI_MAP_CENTER_MID and self.game_state == GameState.LATE_GAME:
-            return
-
-        self.update_state()
-        self.upgrade_abilities()
+        self.log.debug(f"Main player loop. GameState: {self.game_state}")
+        self.update_state(.1)
 
         if self.is_dead:
             self.dead_activities()
@@ -163,12 +158,17 @@ class Game:
 
         # Main attack move loop. This sequence attacks and then de-aggros to prevent them from dying 50 times.
         while not self.buying_items and not self.low_hp:
-            utils.attack_move_click(attack_position, random.uniform(7, 12))
-            utils.right_click(retreat_position, utils.LEAGUE_GAME_CLIENT_WINNAME, random.uniform(0.8, 1.8))
-            self.update_state()
+            attack_time = random.uniform(5, 8)
+            utils.attack_move_click(attack_position, attack_time)
+            utils.right_click(retreat_position, utils.LEAGUE_GAME_CLIENT_WINNAME, attack_time / 10)
+            self.update_state(.1)
             if self.is_dead:
                 self.dead_activities()
                 return
+
+            if attack_position == Game.MINI_MAP_CENTER_MID and self.game_state == GameState.LATE_GAME:
+                return
+
             self.log.debug(f"Waiting for gold {self.buying_items} or hp {self.low_hp}")
 
         # Ult and back
@@ -181,6 +181,7 @@ class Game:
     def dead_activities(self):
         """Activities while waiting for respawn"""
         self.buy_item()
+        self.upgrade_abilities()
         self.update_state()
         if self.respawn_in is not None and self.respawn_in > 0:
             self.log.debug("Dead, waiting for {} seconds", format(self.respawn_in))
@@ -190,9 +191,12 @@ class Game:
         self.in_lane = False
 
     def going_back(self):
+        self.log.debug(f"Going back with {self.current_player['currentGold']} gold and low hp {self.low_hp}")
         utils.right_click(Game.MINI_MAP_UNDER_TURRET, utils.LEAGUE_GAME_CLIENT_WINNAME, 5)
-        utils.press('b', utils.LEAGUE_GAME_CLIENT_WINNAME, 9)
+        utils.press('b', utils.LEAGUE_GAME_CLIENT_WINNAME, 10)
         self.in_lane = False
+        self.buy_item()
+        self.upgrade_abilities()
 
     def buy_item(self) -> None:
         """Opens the shop and attempts to purchase items via default shop hotkeys"""
@@ -218,7 +222,7 @@ class Game:
             utils.press(upgrade, utils.LEAGUE_GAME_CLIENT_WINNAME)
         self.ability_upgrades = ([self.ability_upgrades[0]] + [self.ability_upgrades[-1]] + self.ability_upgrades[1:-1])  # r is always first
 
-    def update_state(self, postpone_update: int = 1) -> bool:
+    def update_state(self, postpone_update=1.0) -> bool:
         """Gets game data from local game server and updates game state"""
         self.log.debug("Updating state. Caller: {}".format(inspect.stack()[1][3]))
         sleep(postpone_update)
@@ -261,7 +265,7 @@ class Game:
 
         if self.game_time < 3:
             self.game_state = GameState.LOADING_SCREEN
-        elif self.game_time < 85:
+        elif self.game_time < 75:
             self.game_state = GameState.PRE_MINIONS
         elif self.game_time < Game.EARLY_GAME_END_TIME and not self.mid_turret_destroyed:
             if self.game_state != GameState.EARLY_GAME:
