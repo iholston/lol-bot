@@ -144,7 +144,6 @@ class Game:
     def play(self, attack_position: tuple, retreat_position: tuple, time_to_lane: int) -> None:
         """A set of player actions. Buys items, levels up abilities, heads to lane, attacks, then retreats"""
         self.log.debug(f"Main player loop. GameState: {self.game_state}")
-        self.update_state(.1)
 
         if self.is_dead:
             self.dead_activities()
@@ -156,6 +155,7 @@ class Game:
             sleep(time_to_lane)
             self.in_lane = True
 
+        self.update_state(.1)
         # Main attack move loop. This sequence attacks and then de-aggros to prevent them from dying 50 times.
         # The less bot attacks, the less retreats
         while not self.buying_items and not self.low_hp:
