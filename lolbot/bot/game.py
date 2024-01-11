@@ -157,10 +157,11 @@ class Game:
             self.in_lane = True
 
         # Main attack move loop. This sequence attacks and then de-aggros to prevent them from dying 50 times.
+        # The less bot attacks, the less retreats
         while not self.buying_items and not self.low_hp:
-            attack_time = random.uniform(5, 8)
+            attack_time = random.uniform(5, 7)
             utils.attack_move_click(attack_position, attack_time)
-            utils.right_click(retreat_position, utils.LEAGUE_GAME_CLIENT_WINNAME, attack_time / 10)
+            utils.right_click(retreat_position, utils.LEAGUE_GAME_CLIENT_WINNAME, attack_time / 8)
             self.update_state(.1)
             if self.is_dead:
                 self.dead_activities()
@@ -171,12 +172,12 @@ class Game:
 
             self.log.debug(f"Waiting for gold {self.buying_items} or hp {self.low_hp}")
 
-        # Ult and back
-        utils.press('f', utils.LEAGUE_GAME_CLIENT_WINNAME)
-        utils.attack_move_click(Game.ULT_DIRECTION)
-        utils.press('r', utils.LEAGUE_GAME_CLIENT_WINNAME, 4)
-        self.going_back()
-        self.buy_item()
+        # Ult and back if low hp or have gold
+        if self.buying_items or self.low_hp:
+            utils.press('f', utils.LEAGUE_GAME_CLIENT_WINNAME)
+            utils.attack_move_click(Game.ULT_DIRECTION)
+            utils.press('r', utils.LEAGUE_GAME_CLIENT_WINNAME, 4)
+            self.going_back()
 
     def dead_activities(self):
         """Activities while waiting for respawn"""
@@ -267,14 +268,14 @@ class Game:
             self.game_state = GameState.LOADING_SCREEN
         elif self.game_time < 75:
             self.game_state = GameState.PRE_MINIONS
-        elif self.game_time < Game.EARLY_GAME_END_TIME and not self.mid_turret_destroyed:
+        elif not self.mid_turret_destroyed:
             if self.game_state != GameState.EARLY_GAME:
                 self.log.info("Early Game. Pushing center mid. Game Time: {}".format(self.formatted_game_time))
                 self.game_state = GameState.EARLY_GAME
         elif self.game_time < Game.MAX_GAME_TIME or self.mid_turret_destroyed:
             if self.game_state != GameState.LATE_GAME:
                 self.log.info("Mid Game. Pushing enemy nexus. Game Time: {}".format(self.formatted_game_time))
-            self.game_state = GameState.LATE_GAME
+                self.game_state = GameState.LATE_GAME
         else:
             raise GameError("Game has exceeded the max time limit")
         self.connection_errors = 0
