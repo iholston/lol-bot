@@ -5,3 +5,5 @@ requests
 urllib3
 pyautogui
 dearpygui
+pynput
+pygetwindow
