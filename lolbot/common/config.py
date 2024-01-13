@@ -46,6 +46,9 @@ class DefaultSettings:
     PATCH = '13.21.1'
     CHAMPS = [21, 18, 22, 67]
     DIALOG = ["mid ples", "plannin on goin mid team", "mid por favor", "bienvenidos, mid", "howdy, mid", "goin mid", "mid"]
+    ALLY_MID_TURRET = [0.8760, 0.8846]
+    ATTACK_MID_TURRET = [0.8981, 0.8674]
+    ATTACK_NEXUS = [0.9628, 0.7852]
 
 
 class ConfigRW:
@@ -78,6 +81,9 @@ class ConfigRW:
         self.settings['patch'] = DefaultSettings.PATCH
         self.settings['champs'] = DefaultSettings.CHAMPS
         self.settings['dialog'] = DefaultSettings.DIALOG
+        self.settings['ally_mid_turret'] = DefaultSettings.ALLY_MID_TURRET
+        self.settings['attack_mid_turret'] = DefaultSettings.ATTACK_MID_TURRET
+        self.settings['attack_nexus'] = DefaultSettings.ATTACK_NEXUS
         self._json_update()
 
     def set_league_dir(self, league_dir: str):
@@ -94,7 +100,12 @@ class ConfigRW:
         self._json_update()
 
     def get_data(self, key: str):
-        """Retrieves data from JSON"""
-        for sk, sv in self.settings.items():
-            if sk == key:
-                return self.settings[key]
+        """Retrieves data from JSON. If no value found, adds it from default values"""
+        if key in self.settings.keys():
+            return self.settings[key]
+        else:
+            value = getattr(DefaultSettings, key.upper(), None)
+            self.settings[key] = getattr(DefaultSettings, key.upper(), None)
+            self._json_update()
+            return value
+

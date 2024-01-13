@@ -6,11 +6,19 @@ import pygetwindow as gw
 from pynput import mouse
 import dearpygui.dearpygui as dpg
 
-import logging
-
-
-from lolbot.bot.game import Game
 from lolbot.common import utils
+from lolbot.common.config import ConfigRW
+
+
+def with_config_rw(function):
+    def wrapper(self, *args, **kwargs):
+        self.config = ConfigRW()
+        try:
+            result = function(self, *args, **kwargs)
+            return result
+        finally:
+            self.config.file.close()
+    return wrapper
 
 
 class DebugTab:
@@ -18,8 +26,8 @@ class DebugTab:
 
     def __init__(self) -> None:
         self.is_tracking_enabled = False
-        self.log = logging.getLogger(__name__)
         self.tracking_btn = None
+        self.config = None
         return
 
     def create_tab(self, parent) -> None:
@@ -31,28 +39,34 @@ class DebugTab:
                 dpg.add_button(label='Click Minimap Mid Center', width=180, callback=self.click_mid_center)
                 dpg.add_button(label='Click Minimap Enemy Nexus', width=180, callback=self.click_enemy_nexus)
             with dpg.group(horizontal=True):
-                self.tracking_btn = dpg.add_button(label=f'Tracking coords: {"Enabled" if self.is_tracking_enabled else "Disabled"}', width=180, callback=self.toggle_tracking)
+                self.tracking_btn = dpg.add_button(tag="enable_tracking_btn", label=f'Tracking coords: {"Enabled" if self.is_tracking_enabled else "Disabled"}', width=180, callback=self.toggle_tracking)
+                dpg.add_text(tag="coords", wrap=380)
+                with dpg.tooltip(parent="enable_tracking_btn"):
+                    dpg.add_text("If enabled, left mouse click will be registred and the coords will be printed")
             dpg.add_spacer()
 
-
+    @with_config_rw
     def click_mid_turret(self):
-        utils.click(Game.MINI_MAP_UNDER_TURRET, utils.LEAGUE_GAME_CLIENT_WINNAME);
+        utils.click(tuple(self.config.get_data('ally_mid_turret')), utils.LEAGUE_GAME_CLIENT_WINNAME, 2);
+        utils.click(tuple(self.config.get_data('ally_mid_turret')), utils.LEAGUE_GAME_CLIENT_WINNAME);
 
-
+    @with_config_rw
     def click_mid_center(self):
-        utils.click(Game.MINI_MAP_CENTER_MID, utils.LEAGUE_GAME_CLIENT_WINNAME);
+        utils.click(tuple(self.config.get_data('attack_mid_turret')), utils.LEAGUE_GAME_CLIENT_WINNAME, 2);
+        utils.click(tuple(self.config.get_data('attack_mid_turret')), utils.LEAGUE_GAME_CLIENT_WINNAME);
 
-
+    @with_config_rw
     def click_enemy_nexus(self):
-        utils.click(Game.MINI_MAP_ENEMY_NEXUS, utils.LEAGUE_GAME_CLIENT_WINNAME);
+        utils.click(tuple(self.config.get_data('attack_nexus')), utils.LEAGUE_GAME_CLIENT_WINNAME, 2);
+        utils.click(tuple(self.config.get_data('attack_nexus')), utils.LEAGUE_GAME_CLIENT_WINNAME);
 
     def on_click(self, x, y, button, pressed):
-        if pressed and button == mouse.Button.left and self.is_tracking_enabled:
+        if pressed and button == mouse.Button.right and self.is_tracking_enabled:
             current_window = gw.getActiveWindow()
             window_title = current_window.title
             relative_x = (x - current_window.left) / current_window.width
             relative_y = (y - current_window.top) / current_window.height
-            print(f"Button clicked in on '{window_title}', coords: ({relative_x}, {relative_y})")
+            dpg.set_value("coords", f"Title: '{window_title}', coords: ({relative_x:.5f}, {relative_y:.5f})")
 
     def toggle_tracking(self):
         self.is_tracking_enabled = not self.is_tracking_enabled
@@ -61,4 +75,5 @@ class DebugTab:
         if self.is_tracking_enabled:
             listener.start()
         else:
+            dpg.set_value("coords", "")
             listener.stop()

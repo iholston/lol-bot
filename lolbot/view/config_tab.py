@@ -7,7 +7,7 @@ import os
 
 import dearpygui.dearpygui as dpg
 
-from lolbot.common.config import ConfigRW
+from lolbot.common.config import ConfigRW, DefaultSettings
 
 
 class ConfigTab:
@@ -50,6 +50,44 @@ class ConfigTab:
                 with dpg.tooltip(dpg.last_item()):
                     dpg.add_text("Open ddragon.leagueoflegends.com in webbrowser")
                 dpg.bind_item_theme(b, "__hyperlinkTheme")
+            with dpg.table(tag="table", header_row=True):
+                dpg.add_table_column(label="Ally Mid Turret Coords")
+                dpg.add_table_column(label="Attack Mid coords")
+                dpg.add_table_column(label="Enemy Nexus Coords")
+                with dpg.table_row():
+                    with dpg.table_cell():
+                        with dpg.group(horizontal=True):
+                            dpg.add_text("X:")
+                            dpg.add_input_float(tag="ally_mid_x", default_value=self.config.get_data('ally_mid_turret')[0], callback=self._set_ally_mid_turret, min_value=0.0, max_value=1.0, min_clamped=True, max_clamped=True, format="%.5f", step=0.0001)
+                            with dpg.tooltip(parent="ally_mid_x"):
+                                dpg.add_text(f"Default value is: {DefaultSettings.ALLY_MID_TURRET[0]}")
+                        with dpg.group(horizontal=True):
+                            dpg.add_text("Y:")
+                            dpg.add_input_float(tag="ally_mid_y", default_value=self.config.get_data('ally_mid_turret')[1], callback=self._set_ally_mid_turret, min_value=0.0, max_value=1.0, min_clamped=True, max_clamped=True, format="%.5f", step=0.0001)
+                            with dpg.tooltip(parent="ally_mid_y"):
+                                dpg.add_text(f"Default value is: {DefaultSettings.ALLY_MID_TURRET[1]}")
+                    with dpg.table_cell():
+                        with dpg.group(horizontal=True):
+                            dpg.add_text("X:")
+                            dpg.add_input_float(tag="attack_mid_x", default_value=self.config.get_data('attack_mid_turret')[0], callback=self._set_attack_mid_turret, min_value=0.0, max_value=1.0, min_clamped=True, max_clamped=True, format="%.5f", step=0.0001)
+                            with dpg.tooltip(parent="attack_mid_x"):
+                                dpg.add_text(f"Default value is: {DefaultSettings.ATTACK_MID_TURRET[0]}")
+                        with dpg.group(horizontal=True):
+                            dpg.add_text("Y:")
+                            dpg.add_input_float(tag="attack_mid_y", default_value=self.config.get_data('attack_mid_turret')[1], callback=self._set_attack_mid_turret, min_value=0.0, max_value=1.0, min_clamped=True, max_clamped=True, format="%.5f", step=0.0001)
+                            with dpg.tooltip(parent="attack_mid_y"):
+                                dpg.add_text(f"Default value is: {DefaultSettings.ATTACK_MID_TURRET[1]}")
+                    with dpg.table_cell():
+                        with dpg.group(horizontal=True):
+                            dpg.add_text("X:")
+                            dpg.add_input_float(tag="attack_nexus_x", default_value=self.config.get_data('attack_nexus')[0], callback=self._set_attack_nexus, min_value=0.0, max_value=1.0, min_clamped=True, max_clamped=True, format="%.5f", step=0.0001)
+                            with dpg.tooltip(parent="attack_nexus_x"):
+                                dpg.add_text(f"Default value is: {DefaultSettings.ATTACK_NEXUS[0]}")
+                        with dpg.group(horizontal=True):
+                            dpg.add_text("Y:")
+                            dpg.add_input_float(tag="attack_nexus_y", default_value=self.config.get_data('attack_nexus')[1], callback=self._set_attack_nexus, min_value=0.0, max_value=1.0, min_clamped=True, max_clamped=True, format="%.5f", step=0.0001)
+                            with dpg.tooltip(parent="attack_nexus_y"):
+                                dpg.add_text(f"Default value is: {DefaultSettings.ATTACK_NEXUS[1]}")
             with dpg.group(horizontal=True):
                 dpg.add_input_text(default_value='Ask for Mid Dialog', width=180, enabled=False)
                 with dpg.tooltip(dpg.last_item()):
@@ -57,7 +95,7 @@ class ConfigTab:
                 x = ""
                 for dia in self.config.get_data('dialog'):
                     x += dia.replace("'", "") + "\n"
-                dpg.add_input_text(default_value=x, width=380, multiline=True, height=215, callback=self._set_dialog)
+                dpg.add_input_text(default_value=x, width=380, multiline=True, height=148, callback=self._set_dialog)
 
     def _set_dir(self, sender: int) -> None:
         """Checks if directory exists and sets the Client Directory path"""
@@ -92,3 +130,15 @@ class ConfigTab:
     def _set_dialog(self, sender: int) -> None:
         """Sets dialog options"""
         self.config.set_data('dialog', dpg.get_value(sender).strip().split("\n"))
+
+    def _set_ally_mid_turret(self) -> None:
+        """Sets ally mid turret coords"""
+        self.config.set_data('ally_mid_turret', [round(dpg.get_value('ally_mid_x'), 5), round(dpg.get_value('ally_mid_y'), 5)])
+
+    def _set_attack_mid_turret(self, sender: int) -> None:
+        """Sets attack mid coords"""
+        self.config.set_data('attack_mid_turret', [round(dpg.get_value('attack_mid_x'), 5), round(dpg.get_value('attack_mid_y'), 5)])
+
+    def _set_attack_nexus(self, sender: int) -> None:
+        """Sets attack nexus coords"""
+        self.config.set_data('attack_nexus', [round(dpg.get_value('attack_nexus_x'), 5), round(dpg.get_value('attack_nexus_y'), 5)])

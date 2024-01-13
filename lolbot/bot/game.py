@@ -13,6 +13,7 @@ import pyautogui
 import requests
 
 from lolbot.common import utils
+from lolbot.common.config import ConfigRW
 
 
 class GameState(Enum):
@@ -34,10 +35,9 @@ class GameError(Exception):
 
 class Game:
     """Game class that handles the tasks needed to play/win a bot game of League of Legends"""
-
-    MINI_MAP_UNDER_TURRET = (0.8760, 0.8846)
-    MINI_MAP_CENTER_MID = (0.8981, 0.8674)
-    MINI_MAP_ENEMY_NEXUS = (0.9628, 0.7852)
+    MINI_MAP_UNDER_TURRET = tuple(ConfigRW().get_data('ally_mid_turret'))
+    MINI_MAP_CENTER_MID = tuple(ConfigRW().get_data('attack_mid_turret'))
+    MINI_MAP_ENEMY_NEXUS = tuple(ConfigRW().get_data('attack_nexus'))
 
     ULT_DIRECTION = (0.7298, 0.2689)
     CENTER_OF_SCREEN = (0.5, 0.5)
@@ -157,7 +157,6 @@ class Game:
 
         self.update_state(.1)
         # Main attack move loop. This sequence attacks and then de-aggros to prevent them from dying 50 times.
-        # The less bot attacks, the less retreats
         while not self.buying_items and not self.low_hp:
             attack_time = random.uniform(5, 7)
             utils.attack_move_click(attack_position, attack_time)
@@ -166,7 +165,7 @@ class Game:
             if self.is_dead:
                 self.dead_activities()
                 return
-
+                            
             if attack_position == Game.MINI_MAP_CENTER_MID and self.game_state == GameState.LATE_GAME:
                 return
 
@@ -252,7 +251,7 @@ class Game:
         for player in self.game_data['allPlayers']:
             if player['summonerName'] in self.game_data['activePlayer']['summonerName']:
                 self.is_dead = bool(player['isDead'])
-                self.buying_items = self.current_player['currentGold'] > 1300 and \
+                self.buying_items = self.current_player['currentGold'] > 2000 and \
                                     len(player['items']) < 7
 
         self.low_hp = 0.001 < self.current_player['championStats']['currentHealth'] / \
