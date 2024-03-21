@@ -5,6 +5,7 @@ Handles Riot Client and login to launch the League Client
 import logging
 import subprocess
 from time import sleep
+from pathlib import Path
 
 from lolbot.common import api
 from lolbot.common import utils
@@ -86,7 +87,9 @@ class Launcher:
 
     def start_league(self):
         self.log.info('Launching League')
-        subprocess.run([self.config.get_data('league_path')])
+        rclient = Path(self.config.get_data('league_path')).parent.absolute().parent.absolute()
+        rclient = str(rclient) + "/Riot Client/RiotClientServices"
+        subprocess.run([rclient, "--launch-product=league_of_legends", "--launch-patchline=live"])
         sleep(3)
 
     def login(self) -> None:
