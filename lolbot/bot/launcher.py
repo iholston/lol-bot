@@ -89,7 +89,7 @@ class Launcher:
         self.log.info('Launching League')
         rclient = Path(self.config.get_data('league_path')).parent.absolute().parent.absolute()
         rclient = str(rclient) + "/Riot Client/RiotClientServices"
-        subprocess.run([rclient, "--launch-product=league_of_legends", "--launch-patchline=live"])
+        subprocess.Popen([rclient, "--launch-product=league_of_legends", "--launch-patchline=live"])
         sleep(3)
 
     def login(self) -> None:

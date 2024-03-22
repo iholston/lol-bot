@@ -41,7 +41,7 @@ class Constants:
 class DefaultSettings:
     """Default settings for bot"""
     LEAGUE_DIR = 'C:/Riot Games/League of Legends'
-    LOBBY = 840
+    LOBBY = 880
     MAX_LEVEL = 30
     PATCH = '13.21.1'
     CHAMPS = [21, 18, 22, 67]

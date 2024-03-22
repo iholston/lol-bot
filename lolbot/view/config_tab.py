@@ -16,9 +16,9 @@ class ConfigTab:
     def __init__(self) -> None:
         self.id = None
         self.lobbies = {
-            'Intro': 830,
-            'Beginner': 840,
-            'Intermediate': 850
+            'Intro': 870,
+            'Beginner': 880,
+            'Intermediate': 890
         }
         self.config = ConfigRW()
 
@@ -36,8 +36,11 @@ class ConfigTab:
                 dpg.add_input_text(tag="LeaguePath", default_value=self.config.get_data('league_dir'), width=380, callback=self._set_dir)
             with dpg.group(horizontal=True):
                 dpg.add_input_text(default_value='Game Mode', width=180, readonly=True)
+                lobby = int(self.config.get_data('lobby'))
+                if lobby < 870:
+                    lobby += 40
                 dpg.add_combo(tag="GameMode", items=list(self.lobbies.keys()), default_value=list(self.lobbies.keys())[
-                    list(self.lobbies.values()).index(self.config.get_data('lobby'))], width=380, callback=self._set_mode)
+                    list(self.lobbies.values()).index(lobby)], width=380, callback=self._set_mode)
             with dpg.group(horizontal=True):
                 dpg.add_input_text(default_value='Account Max Level', width=180, enabled=False)
                 dpg.add_input_int(tag="MaxLevel", default_value=self.config.get_data('max_level'), min_value=0, step=1, width=380, callback=self._set_level)
@@ -67,13 +70,7 @@ class ConfigTab:
 
     def _set_mode(self, sender: int) -> None:
         """Sets the game mode"""
-        match dpg.get_value(sender):
-            case "Intro":
-                self.config.set_data('lobby', 830)
-            case "Beginner":
-                self.config.set_data('lobby', 840)
-            case "Intermediate":
-                self.config.set_data('lobby', 850)
+        self.config.set_data('lobby', self.lobbies.get(dpg.get_value(sender)))
 
     def _set_level(self, sender: int) -> None:
         """Sets account max level"""
