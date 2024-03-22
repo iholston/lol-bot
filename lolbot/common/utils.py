@@ -29,6 +29,8 @@ KILL_CRASH_HANDLER = 'TASKKILL /F /IM LeagueCrashHandler64.exe'
 KILL_LEAGUE_CLIENT = 'TASKKILL /F /IM LeagueClient.exe'
 KILL_LEAGUE = 'TASKKILL /F /IM "League of Legends.exe"'
 KILL_RIOT_CLIENT = 'TASKKILL /F /IM RiotClientUx.exe'
+KILL_HANDLER_WMIC = 'wmic process where "name=\'LeagueCrashHandler64.exe\'" delete'
+KILL_LEAGUE_WMIC = 'wmic process where "name=\'LeagueClient.exe\'" delete'
 
 
 class WindowNotFound(Exception):
@@ -71,6 +73,8 @@ def close_all_processes() -> None:
     os.system(KILL_LEAGUE)
     os.system(KILL_LEAGUE_CLIENT)
     os.system(KILL_RIOT_CLIENT)
+    os.system(KILL_HANDLER_WMIC)
+    os.system(KILL_LEAGUE_WMIC)
     sleep(5)
 
 
