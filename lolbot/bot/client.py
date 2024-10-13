@@ -343,7 +343,7 @@ class Client:
         for i in range(3):
             r = self.connection.request('get', '/lol-honor-v2/v1/ballot')
             if r.status_code == 200:
-                players = r.json()['eligiblePlayers']
+                players = r.json()['eligibleAllies']
                 index = random.randint(0, len(players)-1)
                 self.connection.request('post', '/lol-honor-v2/v1/honor-player', data={"summonerId": players[index]['summonerId']})
                 self.log.debug("Honor Success: Player {}. Champ: {}. Summoner: {}. ID: {}".format(index+1, players[index]['championName'], players[index]['summonerName'], players[index]['summonerId']))
