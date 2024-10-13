@@ -1,3 +1,6 @@
+>[!NOTE]
+>Due the release of [Valorant's Vanguard anti-cheat for League of Legends](https://support-leagueoflegends.riotgames.com/hc/en-us/articles/24169857932435-Riot-Vanguard-FAQ-League-of-Legends) on Windows, it is recommended to run this bot on macOS to reduce the potential of detection and ban. If using Windows, it is recommended to not use the .exe and instead run the bot with python directly
+
 <p align="center">
   <a href="https://github.com/iholston/lol-bot">
     <img src="https://github.com/iholston/lol-bot/assets/32341824/71f35164-c8a6-42ca-a254-68d8be92780e" alt="Logo">
