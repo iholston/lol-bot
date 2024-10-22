@@ -14,8 +14,8 @@ from datetime import datetime, timedelta
 import pyautogui
 
 import lolbot.bot.launcher as launcher
+import lolbot.bot.game as game
 from lolbot.common import api, utils
-from lolbot.bot.game import Game
 from lolbot.common.account import AccountManager
 from lolbot.common.config import Constants, ConfigRW
 from lolbot.common.handler import MultiProcessLogHandler
@@ -114,13 +114,7 @@ class Client:
                 case 'ChampSelect':
                     self.game_lobby()
                 case 'InProgress':
-                    game: Game = Game()
-                    if self.game_errors == 5:
-                        raise ClientError("Game issue. Most likely client disconnect..")
-                    if not game.play_game():
-                        self.game_errors += 1
-                    else:
-                        self.game_errors = 0
+                    game.play_game()
                 case 'Reconnect':
                     self.reconnect()
                 case 'WaitingForStats':

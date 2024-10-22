@@ -4,66 +4,77 @@ providing functions for interactive with various game endpoints
 """
 
 import json
-from typing import NamedTuple
 
+import psutil
 import requests
 
-
 GAME_SERVER_URL = 'https://127.0.0.1:2999/liveclientdata/allgamedata'
+GAME_PROCESS_NAME = "League of Legends.exe"
 
 
-class GameDataError(Exception):
+class GameAPIError(Exception):
     pass
 
 
-class GameData(NamedTuple):
-    summoner_name: str
-    is_dead: bool
-    game_time: int
-
-
-def get_game_data() -> GameData:
-    """Returns available character information"""
+def is_connected() -> bool:
+    """Check if getting response from game server"""
     try:
-        json_response = fetch_game_data()
-        return parse_game_data(json_response)
-    except GameDataError as e:
-        raise e
+        response = requests.get('https://127.0.0.1:2999/liveclientdata/allgamedata', timeout=10, verify=False)
+        response.raise_for_status()
+        return True
+    except requests.RequestException as e:
+        return False
 
 
-def fetch_game_data() -> str:
+def _get_game_data() -> str:
     """Retrieves game data from the local game server"""
     try:
         response = requests.get(GAME_SERVER_URL, timeout=10, verify=False)
         response.raise_for_status()
         return response.text
-    except requests.exceptions.Timeout:
-        raise GameDataError("The request timed out")
-    except requests.exceptions.ConnectionError:
-        raise GameDataError("Failed to connect to the server")
-    except requests.exceptions.HTTPError as e:
-        raise GameDataError(f"HTTP error occurred: {e}")
+    except Exception as e:
+        raise GameAPIError(f"Failed to get game data: {str(e)}")
 
 
-def parse_game_data(json_string: str) -> GameData:
-    """Parses the game data json response for relevant information"""
+def get_game_time() -> int:
+    """Gets current time in game"""
     try:
+        json_string = _get_game_data()
+        data = json.loads(json_string)
+        return int(data['gameData']['gameTime'])
+    except json.JSONDecodeError as e:
+        raise GameAPIError(f"Invalid JSON data: {e}")
+    except KeyError as e:
+        raise GameAPIError(f"Missing key in data: {e}")
+    except GameAPIError as e:
+        raise e
+
+
+def is_dead() -> bool:
+    """Returns whether player is currently dead"""
+    try:
+        json_string = _get_game_data()
         data = json.loads(json_string)
 
-        name = data['activePlayer']['summonerName']
-        is_dead = False
-        time = int(data['gameData']['gameTime'])
-
+        dead = False
         for player in data['allPlayers']:
-            if player['summonerName'] == name:
-                is_dead = bool(player['isDead'])
-
-        return GameData(
-            summoner_name=name,
-            is_dead=is_dead,
-            game_time=time,
-        )
+            if player['summonerName'] == data['activePlayer']['summonerName']:
+                dead = bool(player['isDead'])
+        return dead
     except json.JSONDecodeError as e:
-        raise GameDataError(f"Invalid JSON data: {e}")
+        raise GameAPIError(f"Invalid JSON data: {e}")
     except KeyError as e:
-        raise GameDataError(f"Missing key in data: {e}")
+        raise GameAPIError(f"Missing key in data: {e}")
+    except GameAPIError as e:
+        raise e
+
+
+def close_game() -> None:
+    """Kills the game process"""
+    for proc in psutil.process_iter([GAME_PROCESS_NAME]):
+        try:
+            if proc.info['name'].lower() == GAME_PROCESS_NAME.lower():
+                proc.terminate()
+                proc.wait(timeout=10)
+        except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+            pass
