@@ -5,3 +5,4 @@ requests
 urllib3
 pyautogui
 dearpygui
+psutil
