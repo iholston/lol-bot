@@ -26,7 +26,7 @@ def is_connected() -> bool:
         return False
 
 
-def _get_game_data() -> str:
+def get_game_data() -> str:
     """Retrieves game data from the local game server"""
     try:
         response = requests.get(GAME_SERVER_URL, timeout=10, verify=False)
@@ -39,7 +39,7 @@ def _get_game_data() -> str:
 def get_game_time() -> int:
     """Gets current time in game"""
     try:
-        json_string = _get_game_data()
+        json_string = get_game_data()
         data = json.loads(json_string)
         return int(data['gameData']['gameTime'])
     except json.JSONDecodeError as e:
@@ -69,7 +69,7 @@ def get_champ() -> str:
 def is_dead() -> bool:
     """Returns whether player is currently dead"""
     try:
-        json_string = _get_game_data()
+        json_string = get_game_data()
         data = json.loads(json_string)
 
         dead = False

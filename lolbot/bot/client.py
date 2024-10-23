@@ -349,7 +349,7 @@ class Client:
     def set_game_config(self) -> None:
         """Overwrites the League of Legends game config"""
         self.log.info("Overwriting game configs")
-        path = self.config['league_dir']
+        path = self.config['league_dir'] + '/Config/game.cfg'
         folder = os.path.abspath(os.path.join(path, os.pardir))
         for filename in os.listdir(folder):
             file_path = os.path.join(folder, filename)

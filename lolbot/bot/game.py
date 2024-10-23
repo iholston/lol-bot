@@ -32,6 +32,8 @@ SYSTEM_MENU_X_BUTTON = (0.7729, 0.2488)
 SHOP_ITEM_BUTTONS = [(0.3216, 0.5036), (0.4084, 0.5096), (0.4943, 0.4928)]
 SHOP_PURCHASE_ITEM_BUTTON = (0.7586, 0.6012)
 
+MAX_ERRORS = 15
+
 
 class GameError(Exception):
     """Indicates the game should be terminated"""
@@ -40,6 +42,7 @@ class GameError(Exception):
 
 def play_game() -> None:
     """Plays a single game of League of Legends, takes actions based on game time"""
+    game_errors = 0
     try:
         wait_for_game_window()
         wait_for_connection()
@@ -62,6 +65,12 @@ def play_game() -> None:
         log.warning(str(e))
         proc.close_game()
         sleep(30)
+    except api.GameAPIError as e:
+        game_errors += 1
+        if game_errors == MAX_ERRORS:
+            log.error(f"Max Game Error reached. {e}")
+            proc.close_game()
+            sleep(30)
     except (WindowNotFound, pyautogui.FailSafeException):
         log.info(f"Game Complete")
 
