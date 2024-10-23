@@ -7,7 +7,7 @@ import requests
 
 import dearpygui.dearpygui as dpg
 
-from lolbot.common.config import Constants
+VERSION = '2.4.0'
 
 
 class AboutTab:
@@ -15,7 +15,7 @@ class AboutTab:
 
     def __init__(self) -> None:
         response = requests.get("https://api.github.com/repos/iholston/lol-bot/releases/latest")
-        self.version = 'v' + Constants.VERSION
+        self.version = 'v' + VERSION
         self.latest_version = response.json()["name"]
         self.need_update = False
         if self.latest_version != self.version:
@@ -47,14 +47,10 @@ class AboutTab:
         notes = "\t\t\t\t\t\t\t\t\tNotes\n"
 
         notes += """
-Version 2.1.0+ processes accounts differently. Accounts must unfortunately 
-be added through the accounts tab manually a single time to convert them to 
-the new format. After that it should work normally.        
-
-Alternatively, you can copy the old 'lolbot/resources/account.json' file to
-the new location (select 'Show in Finder' on account tab). If you do this,
-make sure to find and replace all instances of 'leveled' with 'level' and
-'true' with 30 (or your max level) and false with 0.
+Due to the release of Vanguard, it is recommended to run the bot as a python script. There has
+been a noticeable increase in accounts being banned since Vanguard release. The bot is currently
+being ported to MacOS where there is no Vanguard and ultimately running on MacOS is the best way
+to not get banned.
 
 If you have any problems create an issue on the github repo.
 """

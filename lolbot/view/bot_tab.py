@@ -4,40 +4,30 @@ View tab that handles bot controls and displays bot output
 
 import os
 import multiprocessing
-import requests
 import threading
-from time import sleep
+import time
+import datetime
 
 import dearpygui.dearpygui as dpg
 
-from lolbot.common import utils, api
-from lolbot.common.config import ConfigRW
+from lolbot.common import config, proc
+from lolbot.lcu import lcu_api, game_api
 from lolbot.bot.client import Client
 
 
 class BotTab:
     """Class that displays the BotTab and handles bot controls/output"""
 
-    def __init__(self, message_queue: multiprocessing.Queue, terminate: threading.Event) -> None:
-        self.message_queue = message_queue
-        self.connection = api.Connection()
-        self.lobbies = {
-            'Draft Pick': 400,
-            'Ranked Solo/Duo': 420,
-            'Blind Pick': 430,
-            'Ranked Flex': 440,
-            'ARAM': 450,
-            'Intro Bots': 870,
-            'Beginner Bots': 880,
-            'Intermediate Bots': 890,
-            'Normal TFT': 1090,
-            'Ranked TFT': 1100,
-            'Hyper Roll TFT': 1130,
-            'Double Up TFT': 1160
-        }
-        self.config = ConfigRW()
-        self.terminate = terminate
+    def __init__(self):
+        self.message_queue = multiprocessing.Queue()
+        self.games_played = multiprocessing.Value('i', 0)
+        self.bot_errors = multiprocessing.Value('i', 0)
+        self.api = lcu_api.LCUApi()
+        self.api.update_auth_timer()
+        self.output_queue = []
+        self.endpoint = None
         self.bot_thread = None
+        self.start_time = None
 
     def create_tab(self, parent) -> None:
         """Creates Bot Tab"""
@@ -47,25 +37,35 @@ class BotTab:
             with dpg.group(horizontal=True):
                 dpg.add_button(tag="StartButton", label='Start Bot', width=93, callback=self.start_bot)  # width=136
                 dpg.add_button(label="Clear Output", width=93, callback=lambda: self.message_queue.put("Clear"))
-                dpg.add_button(label="Restart UX", width=93, callback=self.ux_callback)
-                dpg.add_button(label="Close Client", width=93, callback=self.close_client_callback)
+                dpg.add_button(label="Restart UX", width=93, callback=self.restart_ux)
+                dpg.add_button(label="Close Client", width=93, callback=self.close_client)
             dpg.add_spacer()
-            dpg.add_text(default_value="Info")
-            dpg.add_input_text(tag="Info", readonly=True, multiline=True, default_value="Initializing...", height=72, width=568, tab_input=True)
+            with dpg.group(horizontal=True):
+                with dpg.group():
+                    dpg.add_text(default_value="Info")
+                    dpg.add_input_text(tag="Info", readonly=True, multiline=True, default_value="Initializing...", height=72, width=280, tab_input=True)
+                with dpg.group():
+                    dpg.add_text(default_value="Bot")
+                    dpg.add_input_text(tag="Bot", readonly=True, multiline=True, default_value="Initializing...", height=72, width=280, tab_input=True)
             dpg.add_spacer()
             dpg.add_text(default_value="Output")
             dpg.add_input_text(tag="Output", multiline=True, default_value="", height=162, width=568, enabled=False)
+
+        # Start self updating
         self.update_info_panel()
+        self.update_bot_panel()
+        self.update_output_panel()
 
     def start_bot(self) -> None:
         """Starts bot process"""
         if self.bot_thread is None:
-            if not os.path.exists(self.config.get_data('league_dir')):
+            if not os.path.exists(config.load_config()['league_dir']):
                 self.message_queue.put("Clear")
                 self.message_queue.put("League Installation Path is Invalid. Update Path to START")
                 return
             self.message_queue.put("Clear")
-            self.bot_thread = multiprocessing.Process(target=Client, args=(self.message_queue,))
+            self.start_time = time.time()
+            self.bot_thread = multiprocessing.Process(target=Client, args=(self.message_queue, self.games_played, self.bot_errors,))
             self.bot_thread.start()
             dpg.configure_item("StartButton", label="Quit Bot")
         else:
@@ -80,95 +80,98 @@ class BotTab:
             self.bot_thread = None
             self.message_queue.put("Bot Successfully Terminated")
 
-    def ux_callback(self) -> None:
+    def restart_ux(self) -> None:
         """Sends restart ux request to api"""
-        if utils.is_league_running():
-            self.connection.request('post', '/riotclient/kill-and-restart-ux')
-            sleep(1)
-            self.connection.set_lcu_headers()
-        else:
+        if not proc.is_league_running():
             self.message_queue.put("Cannot restart UX, League is not running")
+            return
+        try:
+            self.api.restart_ux()
+        except:
+            pass
 
-    def close_client_callback(self) -> None:
+    def close_client(self) -> None:
         """Closes all league related processes"""
         self.message_queue.put('Closing League Processes')
-        threading.Thread(target=utils.close_all_processes).start()
+        threading.Thread(target=proc.close_all_processes).start()
 
     def update_info_panel(self) -> None:
-        """Updates info panel text"""
-        if not self.terminate.is_set() and not utils.is_league_running():
-            dpg.configure_item("Info", default_value="League is not running")
-        else:
-            if not self.terminate.is_set() and not os.path.exists(self.config.get_data('league_dir')):
-                self.message_queue.put("Clear")
-                self.message_queue.put("League Installation Path is Invalid. Update Path")
-                if not self.terminate.is_set():
-                    threading.Timer(2, self.update_info_panel).start()
-                else:
-                    self.stop_bot()
-                return
+        """Updates info panel text continuously"""
+        threading.Timer(2, self.update_info_panel).start()
 
-            _account = ""
-            phase = ""
-            league_patch = ""
-            game_time = ""
-            champ = ""
-            level = ""
-            try:
-                if not self.connection.headers:
-                    self.connection.set_lcu_headers()
-                r = self.connection.request('get', '/lol-summoner/v1/current-summoner')
-                if r.status_code == 200:
-                    _account = r.json()['displayName']
-                    level = str(r.json()['summonerLevel']) + " - " + str(
-                        r.json()['percentCompleteForNextLevel']) + "% to next level"
-                r = self.connection.request('get', '/lol-gameflow/v1/gameflow-phase')
-                if r.status_code == 200:
-                    phase = r.json()
-                    if phase == 'None':
-                        phase = "In Main Menu"
-                    elif phase == 'Matchmaking':
-                        phase = 'In Queue'
-                    elif phase == 'Lobby':
-                        r = self.connection.request('get', '/lol-lobby/v2/lobby')
-                        for lobby, id in self.lobbies.items():
-                            if id == r.json()['gameConfig']['queueId']:
-                                phase = lobby + ' Lobby'
-            except:
-                try:
-                    self.connection.set_lcu_headers()
-                except:
-                    pass
-            if utils.is_game_running() or phase == "InProgress":
-                try:
-                    response = requests.get('https://127.0.0.1:2999/liveclientdata/allgamedata', timeout=10, verify=False)
-                    if response.status_code == 200:
-                        for player in response.json()['allPlayers']:
-                            if player['summonerName'] == response.json()['activePlayer']['summonerName']:
-                                champ = player['championName']
-                        game_time = utils.seconds_to_min_sec(response.json()['gameData']['gameTime'])
-                except:
-                    try:
-                        self.connection.set_lcu_headers()
-                    except:
-                        pass
-                msg = "Accnt: {}\n".format(_account)
-                msg = msg + "Phase: {}\n".format(phase)
-                msg = msg + "Time : {}\n".format(game_time)
-                msg = msg + "Champ: {}\n".format(champ)
-                msg = msg + "Level: {}".format(level)
+        if not proc.is_league_running():
+            msg = "Accnt: -\nLevel: -\nPhase: Closed\nTime : -\nChamp: -"
+            dpg.configure_item("Info", default_value=msg)
+            return
+
+        try:
+            account = self.api.get_display_name()
+            level = self.api.get_summoner_level()
+            phase = self.api.get_phase()
+            patch = self.api.get_patch()
+
+            msg = f"Accnt: {account}\n"
+            msg += f"Level: {level}\n"
+            if phase == "None":
+                msg += "Phase: In Main Menu\n"
+                msg += f"Patch: {patch}"
+            elif phase == "Matchmaking":
+                msg += "Phase: In Queue\n"
+                msg += f"Patch: {patch}"
+            elif phase == "Lobby":
+                phase = "In Lobby"
+                msg += f"Phase: {phase}\n"
+                msg += f"Patch: {patch}"
+            if phase == "InProgress":
+                msg += "Phase: In Game\n"
+                msg += f"Time : {game_api.get_formatted_time()}"
+                msg += f"Champ: {game_api.get_champ()}"
             else:
-                try:
-                    r = requests.get('http://ddragon.leagueoflegends.com/api/versions.json')
-                    league_patch = r.json()[0]
-                except:
-                    pass
-                msg = "Accnt: {}\n".format(_account)
-                msg = msg + "Phase: {}\n".format(phase)
-                msg = msg + "Patch: {}\n".format(league_patch)
-                msg = msg + "Level: {}".format(level)
-            if not self.terminate.is_set():
-                dpg.configure_item("Info", default_value=msg)
+                msg += f"Phase: {phase}\n"
+                msg += f"Patch: {patch}"
+            dpg.configure_item("Info", default_value=msg)
+        except:
+            pass
 
-        if not self.terminate.is_set():
-            threading.Timer(2, self.update_info_panel).start()
+    def update_bot_panel(self):
+        threading.Timer(.5, self.update_bot_panel).start()
+        msg = ""
+        if self.bot_thread is None:
+            msg += "Status : Ready\nRunTime: -\nGames  : -\nXP Gain: -\nErrors : -"
+        else:
+            msg += "Status : Running\n"
+            run_time = datetime.timedelta(seconds=(time.time() - self.start_time))
+            days = run_time.days
+            hours, remainder = divmod(run_time.seconds, 3600)
+            minutes, seconds = divmod(remainder, 60)
+            if days > 0:
+                msg += f"RunTime: {days} day, {hours:02}:{minutes:02}:{seconds:02}\n"
+            else:
+                msg += f"RunTime: {hours:02}:{minutes:02}:{seconds:02}\n"
+            msg += f"Games  : {self.games_played.value}\n"
+            try:
+                msg += f"XP Gain: nah\n"
+            except:
+                msg += f"XP Gain: 0\n"
+            msg += f"Errors : {self.bot_errors.value}"
+        dpg.configure_item("Bot", default_value=msg)
+
+    def update_output_panel(self):
+        threading.Timer(.5, self.update_output_panel).start()
+        if not self.message_queue.empty():
+            display_msg = ""
+            self.output_queue.append(self.message_queue.get())
+            if len(self.output_queue) > 12:
+                self.output_queue.pop(0)
+            for msg in self.output_queue:
+                if "Clear" in msg:
+                    self.output_queue = []
+                    display_msg = ""
+                    break
+                elif "INFO" not in msg and "ERROR" not in msg and "WARNING" not in msg:
+                    display_msg += "[{}] [INFO   ] {}\n".format(datetime.datetime.now().strftime("%H:%M:%S"), msg)
+                else:
+                    display_msg += msg + "\n"
+            dpg.configure_item("Output", default_value=display_msg.strip())
+            if "Bot Successfully Terminated" in display_msg:
+                self.output_queue = []

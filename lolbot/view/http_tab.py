@@ -6,9 +6,10 @@ import webbrowser
 import json
 import subprocess
 
+import requests
 import dearpygui.dearpygui as dpg
 
-from lolbot.common import api
+import lolbot.lcu.cmd as cmd
 
 
 class HTTPTab:
@@ -16,7 +17,6 @@ class HTTPTab:
 
     def __init__(self) -> None:
         self.id = -1
-        self.connection = api.Connection()
         self.methods = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE']
 
     def create_tab(self, parent: int) -> None:
@@ -69,15 +69,23 @@ class HTTPTab:
     def request(self) -> None:
         """Sends custom HTTP request to LCU API"""
         try:
-            self.connection.set_lcu_headers()
-        except FileNotFoundError:
-            dpg.configure_item('StatusOutput', label='418')
-            dpg.configure_item('ResponseOutput', default_value='League of Legends is not running')
-            return
-        try:
-            r = self.connection.request(dpg.get_value('Method').lower(), dpg.get_value('URL').strip(), data=dpg.get_value('Body').strip())
-            dpg.configure_item('StatusOutput', label=r.status_code)
-            dpg.configure_item('ResponseOutput', default_value=json.dumps(r.json(), indent=4))
+            endpoint = cmd.get_commandline().auth_url
+            url = f"{endpoint}{dpg.get_value('URL').strip()}"
+            body = dpg.get_value('Body').strip()
+            response = None
+            match dpg.get_value('Method').lower():
+                case 'get':
+                    response = requests.get(url)
+                case 'post':
+                    response = requests.post(url, data=body)
+                case 'delete':
+                    response = requests.delete(url, data=body)
+                case 'put':
+                    response = requests.put(url, data=body)
+                case 'patch':
+                    response = requests.patch(url, data=body)
+            dpg.configure_item('StatusOutput', label=response.status_code)
+            dpg.configure_item('ResponseOutput', default_value=json.dumps(response.json(), indent=4))
         except Exception as e:
             dpg.configure_item('StatusOutput', label='418')
-            dpg.configure_item('ResponseOutput', default_value=e.__str__())
+            dpg.configure_item('ResponseOutput', default_value=str(e))

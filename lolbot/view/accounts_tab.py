@@ -9,7 +9,7 @@ import threading
 from typing import Any
 
 import dearpygui.dearpygui as dpg
-from lolbot.common.config import Constants
+import lolbot.common.config as config
 from lolbot.common.account import Account, AccountManager
 
 
@@ -39,7 +39,7 @@ class AccountsTab:
                     dpg.add_button(label="Cancel", width=113, callback=lambda: dpg.configure_item("AccountSubmit", show=False))
             with dpg.group(horizontal=True):
                 dpg.add_button(label="Add New Account", width=184, callback=lambda: dpg.configure_item("AccountSubmit", show=True))
-                dpg.add_button(label="Show in File Explorer", width=184, callback=lambda: subprocess.Popen('explorer /select, {}'.format(Constants.ACCOUNT_PATH)))
+                dpg.add_button(label="Show in File Explorer", width=184, callback=lambda: subprocess.Popen('explorer /select, {}'.format(config.ACCOUNT_PATH)))
                 dpg.add_button(tag="BackupButton", label="Create Backup", width=184, callback=self.create_backup)
                 with dpg.tooltip(dpg.last_item()):
                     dpg.add_text("Creates a backup of the accounts.json file in the bak folder")
@@ -119,7 +119,7 @@ class AccountsTab:
     @staticmethod
     def create_backup(sender: int) -> None:
         bak = "{}{}".format(time.strftime("%Y%m%d-%H%M%S"), ".json")
-        shutil.copyfile(Constants.ACCOUNT_PATH, '{}/{}'.format(Constants.BAK_DIR, bak))
+        shutil.copyfile(config.ACCOUNT_PATH, '{}/{}'.format(config.BAK_DIR, bak))
         dpg.configure_item("BackupButton", label="Backup Created!")
         threading.Timer(1, lambda: dpg.configure_item("BackupButton", label="Create Backup")).start()
 

@@ -1,100 +1,58 @@
 """
-Handles creating/writing configurations to json file
+Handles multi-platform creating/writing configurations to json file
 """
-
 import os
 import json
-from typing import Any
 
-
-class Constants:
-    """Constant settings"""
-    # Constant paths
-    RIOT_LOCKFILE = os.path.join(os.getenv('LOCALAPPDATA'), 'Riot Games/Riot Client/Config/lockfile')
+if os.name == 'nt':
     CONFIG_DIR = os.path.join(os.getenv('LOCALAPPDATA'), 'LoLBot')
-    BAK_DIR = os.path.join(CONFIG_DIR, 'bak')
-    LOG_DIR = os.path.join(CONFIG_DIR, 'logs')
-    CONFIG_PATH = os.path.join(CONFIG_DIR, 'configs.json')
-    ACCOUNT_PATH = os.path.join(CONFIG_DIR, 'accounts.json')
+else:
+    CONFIG_DIR = os.path.join(os.path.expanduser('~'), 'Library', 'Application Support', 'LoLBot')
 
-    # Pyinstaller dependant paths
-    GAME_CFG = 'lolbot/resources/game.cfg'
-    ICON_PATH = 'lolbot/resources/images/a.ico'
+os.makedirs(CONFIG_DIR, exist_ok=True)
 
-    # Other
-    VERSION = '2.3.0'
+BAK_DIR = os.path.join(CONFIG_DIR, 'bak')
+LOG_DIR = os.path.join(CONFIG_DIR, 'logs')
+CONFIG_PATH = os.path.join(CONFIG_DIR, 'config.json')
+ACCOUNT_PATH = os.path.join(CONFIG_DIR, 'accounts.json')
 
-    @staticmethod
-    def create_dirs():
-        if not os.path.exists(Constants.CONFIG_DIR):
-            os.makedirs(Constants.CONFIG_DIR)
-        if not os.path.exists(Constants.LOG_DIR):
-            os.makedirs(Constants.LOG_DIR)
-        if not os.path.exists(Constants.BAK_DIR):
-            os.makedirs(Constants.BAK_DIR)
-        if not os.path.exists(Constants.CONFIG_PATH):
-            open(Constants.CONFIG_PATH, 'w+')
-        if not os.path.exists(Constants.ACCOUNT_PATH):
-            open(Constants.ACCOUNT_PATH, 'w+')
+GAME_CFG = 'lolbot/resources/game.cfg'
 
-
-class DefaultSettings:
-    """Default settings for bot"""
-    LEAGUE_DIR = 'C:/Riot Games/League of Legends'
-    LOBBY = 880
-    MAX_LEVEL = 30
-    PATCH = '13.21.1'
-    CHAMPS = [21, 18, 22, 67]
-    DIALOG = ["mid ples", "plannin on goin mid team", "mid por favor", "bienvenidos, mid", "howdy, mid", "goin mid", "mid"]
+LOBBIES = {
+    'Draft Pick': 400,
+    'Ranked Solo/Duo': 420,
+    'Blind Pick': 430,
+    'Ranked Flex': 440,
+    'ARAM': 450,
+    'Intro Bots': 870,
+    'Beginner Bots': 880,
+    'Intermediate Bots': 890,
+    'Normal TFT': 1090,
+    'Ranked TFT': 1100,
+    'Hyper Roll TFT': 1130,
+    'Double Up TFT': 1160
+}
 
 
-class ConfigRW:
-    """Reads/Writes configurations required by bot"""
+def load_config() -> dict:
+    """Load configuration from disk or set defaults"""
+    default_config = {
+        'league_dir': 'C:/Riot Games/League of Legends',
+        'lobby': 880,
+        'max_level': 30,
+        'champs': [21, 18, 22, 67],
+        'dialog': ["mid ples", "plannin on goin mid team", "mid por favor", "bienvenidos, mid", "howdy, mid", "goin mid", "mid"]
+    }
+    if not os.path.exists(CONFIG_PATH):
+        with open(CONFIG_PATH, 'w') as configfile:
+            json.dump(default_config, configfile, indent=4)
+        return default_config
+    else:
+        with open(CONFIG_PATH, 'r') as configfile:
+            return json.load(configfile)
 
-    def __init__(self):
-        self.file = open(Constants.CONFIG_PATH, 'r+')
-        self.settings = {}
-        self.load_or_default()
-        self._json_update()
 
-    def _json_update(self):
-        """Persists settings"""
-        self.file.seek(0)
-        json.dump(self.settings, self.file, indent=4)
-        self.file.truncate()
-
-    def load_or_default(self):
-        """Attempts to load settings, if it fails, sets to default"""
-        try:
-            self.settings = json.load(self.file)
-        except json.decoder.JSONDecodeError:
-            self.set_defaults()
-
-    def set_defaults(self):
-        """Set and persist the default settings"""
-        self.set_league_dir(DefaultSettings.LEAGUE_DIR)
-        self.settings['lobby'] = DefaultSettings.LOBBY
-        self.settings['max_level'] = DefaultSettings.MAX_LEVEL
-        self.settings['patch'] = DefaultSettings.PATCH
-        self.settings['champs'] = DefaultSettings.CHAMPS
-        self.settings['dialog'] = DefaultSettings.DIALOG
-        self._json_update()
-
-    def set_league_dir(self, league_dir: str):
-        """Sets all league paths since they depend on one directory"""
-        self.settings['league_dir'] = league_dir
-        self.settings['league_path'] = os.path.join(league_dir, 'LeagueClient')
-        self.settings['league_config'] = os.path.join(league_dir, 'Config/game.cfg')
-        self.settings['league_lockfile'] = os.path.join(league_dir, 'lockfile')
-        self._json_update()
-
-    def set_data(self, key: str, value: Any):
-        """Persists data to JSON"""
-        self.settings[key] = value
-        self._json_update()
-
-    def get_data(self, key: str):
-        """Retrieves data from JSON"""
-        for sk, sv in self.settings.items():
-            if sk == key:
-                return self.settings[key]
+def save_config(config) -> None:
+    """Save the configuration to disk"""
+    with open(CONFIG_PATH, 'w') as configfile:
+        json.dump(config, configfile, index=4)

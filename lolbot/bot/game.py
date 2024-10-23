@@ -6,9 +6,10 @@ import logging
 import random
 from datetime import datetime, timedelta
 
-from controller import *
-from window import game_window_exists, WindowNotFound, GAME_WINDOW_NAME
+from lolbot.bot.controller import *
+from lolbot.bot.window import game_window_exists, WindowNotFound, GAME_WINDOW_NAME
 import lolbot.lcu.game_api as api
+import lolbot.common.proc as proc
 
 log = logging.getLogger(__name__)
 
@@ -59,7 +60,7 @@ def play_game() -> None:
                 raise GameError("Game has exceeded the max time limit")
     except GameError as e:
         log.warning(str(e))
-        api.close_game()
+        proc.close_game()
         sleep(30)
     except (WindowNotFound, pyautogui.FailSafeException):
         log.info(f"Game Complete")
@@ -109,6 +110,7 @@ def game_start() -> None:
     while api.get_game_time() < MINION_CLASH_TIME:
         right_click(MINI_MAP_UNDER_TURRET, GAME_WINDOW_NAME, 2)  # to prevent afk warning popup
         left_click(AFK_OK_BUTTON, GAME_WINDOW_NAME)
+    log.info("Minions clashed. Entering Game Loop")
 
 
 def play(attack: tuple, retreat: tuple, time_to_lane: int) -> None:

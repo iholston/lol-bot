@@ -7,8 +7,6 @@ from dataclasses import dataclass
 
 import psutil
 
-from lcu_api import LCUError
-
 
 LCU_PORT_KEY = "--app-port="
 LCU_TOKEN_KEY = "--remoting-auth-token="
@@ -37,8 +35,9 @@ def get_commandline() -> CommandLineOutput:
             if proc.info['name'] == PROCESS_NAME:
                 cmdline = " ".join(proc.info['cmdline'])
                 return match_stdout(cmdline)
+        return CommandLineOutput()
     except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess) as e:
-        raise LCUError(f"Process handling error: {str(e)}")
+        raise e
 
 
 def match_stdout(stdout: str) -> CommandLineOutput:

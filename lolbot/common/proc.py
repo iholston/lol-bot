@@ -1,5 +1,5 @@
 """
-Utility functions that interact with game windows and processes
+Utility functions that interact processes
 """
 
 import logging
@@ -33,8 +33,6 @@ KILL_HANDLER_WMIC = 'wmic process where "name=\'LeagueCrashHandler64.exe\'" dele
 KILL_LEAGUE_WMIC = 'wmic process where "name=\'LeagueClient.exe\'" delete'
 
 
-class WindowNotFound(Exception):
-    pass
 
 
 def is_league_running() -> bool:
@@ -226,11 +224,13 @@ def seconds_to_min_sec(seconds: str or float or int) -> str:
         return "XX:XX"
 
 
-def print_ascii() -> None:
-    """Prints some ascii art"""
-    print("""\n\n            
-                ──────▄▌▐▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▌
-                ───▄▄██▌█ BEEP BEEP
-                ▄▄▄▌▐██▌█ -15 LP DELIVERY
-                ███████▌█▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▌
-                ▀(⊙)▀▀▀▀▀▀▀(⊙)(⊙)▀▀▀▀▀▀▀▀▀▀(⊙)\n\n\t\t\tLoL Bot\n\n""")
+def close_game() -> None:
+    """Kills the game process""" # TODO proc.py
+    for proc in psutil.process_iter([GAME_PROCESS_NAME]):
+        try:
+            if proc.info['name'].lower() == GAME_PROCESS_NAME.lower():
+                proc.terminate()
+                proc.wait(timeout=10)
+        except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+            pass
+

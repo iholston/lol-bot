@@ -1,5 +1,5 @@
 """
-Handles bot logging
+Sets global logging state
 """
 
 import logging
@@ -11,6 +11,10 @@ from multiprocessing import Queue
 from logging.handlers import RotatingFileHandler
 
 
+def set_logs(msg_queue: Queue, log_dir: str) -> None:
+    handler = MultiProcessLogHandler(msg_queue, log_dir)
+
+
 class MultiProcessLogHandler(logging.Handler):
     """Class that handles bot log messsages, writes to log file, terminal, and view"""
 
@@ -18,6 +22,7 @@ class MultiProcessLogHandler(logging.Handler):
         logging.Handler.__init__(self)
         self.log_dir = path
         self.message_queue = message_queue
+        self.set_logs()
 
     def emit(self, record: logging.LogRecord) -> None:
         """Adds log to message queue"""

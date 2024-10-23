@@ -14,11 +14,14 @@ from datetime import datetime, timedelta
 import pyautogui
 
 import lolbot.bot.launcher as launcher
+import lolbot.lcu.lcu_api as api
+import lolbot.lcu.cmd as cmd
 import lolbot.bot.game as game
-from lolbot.common import api, utils
+import lolbot.common.log as log
+import lolbot.bot.window as window
+import lolbot.common.config as config
+from lolbot.common import proc
 from lolbot.common.account import AccountManager
-from lolbot.common.config import Constants, ConfigRW
-from lolbot.common.handler import MultiProcessLogHandler
 
 
 class ClientError(Exception):
@@ -37,39 +40,41 @@ class Client:
     POST_GAME_SELECT_CHAMP_RATIO = (0.4977, 0.5333)
     POPUP_SEND_EMAIL_X_RATIO = (0.6960, 0.1238)
     MAX_CLIENT_ERRORS = 5
-    MAX_PHASE_ERRORS = 20
+    MAX_PHASE_ERRORS = 2
 
-    def __init__(self, message_queue) -> None:
-        self.handler = MultiProcessLogHandler(message_queue, Constants.LOG_DIR)
+    def __init__(self, message_queue, games_played, client_errors) -> None:
+        self.print_ascii()
+        #log.set_logs(message_queue, config.LOG_DIR)
+        self.handler = log.MultiProcessLogHandler(message_queue, config.LOG_DIR)
         self.log = logging.getLogger(__name__)
-        self.handler.set_logs()
         self.account_manager = AccountManager()
-        self.connection = api.Connection()
         self.launcher = launcher.Launcher()
-        self.config = ConfigRW()
-        self.max_level = self.config.get_data('max_level')
-        self.lobby = self.config.get_data('lobby')
-        self.champs = self.config.get_data('champs')
-        self.dialog = self.config.get_data('dialog')
+        self.api = api.LCUApi()
+        self.api.update_auth_timer()
+        self.config = config.load_config()
+        self.max_level = self.config['max_level']
+        self.lobby = self.config['lobby']
+        self.champs = self.config['champs']
+        self.dialog = self.config['dialog']
         self.account = None
         self.phase = ""
         self.prev_phase = None
         self.client_errors = 0
         self.phase_errors = 0
         self.game_errors = 0
-        utils.print_ascii()
         self.account_loop()
+
 
     def account_loop(self) -> None:
         """Main loop, gets an account, launches league, levels the account, and repeats"""
         while True:
             try:
                 self.account = self.account_manager.get_account(self.max_level)
-                self.launcher.launch_league(self.account.username, self.account.password)
+                #self.launcher.launch_league(self.account.username, self.account.password)
                 self.leveling_loop()
                 if self.launcher.verify_account():
                     self.account_manager.set_account_as_leveled(self.account, self.max_level)
-                utils.close_all_processes()
+                proc.close_all_processes()
                 self.client_errors = 0
                 self.phase_errors = 0
                 self.game_errors = 0
@@ -82,7 +87,7 @@ class Client:
                     err_msg = "Max errors reached. Exiting"
                     self.log.error(err_msg)
                     raise ClientError(err_msg)
-                utils.close_all_processes()
+                proc.close_all_processes()
             except launcher.LauncherError as le:
                 self.log.error(le.__str__())
                 self.log.error("Launcher Error. Exiting")
@@ -96,11 +101,11 @@ class Client:
 
     def leveling_loop(self) -> None: 
         """Loop that runs the correct function based on the phase of the League Client, continuously starts games"""
-        self.connection.connect_lcu(verbose=False)
         phase = self.get_phase()
         if phase != 'InProgress' and phase != 'Reconnect':
             self.check_patch()
         self.set_game_config()
+
         while not self.account_leveled():
             match self.get_phase():
                 case 'None':
@@ -129,50 +134,40 @@ class Client:
     def get_phase(self) -> str:
         """Requests the League Client phase"""
         for i in range(15):
-            r = self.connection.request('get', '/lol-gameflow/v1/gameflow-phase')
-            if r.status_code == 200:
+            try:
                 self.prev_phase = self.phase
-                self.phase = r.json()
-                self.log.debug("New Phase: {}, Previous Phase: {}".format(self.phase, self.prev_phase))
+                self.phase = self.api.get_phase()
                 if self.prev_phase == self.phase and self.phase != "Matchmaking":
                     self.phase_errors += 1
                     if self.phase_errors == Client.MAX_PHASE_ERRORS:
                         raise ClientError("Transition error. Phase will not change")
-                    else:
-                        self.log.debug("Phase same as previous. Phase: {}, Previous Phase: {}, Errno {}".format(self.phase, self.prev_phase, self.phase_errors))
                 else:
                     self.phase_errors = 0
                 sleep(1.5)
                 return self.phase
-            sleep(1)
+            except Exception as e:
+                print(str(e))
         raise ClientError("Could not get phase")
 
     def create_lobby(self, lobby_id: int) -> None:
         """Creates a lobby for given lobby ID"""
-        self.log.info("Creating lobby with lobby_id: {}".format(lobby_id))
-        self.connection.request('post', '/lol-lobby/v2/lobby', data={'queueId': lobby_id})
+        self.log.info(f"Creating lobby with lobby_id: {lobby_id}")
+        try:
+            self.api.create_lobby(lobby_id)
+        except api.LCUError as e:
+            pass
         sleep(1.5)
 
     def start_matchmaking(self, lobby_id: int) -> None:
         """Starts matchmaking for a given lobby ID, will also wait out dodge timers"""
         self.log.info("Starting queue for lobby_id: {}".format(lobby_id))
-        r = self.connection.request('get', '/lol-lobby/v2/lobby')
-        if r.json()['gameConfig']['queueId'] != lobby_id:
-            self.create_lobby(lobby_id)
+        try:
+            self.api.create_lobby(lobby_id)
             sleep(1)
-        self.connection.request('post', '/lol-lobby/v2/lobby/matchmaking/search')
-        sleep(1.5)
-
-        # Check for dodge timer
-        r = self.connection.request('get', '/lol-matchmaking/v1/search')
-        if r.status_code == 200 and len(r.json()['errors']) != 0:
-            dodge_timer = int(r.json()['errors'][0]['penaltyTimeRemaining'])
-            self.log.info("Dodge Timer. Time Remaining: {}".format(utils.seconds_to_min_sec(dodge_timer)))
-            sleep(dodge_timer)
-
-        if r.status_code == 200:
-            if float(r.json()['estimatedQueueTime']) > 6000:
-                self.log.warning("Queue times are too long")
+            self.api.start_matchmaking()
+        except:
+            pass
+        # Check for dodge timer TODO
 
     def queue(self) -> None:
         """Waits until the League Client Phase changes to something other than 'Matchmaking'"""
@@ -184,23 +179,26 @@ class Client:
             elif datetime.now() - start > timedelta(minutes=15):
                 raise ClientError("Queue Timeout")
             elif datetime.now() - start > timedelta(minutes=10):
-                self.connection.request('delete', '/lol-lobby/v2/lobby/matchmaking/search')
+                self.api.quit_matchmaking()
             sleep(1)
 
     def accept_match(self) -> None:
         """Accepts the Ready Check"""
-        self.log.info("Accepting match")
-        self.connection.request('post', '/lol-matchmaking/v1/ready-check/accept')
+        try:
+            self.log.info("Accepting match")
+            self.api.accept_match()
+        except Exception as e:
+            self.log.warning(f"Could not accept match: {str(e)}")
 
     def game_lobby(self) -> None:
         """Handles the Champ Select Lobby"""
         self.log.info("Lobby opened, picking champ")
-        r = self.connection.request('get', '/lol-champ-select/v1/session')
+        r = self.api.make_get_request('/lol-champ-select/v1/session')
         if r.status_code != 200:
             return
         cs = r.json()
 
-        r2 = self.connection.request('get', '/lol-lobby-team-builder/champ-select/v1/pickable-champion-ids')
+        r2 = self.api.make_get_request('/lol-lobby-team-builder/champ-select/v1/pickable-champion-ids')
         if r2.status_code != 200:
             return
         f2p = r2.json()
@@ -230,24 +228,24 @@ class Client:
                             f2p_index += 1
                         url = '/lol-champ-select/v1/session/actions/{}'.format(action['id'])
                         data = {'championId': champion_id}
-                        self.connection.request('patch', url, data=data)
+                        self.api.make_patch_request(url, body=data)
                     else:  # champ selected, lock in
                         self.log.debug("Lobby State: {}. Time Left in Lobby: {}s. Action: Locking in champ".format(lobby_state, lobby_time_left))
                         url = '/lol-champ-select/v1/session/actions/{}'.format(action['id'])
                         data = {'championId': action['championId']}
-                        self.connection.request('post', url + '/complete', data=data)
+                        self.api.make_post_request(url + '/complete', body=data)
 
                         # Ask for mid
                         if not requested:
                             sleep(1)
                             try:
-                                self.chat(random.choice(self.dialog))
+                                self.api.send_chat_message(random.choice(self.dialog))
                             except IndexError:
                                 pass
                             requested = True
                 else:
                     self.log.debug("Lobby State: {}. Time Left in Lobby: {}s. Action: Waiting".format(lobby_state, lobby_time_left))
-                r = self.connection.request('get', '/lol-champ-select/v1/session')
+                r = self.api.make_get_request('/lol-champ-select/v1/session')
                 if r.status_code != 200:
                     self.log.info('Lobby closed')
                     return
@@ -258,10 +256,11 @@ class Client:
         """Attempts to reconnect to an ongoing League of Legends match"""
         self.log.info("Reconnecting to game")
         for i in range(3):
-            r = self.connection.request('post', '/lol-gameflow/v1/reconnect')
-            if r.status_code == 204:
+            try:
+                self.api.game_reconnect()
                 return
-            sleep(2)
+            except:
+                sleep(2)
         self.log.warning('Could not reconnect to game')
 
     def wait_for_stats(self) -> None:
@@ -278,14 +277,14 @@ class Client:
         self.log.info("Honoring teammates and accepting rewards")
         sleep(3)
         try:
-            utils.click(Client.POPUP_SEND_EMAIL_X_RATIO, utils.LEAGUE_CLIENT_WINNAME, 2)
+            proc.click(Client.POPUP_SEND_EMAIL_X_RATIO, proc.LEAGUE_CLIENT_WINNAME, 2)
             self.honor_player()
-            utils.click(Client.POPUP_SEND_EMAIL_X_RATIO, utils.LEAGUE_CLIENT_WINNAME, 2)
+            proc.click(Client.POPUP_SEND_EMAIL_X_RATIO, proc.LEAGUE_CLIENT_WINNAME, 2)
             for i in range(3):
-                utils.click(Client.POST_GAME_SELECT_CHAMP_RATIO, utils.LEAGUE_CLIENT_WINNAME, 1)
-                utils.click(Client.POST_GAME_OK_RATIO, utils.LEAGUE_CLIENT_WINNAME, 1)
-            utils.click(Client.POPUP_SEND_EMAIL_X_RATIO, utils.LEAGUE_CLIENT_WINNAME, 1)
-        except (utils.WindowNotFound, pyautogui.FailSafeException):
+                proc.click(Client.POST_GAME_SELECT_CHAMP_RATIO, proc.LEAGUE_CLIENT_WINNAME, 1)
+                proc.click(Client.POST_GAME_OK_RATIO, proc.LEAGUE_CLIENT_WINNAME, 1)
+            proc.click(Client.POPUP_SEND_EMAIL_X_RATIO, proc.LEAGUE_CLIENT_WINNAME, 1)
+        except (window.WindowNotFound, pyautogui.FailSafeException):
             sleep(3)
 
     def end_of_game(self) -> None:
@@ -296,7 +295,7 @@ class Client:
             if self.get_phase() != 'EndOfGame':
                 return
             if not posted:
-                self.connection.request('post', '/lol-lobby/v2/play-again')
+                self.api.play_again()
             else:
                 self.create_lobby(self.lobby)
             posted = not posted
@@ -304,11 +303,11 @@ class Client:
         raise ClientError("Could not exit play-again screen")
 
     def account_leveled(self) -> bool:
-        """Checks if account has reached the constants.MAX_LEVEL (default 30)"""
-        r = self.connection.request('get', '/lol-chat/v1/me')
+        """Checks if account has reached the config.MAX_LEVEL (default 30)"""
+        r = self.api.make_get_request('/lol-chat/v1/me')
         if r.status_code == 200:
             self.account.level = int(r.json()['lol']['level'])
-            if self.account.level < self.max_level:
+            if self.account.level < 400:
                 self.log.debug("Account Level: {}.".format(self.account.level))
                 return False
             else:
@@ -318,7 +317,7 @@ class Client:
     def check_patch(self) -> None:
         """Checks if the League Client is patching and waits till it is finished"""
         self.log.info("Checking for Client Updates")
-        r = self.connection.request('get', '/patcher/v1/products/league_of_legends/state')
+        r = self.api.make_get_request('/patcher/v1/products/league_of_legends/state')
         if r.status_code != 200:
             return
         logged = False
@@ -327,7 +326,7 @@ class Client:
                 self.log.info("Client is patching...")
                 logged = True
             sleep(3)
-            r = self.connection.request('get', '/patcher/v1/products/league_of_legends/state')
+            r = self.api.make_get_request('/patcher/v1/products/league_of_legends/state')
             self.log.debug('Status Code: {}, Percent Patched: {}%'.format(r.status_code, r.json()['percentPatched']))
             self.log.debug(r.json())
         self.log.info("Client is up to date")
@@ -335,43 +334,22 @@ class Client:
     def honor_player(self) -> None:
         """Honors a player in the post game lobby"""
         for i in range(3):
-            r = self.connection.request('get', '/lol-honor-v2/v1/ballot')
+            r = self.api.make_get_request('/lol-honor-v2/v1/ballot')
             if r.status_code == 200:
                 players = r.json()['eligibleAllies']
                 index = random.randint(0, len(players)-1)
-                self.connection.request('post', '/lol-honor-v2/v1/honor-player', data={"summonerId": players[index]['summonerId']})
+                self.api.make_post_request('/lol-honor-v2/v1/honor-player', body={"summonerId": players[index]['summonerId']})
                 self.log.debug("Honor Success: Player {}. Champ: {}. Summoner: {}. ID: {}".format(index+1, players[index]['championName'], players[index]['summonerName'], players[index]['summonerId']))
                 sleep(2)
                 return
             sleep(2)
         self.log.warning('Honor Failure. Player -1, Champ: NULL. Summoner: NULL. ID: -1')
-        self.connection.request('post', '/lol-honor-v2/v1/honor-player', data={"summonerId": 0})  # will clear honor screen
-
-    def chat(self, msg: str) -> None:
-        """Sends a message to the chat window"""
-        chat_id = ''
-        r = self.connection.request('get', '/lol-chat/v1/conversations')
-        if r.status_code != 200:
-            self.log.warning("{} chat attempt failed. Could not reach endpoint".format(inspect.stack()[1][3]))
-            return
-        for convo in r.json():
-            if convo['gameName'] != '' and convo['gameTag'] != '':
-                continue
-            chat_id = convo['id']
-        if chat_id == '':
-            self.log.warning('{} chat attempt failed. Could not send message. Chat ID is Null'.format(inspect.stack()[1][3]))
-            return
-        data = {"body": msg}
-        r = self.connection.request('post', '/lol-chat/v1/conversations/{}/messages'.format(chat_id), data=data)
-        if r.status_code != 200:
-            self.log.warning('Could not send message. HTTP STATUS: {} - {}, Caller: {}'.format(r.status_code, r.json(), inspect.stack()[1][3]))
-        else:
-            self.log.debug("Message success. Msg: {}. Caller: {}".format(msg, inspect.stack()[1][3]))
+        self.api.make_post_request('/lol-honor-v2/v1/honor-player', body={"summonerId": 0})  # will clear honor screen
 
     def set_game_config(self) -> None:
         """Overwrites the League of Legends game config"""
         self.log.info("Overwriting game configs")
-        path = self.config.get_data('league_config')
+        path = self.config['league_dir']
         folder = os.path.abspath(os.path.join(path, os.pardir))
         for filename in os.listdir(folder):
             file_path = os.path.join(folder, filename)
@@ -380,4 +358,13 @@ class Client:
                     os.unlink(file_path)
             except Exception as e:
                 print('Failed to delete %s. Reason: %s' % (file_path, e))
-        shutil.copy(utils.resource_path(Constants.GAME_CFG), path)
+        shutil.copy(proc.resource_path(config.GAME_CFG), path)
+
+    def print_ascii(self) -> None:
+        """Prints some ascii art"""
+        print("""\n\n            
+                    ──────▄▌▐▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▌
+                    ───▄▄██▌█ BEEP BEEP
+                    ▄▄▄▌▐██▌█ -15 LP DELIVERY
+                    ███████▌█▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▌
+                    ▀(⊙)▀▀▀▀▀▀▀(⊙)(⊙)▀▀▀▀▀▀▀▀▀▀(⊙)\n\n\t\t\tLoL Bot\n\n""")

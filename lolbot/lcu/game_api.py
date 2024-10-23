@@ -19,7 +19,7 @@ class GameAPIError(Exception):
 def is_connected() -> bool:
     """Check if getting response from game server"""
     try:
-        response = requests.get('https://127.0.0.1:2999/liveclientdata/allgamedata', timeout=10, verify=False)
+        response = requests.get(GAME_SERVER_URL, timeout=10, verify=False)
         response.raise_for_status()
         return True
     except requests.RequestException as e:
@@ -50,6 +50,22 @@ def get_game_time() -> int:
         raise e
 
 
+def get_formatted_time() -> str:
+    """Converts League of Legends game time to minute:seconds format"""
+    seconds = int(get_game_time())
+    try:
+        if len(str(int(seconds % 60))) == 1:
+            return str(int(seconds / 60)) + ":0" + str(int(seconds % 60))
+        else:
+            return str(int(seconds / 60)) + ":" + str(int(seconds % 60))
+    except ValueError:
+        return "XX:XX"
+
+
+def get_champ() -> str:
+    return ""
+
+
 def is_dead() -> bool:
     """Returns whether player is currently dead"""
     try:
@@ -69,12 +85,3 @@ def is_dead() -> bool:
         raise e
 
 
-def close_game() -> None:
-    """Kills the game process"""
-    for proc in psutil.process_iter([GAME_PROCESS_NAME]):
-        try:
-            if proc.info['name'].lower() == GAME_PROCESS_NAME.lower():
-                proc.terminate()
-                proc.wait(timeout=10)
-        except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
-            pass
