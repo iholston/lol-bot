@@ -43,6 +43,7 @@ class GameError(Exception):
 def play_game() -> None:
     """Plays a single game of League of Legends, takes actions based on game time"""
     game_errors = 0
+    logged = False
     try:
         wait_for_game_window()
         wait_for_connection()
@@ -52,12 +53,18 @@ def play_game() -> None:
                 continue
             game_time = api.get_game_time()
             if game_time < LOADING_SCREEN_TIME:
+                log.info("Loading Screen. Waiting for game to start")
                 loading_screen()
             elif game_time < MINION_CLASH_TIME:
+                log.info("Game Start. Waiting for minions")
                 game_start()
-            elif game_time < 630:  # Before first tower is taken
+            elif game_time < FIRST_TOWER_TIME:
+                if not logged:
+                    log.info("In Game. Destroying enemy nexus")
                 play(MINI_MAP_CENTER_MID, MINI_MAP_UNDER_TURRET, 20)
             elif game_time < MAX_GAME_TIME:
+                if not logged:
+                    log.info("In Game. Destroying enemy nexus")
                 play(MINI_MAP_ENEMY_NEXUS, MINI_MAP_CENTER_MID, 35)
             else:
                 raise GameError("Game has exceeded the max time limit")
@@ -68,7 +75,7 @@ def play_game() -> None:
     except api.GameAPIError as e:
         game_errors += 1
         if game_errors == MAX_ERRORS:
-            log.error(f"Max Game Error reached. {e}")
+            log.error(f"Max Game Errors reached. {e}")
             proc.close_game()
             sleep(30)
     except (WindowNotFound, pyautogui.FailSafeException):
@@ -98,7 +105,6 @@ def wait_for_connection() -> None:
 
 def loading_screen() -> None:
     """Loop that waits for loading screen to end"""
-    log.info("In loading screen. Waiting for game to start")
     start = datetime.now()
     while api.get_game_time() < LOADING_SCREEN_TIME:
         sleep(2)
@@ -109,7 +115,6 @@ def loading_screen() -> None:
 
 def game_start() -> None:
     """Buys starter items and waits for minions to clash (minions clash at 90 seconds)"""
-    log.info("Game start. Waiting for minions")
     sleep(10)
     shop()
     keypress('y', GAME_WINDOW_NAME)  # lock screen
@@ -119,7 +124,6 @@ def game_start() -> None:
     while api.get_game_time() < MINION_CLASH_TIME:
         right_click(MINI_MAP_UNDER_TURRET, GAME_WINDOW_NAME, 2)  # to prevent afk warning popup
         left_click(AFK_OK_BUTTON, GAME_WINDOW_NAME)
-    log.info("Minions clashed. Entering Game Loop")
 
 
 def play(attack: tuple, retreat: tuple, time_to_lane: int) -> None:

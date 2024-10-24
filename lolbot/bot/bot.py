@@ -56,14 +56,14 @@ class Bot:
     def run(self, message_queue) -> None:
         """Main loop, gets an account, launches league, monitors account level, and repeats."""
         logger.MultiProcessLogHandler(message_queue).set_logs()
-        self.print_ascii()
         self.api.update_auth_timer()
+        self.print_ascii()
+        # self.wait_for_patching()
+        self.set_game_config()
         while True:
             try:
                 #account = account.get_unmaxxed_account(self.max_level)
                 #launcher.open_league_with_account(account['username'], account['password'])
-                #self.wait_for_patching()
-                self.set_game_config()
                 self.leveling_loop()
                 try:
                     pass
@@ -143,7 +143,11 @@ class Bot:
     def start_matchmaking(self) -> None:
         """Starts matchmaking for expected game mode, will also wait out dodge timers."""
         # Create lobby
-        log.info(f"Creating lobby with lobby_id: {self.lobby}")
+        lobby_name = ""
+        for lobby, lid in config.LOBBIES.items():
+            if lid == self.lobby:
+                lobby_name = lobby + " "
+        log.info(f"Creating {lobby_name}Lobby")
         try:
             self.api.create_lobby(self.lobby)
             sleep(3)
@@ -167,9 +171,11 @@ class Bot:
         except LCUError:
             return
 
+        # TODO when queue times get too high switch to real person lobby and then back
+
     def queue(self) -> None:
         """Waits until the League Client Phase changes to something other than 'Matchmaking'."""
-        log.info("In queue. Waiting for match")
+        log.info("In Queue. Waiting for Ready Check...")
         start = datetime.now()
         while True:
             try:
@@ -184,21 +190,21 @@ class Bot:
     def accept_match(self) -> None:
         """Accepts the Ready Check."""
         try:
-            log.info("Accepting match")
+            if self.prev_phase != "ReadyCheck":
+                log.info("Accepting match")
             self.api.accept_match()
         except LCUError:
             pass
 
     def champ_select(self) -> None:
         """Handles the Champ Select Lobby."""
-        log.info("Lobby opened, picking champ")
+        log.info("Champ Select. Picking champ")
         champ_index = -1
         while True:
             try:
                 data = self.api.get_champ_select_data()
                 champ_list = self.champs + self.api.get_available_champion_ids()
             except LCUError:
-                log.info("Lobby closed")
                 return
             try:
                 for action in data['actions'][0]:
