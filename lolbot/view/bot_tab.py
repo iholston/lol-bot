@@ -12,7 +12,7 @@ import dearpygui.dearpygui as dpg
 
 from lolbot.common import config, proc
 from lolbot.lcu import lcu_api, game_api
-from lolbot.bot.client import Client
+from lolbot.bot.bot import Bot
 
 
 class BotTab:
@@ -65,7 +65,8 @@ class BotTab:
                 return
             self.message_queue.put("Clear")
             self.start_time = time.time()
-            self.bot_thread = multiprocessing.Process(target=Client, args=(self.message_queue, self.games_played, self.bot_errors,))
+            bot = Bot(self.message_queue)
+            self.bot_thread = multiprocessing.Process(target=bot.run())
             self.bot_thread.start()
             dpg.configure_item("StartButton", label="Quit Bot")
         else:
@@ -108,27 +109,29 @@ class BotTab:
             account = self.api.get_display_name()
             level = self.api.get_summoner_level()
             phase = self.api.get_phase()
-            patch = self.api.get_patch()
 
             msg = f"Accnt: {account}\n"
-            msg += f"Level: {level}\n"
             if phase == "None":
                 msg += "Phase: In Main Menu\n"
-                msg += f"Patch: {patch}"
             elif phase == "Matchmaking":
                 msg += "Phase: In Queue\n"
-                msg += f"Patch: {patch}"
             elif phase == "Lobby":
-                phase = "In Lobby"
+                lobby_id = self.api.get_lobby_id()
+                for lobby, id in config.LOBBIES.items():
+                    if id == lobby_id:
+                        phase = lobby + " Lobby"
                 msg += f"Phase: {phase}\n"
-                msg += f"Patch: {patch}"
-            if phase == "InProgress":
+            elif phase == "InProgress":
                 msg += "Phase: In Game\n"
+            else:
+                msg += f"Phase: {phase}"
+            msg += f"Level: {level}\n"
+            if phase == "InProgress":
                 msg += f"Time : {game_api.get_formatted_time()}"
                 msg += f"Champ: {game_api.get_champ()}"
             else:
-                msg += f"Phase: {phase}\n"
-                msg += f"Patch: {patch}"
+                msg += "Time : -\n"
+                msg += "Champ: -"
             dpg.configure_item("Info", default_value=msg)
         except:
             pass

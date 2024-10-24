@@ -14,8 +14,8 @@ LCU_TOKEN_KEY = "--remoting-auth-token="
 PORT_REGEX = re.compile(r"--app-port=(\d+)")
 TOKEN_REGEX = re.compile(r"--remoting-auth-token=(\S+)")
 
-PROCESS_NAME = "LeagueClientUx.exe"
-
+LEAGUE_PROCESS = "LeagueClientUx.exe"
+RIOT_CLIENT_PROCESS = "Riot Client.exe"
 
 @dataclass
 class CommandLineOutput:
@@ -26,13 +26,16 @@ class CommandLineOutput:
 
 def get_commandline() -> CommandLineOutput:
     """
-    Retrieves the command line of the LeagueClientUx.exe process and
+    Retrieves the command line of the LeagueClientUx.exe or Riot Client process and
     returns the relevant information
     """
     try:
         # Iterate over all running processes
         for proc in psutil.process_iter(['name', 'cmdline']):
-            if proc.info['name'] == PROCESS_NAME:
+            if proc.info['name'] == LEAGUE_PROCESS:
+                cmdline = " ".join(proc.info['cmdline'])
+                return match_stdout(cmdline)
+            elif proc.info['name'] == RIOT_CLIENT_PROCESS and PORT_REGEX.search(str(proc.info['cmdline'])):
                 cmdline = " ".join(proc.info['cmdline'])
                 return match_stdout(cmdline)
         return CommandLineOutput()
