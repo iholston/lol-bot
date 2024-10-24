@@ -1,13 +1,11 @@
 """
 Controls the League Client and continually starts League of Legends games
 """
-
 import os
 import shutil
 import logging
 import random
 import traceback
-import inspect
 from time import sleep
 from datetime import datetime, timedelta
 
@@ -41,8 +39,7 @@ class BotError(Exception):
 
 class Bot:
     """Handles the League Client and all tasks needed to start a new game."""
-    def __init__(self, message_queue) -> None:
-        logger.MultiProcessLogHandler(message_queue).set_logs()
+    def __init__(self) -> None:
         self.api = LCUApi()
         self.config = config.load_config()
         self.league_dir = self.config['league_dir']
@@ -56,15 +53,16 @@ class Bot:
         self.phase_errors = 0
         self.game_errors = 0
 
-    def run(self) -> None:
+    def run(self, message_queue) -> None:
         """Main loop, gets an account, launches league, monitors account level, and repeats."""
+        logger.MultiProcessLogHandler(message_queue).set_logs()
         self.print_ascii()
         self.api.update_auth_timer()
         while True:
             try:
                 #account = account.get_unmaxxed_account(self.max_level)
                 #launcher.open_league_with_account(account['username'], account['password'])
-                self.wait_for_patching()
+                #self.wait_for_patching()
                 self.set_game_config()
                 self.leveling_loop()
                 try:
@@ -156,14 +154,16 @@ class Bot:
         log.info("Starting queue")
         try:
             self.api.start_matchmaking()
+            sleep(1)
         except LCUError:
             return
 
         # Wait out dodge timer
         try:
             time_remaining = self.api.get_dodge_timer()
-            log.info(f"Dodge Timer. Time Remaining: {time_remaining}")
-            sleep(time_remaining)
+            if time_remaining > 0:
+                log.info(f"Dodge Timer. Time Remaining: {time_remaining}")
+                sleep(time_remaining)
         except LCUError:
             return
 

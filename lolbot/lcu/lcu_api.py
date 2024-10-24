@@ -173,10 +173,8 @@ class LCUApi:
         url = f"{self.endpoint}/lol-lobby/v2/lobby"
         try:
             response = self.client.post(url, json={'queueId': lobby_id})
-            print(response.json())
             response.raise_for_status()
         except requests.RequestException as e:
-            print(e)
             raise LCUError(f"Failed to create lobby with id {lobby_id}: {e}")
 
     def start_matchmaking(self) -> None:
@@ -270,9 +268,8 @@ class LCUApi:
         try:
             response = self.client.get(url)
             response.raise_for_status()
-            if not response.json()['isUpToDate']:
-                return True
-            return False
+            print(response.json())
+            return not response.json()['isUpToDate']
         except requests.RequestException as e:
             return False
 

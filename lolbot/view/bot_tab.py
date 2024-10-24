@@ -65,8 +65,9 @@ class BotTab:
                 return
             self.message_queue.put("Clear")
             self.start_time = time.time()
-            bot = Bot(self.message_queue)
-            self.bot_thread = multiprocessing.Process(target=bot.run())
+            bot = Bot()
+
+            self.bot_thread = multiprocessing.Process(target=bot.run, args=(self.message_queue,))
             self.bot_thread.start()
             dpg.configure_item("StartButton", label="Quit Bot")
         else:

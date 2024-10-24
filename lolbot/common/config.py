@@ -48,11 +48,14 @@ def load_config() -> dict:
             json.dump(default_config, configfile, indent=4)
         return default_config
     else:
-        with open(CONFIG_PATH, 'r') as configfile:
-            return json.load(configfile)
+        try:
+            with open(CONFIG_PATH, 'r') as configfile:
+                return json.load(configfile)
+        except json.JSONDecodeError:
+            return default_config
 
 
 def save_config(config) -> None:
     """Save the configuration to disk"""
     with open(CONFIG_PATH, 'w') as configfile:
-        json.dump(config, configfile, index=4)
+        json.dump(config, configfile, indent=4)
