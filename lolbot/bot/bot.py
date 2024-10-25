@@ -121,7 +121,7 @@ class Bot:
                     self.pre_end_of_game()
                 case 'EndOfGame':
                     self.end_of_game()
-                    games += 1
+                    games.value += 1
                 case _:
                     raise BotError("Unknown phase. {}".format(self.phase))
 

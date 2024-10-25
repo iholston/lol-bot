@@ -12,6 +12,7 @@ import dearpygui.dearpygui as dpg
 
 from lolbot.common import config, proc
 from lolbot.lcu.lcu_api import LCUApi, LCUError
+import lolbot.lcu.game_api as game_api
 from lolbot.bot.bot import Bot
 
 
@@ -124,7 +125,7 @@ class BotTab:
             elif phase == "InProgress":
                 msg += "Phase: In Game\n"
             else:
-                msg += f"Phase: {phase}"
+                msg += f"Phase: {phase}\n"
             msg += f"Level: {level}\n"
             if phase == "InProgress":
                 msg += f"Time : {game_api.get_formatted_time()}"
@@ -152,8 +153,11 @@ class BotTab:
             else:
                 msg += f"RunTime: {hours:02}:{minutes:02}:{seconds:02}\n"
             msg += f"Games  : {self.games_played.value}\n"
-            msg += f"Errors : {self.bot_errors.value}"
-            msg += f"Action : {self.output_queue[-1]}"
+            msg += f"Errors : {self.bot_errors.value}\n"
+            if len(self.output_queue) > 0:
+                msg += f"Action : {self.output_queue[-1].split(']')[-1].strip()}"
+            else:
+                msg += "Action : -"
         dpg.configure_item("Bot", default_value=msg)
 
     def update_output_panel(self):
