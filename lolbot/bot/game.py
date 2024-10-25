@@ -52,19 +52,16 @@ def play_game() -> None:
                 sleep(2)
                 continue
             game_time = api.get_game_time()
+            if game_time > MINION_CLASH_TIME and not logged:
+                log.info("Destroying Enemy Nexus")
+                logged = True
             if game_time < LOADING_SCREEN_TIME:
-                log.info("Loading Screen. Waiting for game to start")
                 loading_screen()
             elif game_time < MINION_CLASH_TIME:
-                log.info("Game Start. Waiting for minions")
                 game_start()
             elif game_time < FIRST_TOWER_TIME:
-                if not logged:
-                    log.info("In Game. Destroying enemy nexus")
                 play(MINI_MAP_CENTER_MID, MINI_MAP_UNDER_TURRET, 20)
             elif game_time < MAX_GAME_TIME:
-                if not logged:
-                    log.info("In Game. Destroying enemy nexus")
                 play(MINI_MAP_ENEMY_NEXUS, MINI_MAP_CENTER_MID, 35)
             else:
                 raise GameError("Game has exceeded the max time limit")
@@ -105,6 +102,7 @@ def wait_for_connection() -> None:
 
 def loading_screen() -> None:
     """Loop that waits for loading screen to end"""
+    log.info("Waiting for game to start")
     start = datetime.now()
     while api.get_game_time() < LOADING_SCREEN_TIME:
         sleep(2)
@@ -115,6 +113,7 @@ def loading_screen() -> None:
 
 def game_start() -> None:
     """Buys starter items and waits for minions to clash (minions clash at 90 seconds)"""
+    log.info("Buying items, heading mid, and waiting for minions")
     sleep(10)
     shop()
     keypress('y', GAME_WINDOW_NAME)  # lock screen

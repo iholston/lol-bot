@@ -57,6 +57,22 @@ class LCUApi:
         except Exception as e:
             raise e
 
+    def make_delete_request(self, url, body):
+        url = f"{self.endpoint}{url}"
+        try:
+            response = self.client.delete(url, json=body)
+            return response
+        except Exception as e:
+            raise e
+
+    def make_put_request(self, url, body):
+        url = f"{self.endpoint}{url}"
+        try:
+            response = self.client.put(url, json=body)
+            return response
+        except Exception as e:
+            raise e
+
     def get_display_name(self) -> str:
         """Gets display name of logged in account"""
         url = f"{self.endpoint}/lol-summoner/v1/current-summoner"
@@ -140,13 +156,35 @@ class LCUApi:
             raise LCUError(f"Error getting dodge timer: {e}")
 
     def login(self, username: str, password: str) -> None:
-        # body = {"clientId": "riot-client", 'trustLevels': ['always_trusted']}
-        # r = self.connection.request("post", "/rso-auth/v2/authorizations", data=body)
-        # if r.status_code != 200:
-        #     raise LauncherError("Failed Authorization Request. Response: {}".format(r.status_code))
-        # body = {"username": self.username, "password": self.password, "persistLogin": False}
-        # r = self.connection.request("put", '/rso-auth/v1/session/credentials', data=body)
-        return
+        """Logs into the Riot Client"""
+        url = f"{self.endpoint}/rso-auth/v2/authorizations"
+        body = {"clientId": "riot-client", 'trustLevels': ['always_trusted']}
+        try:
+            response = self.client.post(url, json=body)
+            response.raise_for_status()
+            print(response.json())
+        except requests.RequestException as e:
+            print(f"1{e}")
+            raise LCUError(f"Error in first part of authorization: {e}")
+
+        url = f"{self.endpoint}/rso-auth/v1/session/credentials"
+        body = {"username": username, "password": password, "persistLogin": False}
+        try:
+            response = self.client.put(url, json=body)
+            response.raise_for_status()
+            print(response.json())
+        except requests.RequestException as e:
+            print(e)
+            raise LCUError(f"Invalid Username or Password: {e}")
+
+    def launch_league_from_rc(self) -> None:
+        """Ensures that the account does not stay signed in after client exits"""
+        url = f"{self.endpoint}/product-launcher/v1/products/league_of_legends/patchlines/live"
+        try:
+            response = self.client.post(url)
+            response.raise_for_status()
+        except requests.RequestException as e:
+            raise LCUError(f"Failed to launch league from Riot Client: {e}")
 
     def logout_on_close(self) -> None:
         """Ensures that the account does not stay signed in after client exits"""

@@ -24,32 +24,31 @@ class LaunchError(Exception):
 def open_league_with_account(username: str, password: str) -> None:
     """Ensures that League is open and logged into a specific account"""
     api = LCUApi()
+    api.update_auth()
     login_attempted = False
     for i in range(MAX_RETRIES):
-        if proc.is_league_running() and verify_account(api, username):
-            # League is running and account is logged in
+        if proc.is_league_running() and verify_account(api, username):  # League is running and account is logged in
             return
-        elif proc.is_league_running():
-            # League is running and wrong account is logged in
-            api.logout_on_close()
+        elif proc.is_league_running():  # League is running and wrong account is logged in
+            try:
+                api.logout_on_close()
+            except LCUError:
+                pass
             proc.close_all_processes()
             sleep(10)
             continue
-        elif proc.is_rc_running() and api.access_token_exists():
-            # Riot Client is open and a user is logged in
+        elif proc.is_rc_running() and api.access_token_exists():  # Riot Client is open and a user is logged in
             launch_league()
-        elif proc.is_league_running():
-            # Riot Client is open and waiting for login
+        elif proc.is_rc_running():  # Riot Client is open and waiting for login
             login_attempted = True
             log.info("Logging into Riot Client")
             try:
                 api.login(username, password)
+                sleep(5)
+                api.launch_league_from_rc()
             except LCUError:
-                sleep(2)
                 continue
-            launch_league()
-        else:
-            # Nothing is running
+        else:  # Nothing is running
             launch_league()
         sleep(2)
 
@@ -63,7 +62,7 @@ def launch_league():
     """Launches League of Legends from Riot Client."""
     log.info('Launching League of Legends')
     c = config.load_config()
-    riot_client_dir = Path(c['league_dir']).parent.absolute().parent.absolute()
+    riot_client_dir = Path(c['league_dir']).parent.absolute()
     riot_client_path = str(riot_client_dir) + "/Riot Client/RiotClientServices"
     subprocess.Popen([riot_client_path, "--launch-product=league_of_legends", "--launch-patchline=live"])
     sleep(3)

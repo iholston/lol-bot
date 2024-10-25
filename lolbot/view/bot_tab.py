@@ -11,19 +11,18 @@ import datetime
 import dearpygui.dearpygui as dpg
 
 from lolbot.common import config, proc
-from lolbot.lcu import lcu_api, game_api
+from lolbot.lcu.lcu_api import LCUApi, LCUError
 from lolbot.bot.bot import Bot
 
 
 class BotTab:
     """Class that displays the BotTab and handles bot controls/output"""
 
-    def __init__(self):
+    def __init__(self, api: LCUApi):
         self.message_queue = multiprocessing.Queue()
         self.games_played = multiprocessing.Value('i', 0)
         self.bot_errors = multiprocessing.Value('i', 0)
-        self.api = lcu_api.LCUApi()
-        self.api.update_auth_timer()
+        self.api = api
         self.output_queue = []
         self.endpoint = None
         self.bot_thread = None
@@ -67,7 +66,7 @@ class BotTab:
             self.start_time = time.time()
             bot = Bot()
 
-            self.bot_thread = multiprocessing.Process(target=bot.run, args=(self.message_queue,))
+            self.bot_thread = multiprocessing.Process(target=bot.run, args=(self.message_queue, self.games_played, self.bot_errors))
             self.bot_thread.start()
             dpg.configure_item("StartButton", label="Quit Bot")
         else:
@@ -141,7 +140,7 @@ class BotTab:
         threading.Timer(.5, self.update_bot_panel).start()
         msg = ""
         if self.bot_thread is None:
-            msg += "Status : Ready\nRunTime: -\nGames  : -\nXP Gain: -\nErrors : -"
+            msg += ("Status : Ready\nRunTime: -\nGames  : -\nErrors : -\nAction : -")
         else:
             msg += "Status : Running\n"
             run_time = datetime.timedelta(seconds=(time.time() - self.start_time))
@@ -153,11 +152,8 @@ class BotTab:
             else:
                 msg += f"RunTime: {hours:02}:{minutes:02}:{seconds:02}\n"
             msg += f"Games  : {self.games_played.value}\n"
-            try:
-                msg += f"XP Gain: nah\n"
-            except:
-                msg += f"XP Gain: 0\n"
             msg += f"Errors : {self.bot_errors.value}"
+            msg += f"Action : {self.output_queue[-1]}"
         dpg.configure_item("Bot", default_value=msg)
 
     def update_output_panel(self):

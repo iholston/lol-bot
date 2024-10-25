@@ -7,6 +7,7 @@ import multiprocessing; multiprocessing.freeze_support()  # https://stackoverflo
 
 import dearpygui.dearpygui as dpg
 
+from lolbot.lcu.lcu_api import LCUApi, LCUError
 from lolbot.view.bot_tab import BotTab
 from lolbot.view.accounts_tab import AccountsTab
 from lolbot.view.config_tab import ConfigTab
@@ -24,12 +25,14 @@ class MainWindow:
         self.width = width
         self.height = height
         self.tab_bar = None
-        self.bot_tab = BotTab()
+        self.api = LCUApi()
+        self.bot_tab = BotTab(self.api)
         self.accounts_tab = AccountsTab()
         self.config_tab = ConfigTab()
-        self.https_tab = HTTPTab()
+        self.https_tab = HTTPTab(self.api)
         self.logs_tab = LogsTab()
         self.about_tab = AboutTab()
+        self.api.update_auth_timer()
 
     def show(self) -> None:
         """Renders view"""

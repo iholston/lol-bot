@@ -9,21 +9,21 @@ import subprocess
 import requests
 import dearpygui.dearpygui as dpg
 
-import lolbot.lcu.cmd as cmd
+from lolbot.lcu.lcu_api import LCUApi, LCUError
 
 
 class HTTPTab:
     """Class that displays the HTTPTab and sends custom HTTP requests to the LCU API"""
 
-    def __init__(self) -> None:
+    def __init__(self, api: LCUApi) -> None:
         self.id = -1
-        self.methods = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE']
+        self.api = api
 
     def create_tab(self, parent: int) -> None:
         """Creates the HTTPTab"""
         with dpg.tab(label="HTTP", parent=parent) as self.id:
             dpg.add_text("Method:")
-            dpg.add_combo(tag='Method', items=self.methods, default_value='GET', width=569)
+            dpg.add_combo(tag='Method', items=['GET', 'POST', 'PUT', 'PATCH', 'DELETE'], default_value='GET', width=569)
             dpg.add_text("URL:")
             dpg.add_input_text(tag='URL', width=568)
             dpg.add_text("Body:")
@@ -69,21 +69,20 @@ class HTTPTab:
     def request(self) -> None:
         """Sends custom HTTP request to LCU API"""
         try:
-            endpoint = cmd.get_commandline().auth_url
-            url = f"{endpoint}{dpg.get_value('URL').strip()}"
-            body = dpg.get_value('Body').strip()
             response = None
+            url = dpg.get_value('URL').strip()
+            body = dpg.get_value('Body').strip()
             match dpg.get_value('Method').lower():
                 case 'get':
-                    response = requests.get(url)
+                    response = self.api.make_get_request(url)
                 case 'post':
-                    response = requests.post(url, data=body)
+                    response = self.api.make_post_request(url, body)
                 case 'delete':
-                    response = requests.delete(url, data=body)
+                    response = self.api.make_delete_request(url, body)
                 case 'put':
-                    response = requests.put(url, data=body)
+                    response = self.api.make_put_request(url, body)
                 case 'patch':
-                    response = requests.patch(url, data=body)
+                    response = self.api.make_patch_request(url, body)
             dpg.configure_item('StatusOutput', label=response.status_code)
             dpg.configure_item('ResponseOutput', default_value=json.dumps(response.json(), indent=4))
         except Exception as e:

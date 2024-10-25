@@ -6,6 +6,7 @@ import shutil
 import logging
 import random
 import traceback
+import multiprocessing as mp
 from time import sleep
 from datetime import datetime, timedelta
 
@@ -53,7 +54,7 @@ class Bot:
         self.phase_errors = 0
         self.game_errors = 0
 
-    def run(self, message_queue) -> None:
+    def run(self, message_queue: mp.Queue, games: mp.Value, errors: mp.Value) -> None:
         """Main loop, gets an account, launches league, monitors account level, and repeats."""
         logger.MultiProcessLogHandler(message_queue).set_logs()
         self.api.update_auth_timer()
@@ -62,9 +63,10 @@ class Bot:
         self.set_game_config()
         while True:
             try:
+                errors.value = self.bot_errors
                 #account = account.get_unmaxxed_account(self.max_level)
                 #launcher.open_league_with_account(account['username'], account['password'])
-                self.leveling_loop()
+                self.leveling_loop(games)
                 try:
                     pass
                     # if account['username'] == self.api.get_display_name():
@@ -97,7 +99,7 @@ class Bot:
                 log.error("Unknown Error. Exiting")
                 return
 
-    def leveling_loop(self) -> None: 
+    def leveling_loop(self, games: mp.Value) -> None:
         """Loop that takes action based on the phase of the League Client, continuously starts games."""
         while not self.account_leveled():
             match self.get_phase():
@@ -119,11 +121,13 @@ class Bot:
                     self.pre_end_of_game()
                 case 'EndOfGame':
                     self.end_of_game()
+                    games += 1
                 case _:
                     raise BotError("Unknown phase. {}".format(self.phase))
 
     def get_phase(self) -> str:
         """Requests the League Client phase."""
+        err = None
         for i in range(15):
             try:
                 self.prev_phase = self.phase
@@ -137,8 +141,8 @@ class Bot:
                 sleep(1.5)
                 return self.phase
             except LCUError as e:
-                pass
-        raise BotError("Could not get phase")
+                err = e
+        raise BotError(f"Could not get phase: {err}")
 
     def start_matchmaking(self) -> None:
         """Starts matchmaking for expected game mode, will also wait out dodge timers."""
@@ -147,7 +151,7 @@ class Bot:
         for lobby, lid in config.LOBBIES.items():
             if lid == self.lobby:
                 lobby_name = lobby + " "
-        log.info(f"Creating {lobby_name}Lobby")
+        log.info(f"Creating {lobby_name.lower()}lobby")
         try:
             self.api.create_lobby(self.lobby)
             sleep(3)
@@ -175,7 +179,7 @@ class Bot:
 
     def queue(self) -> None:
         """Waits until the League Client Phase changes to something other than 'Matchmaking'."""
-        log.info("In Queue. Waiting for Ready Check...")
+        log.info("Waiting for Ready Check")
         start = datetime.now()
         while True:
             try:
@@ -191,14 +195,14 @@ class Bot:
         """Accepts the Ready Check."""
         try:
             if self.prev_phase != "ReadyCheck":
-                log.info("Accepting match")
+                log.info("Accepting Match")
             self.api.accept_match()
         except LCUError:
             pass
 
     def champ_select(self) -> None:
         """Handles the Champ Select Lobby."""
-        log.info("Champ Select. Picking champ")
+        log.info("Locking in champ")
         champ_index = -1
         while True:
             try:
@@ -268,14 +272,14 @@ class Bot:
                 self.api.honor_player(players[index]['summonerId'])
                 sleep(2)
                 return True
-            except LCUError:
-                pass
+            except LCUError as e:
+                log.warning(e)
         log.warning('Honor Failure')
         return False
 
     def end_of_game(self) -> None:
         """Transitions out of EndOfGame."""
-        log.info("Post game. Starting a new loop")
+        log.info("Getting back into queue")
         posted = False
         for i in range(15):
             try:
