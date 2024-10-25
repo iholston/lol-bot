@@ -1,3 +1,7 @@
+"""
+Utility functions for determining if a window exists.
+"""
+
 from win32gui import FindWindow, GetWindowRect
 
 CLIENT_WINDOW_NAME = "League of Legends"

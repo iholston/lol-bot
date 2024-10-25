@@ -1,5 +1,5 @@
 """
-View tab that displays information about the bot
+View tab that displays information about the bot.
 """
 
 import webbrowser
@@ -7,7 +7,7 @@ import requests
 
 import dearpygui.dearpygui as dpg
 
-VERSION = '2.4.0'
+VERSION = '3.0.0'
 
 
 class AboutTab:
@@ -48,9 +48,9 @@ class AboutTab:
 
         notes += """
 Due to the release of Vanguard, it is recommended to run the bot as a python 
-script. There has been a noticeable increase in accounts being banned since 
-Vanguard release. The bot is currently being ported to MacOS where there is 
-no Vanguard and ultimately running on MacOS is the best way to not get banned.
+script. There has been a distinct increase in accounts being banned on Windows 
+since Vanguard release. The bot is currently being ported to MacOS where there 
+is no Vanguard. Running on MacOS is the best way to not get banned.
 
 If you have any problems create an issue on the github repo.
 """

@@ -1,11 +1,10 @@
 """
 Handles all HTTP requests to the local game server,
-providing functions for interactive with various game endpoints
+providing functions for interacting with various game endpoints.
 """
 
 import json
 
-import psutil
 import requests
 
 GAME_SERVER_URL = 'https://127.0.0.1:2999/liveclientdata/allgamedata'
@@ -63,7 +62,20 @@ def get_formatted_time() -> str:
 
 
 def get_champ() -> str:
-    return ""
+    """Gets current champion being  played in game"""
+    try:
+        json_string = get_game_data()
+        data = json.loads(json_string)
+        for player in data['allPlayers']:
+            if player['summonerName'] == data['activePlayer']['summonerName']:
+                return player['championName']
+        return ""
+    except json.JSONDecodeError as e:
+        raise GameAPIError(f"Invalid JSON data: {e}")
+    except KeyError as e:
+        raise GameAPIError(f"Missing key in data: {e}")
+    except GameAPIError as e:
+        raise e
 
 
 def is_dead() -> bool:
@@ -83,5 +95,3 @@ def is_dead() -> bool:
         raise GameAPIError(f"Missing key in data: {e}")
     except GameAPIError as e:
         raise e
-
-

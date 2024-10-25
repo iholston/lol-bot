@@ -1,15 +1,14 @@
 """
-View tab that sends custom HTTP requests to LCU API
+View tab that sends custom HTTP requests to LCU API.
 """
 
 import webbrowser
 import json
 import subprocess
 
-import requests
 import dearpygui.dearpygui as dpg
 
-from lolbot.lcu.lcu_api import LCUApi, LCUError
+from lolbot.lcu.lcu_api import LCUApi
 
 
 class HTTPTab:

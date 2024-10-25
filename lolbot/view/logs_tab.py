@@ -1,5 +1,5 @@
 """
-View tab that displays logs in the /logs folder
+View tab that displays logs in the /logs folder.
 """
 
 import subprocess
@@ -20,7 +20,6 @@ class LogsTab:
         self.logs_group = None
 
     def create_tab(self, parent) -> None:
-        """Creates Log Tab"""
         with dpg.tab(label="Logs", parent=parent) as self.id:
             with dpg.window(label="Delete Files", modal=True, show=False, tag="DeleteFiles", pos=[115, 130]):
                 dpg.add_text("All files in the logs folder will be deleted")

@@ -1,5 +1,5 @@
 """
-Get league of legends auth url from process info
+Get league of legends auth url from process info.
 """
 
 import re
@@ -30,7 +30,6 @@ def get_commandline() -> CommandLineOutput:
     returns the relevant information
     """
     try:
-        # Iterate over all running processes
         for proc in psutil.process_iter(['name', 'cmdline']):
             if proc.info['name'] == LEAGUE_PROCESS:
                 cmdline = " ".join(proc.info['cmdline'])
@@ -52,5 +51,4 @@ def match_stdout(stdout: str) -> CommandLineOutput:
     token = token_match.group(1).replace(LCU_TOKEN_KEY, '').replace('"', '') if token_match else ""
 
     auth_url = f"https://riot:{token}@127.0.0.1:{port}"
-
     return CommandLineOutput(auth_url=auth_url, token=token, port=port)

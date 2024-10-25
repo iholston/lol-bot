@@ -1,15 +1,15 @@
 """
-Plays and through a single League of Legends match
+Game logic that plays and through a single League of Legends match.
 """
 
 import logging
 import random
 from datetime import datetime, timedelta
 
+import lolbot.lcu.game_api as api
 from lolbot.bot.controller import *
 from lolbot.bot.window import game_window_exists, WindowNotFound, GAME_WINDOW_NAME
-import lolbot.lcu.game_api as api
-import lolbot.common.proc as proc
+from lolbot.common import proc
 
 log = logging.getLogger(__name__)
 

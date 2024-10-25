@@ -1,5 +1,5 @@
 """
-View tab that sets configurations for the bot
+View tab that sets configurations for the bot.
 """
 
 import webbrowser
@@ -34,8 +34,8 @@ class ConfigTab:
                 lobby = int(self.config['lobby'])
                 if lobby < 870:
                     lobby += 40
-                dpg.add_combo(tag="GameMode", items=list(config.LOBBIES.keys()), default_value=list(config.LOBBIES.keys())[
-                    list(config.LOBBIES.values()).index(lobby)], width=380, callback=self.save_config)
+                dpg.add_combo(tag="GameMode", items=list(config.BOT_LOBBIES.keys()), default_value=list(config.BOT_LOBBIES.keys())[
+                    list(config.BOT_LOBBIES.values()).index(lobby)], width=380, callback=self.save_config)
             with dpg.group(horizontal=True):
                 dpg.add_input_text(default_value='Account Max Level', width=180, enabled=False)
                 dpg.add_input_int(tag="MaxLevel", default_value=self.config['max_level'], min_value=0, step=1, width=380, callback=self.save_config)
@@ -60,7 +60,7 @@ class ConfigTab:
     def save_config(self):
         if os.path.exists(dpg.get_value('LeaguePath')):
             self.config['league_dir'] = dpg.get_value('LeaguePath')
-        self.config['lobby'] = config.LOBBIES.get(dpg.get_value('GameMode'))
+        self.config['lobby'] = config.BOT_LOBBIES.get(dpg.get_value('GameMode'))
         self.config['max_level'] = dpg.get_value('MaxLevel')
         champs = dpg.get_value('Champs')
         self.config['champs'] = [int(s) for s in champs.split(',')]

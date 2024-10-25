@@ -1,13 +1,14 @@
 """
-Main window that displays all the tabs
+Main window that displays all the tabs.
 """
 
 import ctypes; ctypes.windll.shcore.SetProcessDpiAwareness(0)  # This must be set before importing pyautogui/dpg
 import multiprocessing; multiprocessing.freeze_support()  # https://stackoverflow.com/questions/24944558/pyinstaller-built-windows-exe-fails-with-multiprocessing
+import time
 
 import dearpygui.dearpygui as dpg
 
-from lolbot.lcu.lcu_api import LCUApi, LCUError
+from lolbot.lcu.lcu_api import LCUApi
 from lolbot.view.bot_tab import BotTab
 from lolbot.view.accounts_tab import AccountsTab
 from lolbot.view.config_tab import ConfigTab
@@ -55,7 +56,18 @@ class MainWindow:
         dpg.setup_dearpygui()
         dpg.show_viewport()
         dpg.set_primary_window('primary window', True)
-        dpg.set_exit_callback(self.bot_tab.stop_bot)
+        dpg.set_exit_callback(self.on_exit)
+        panel_update_time = time.time()
         while dpg.is_dearpygui_running():
+            current_time = time.time()
+            if current_time - panel_update_time >= 0.3:
+                self.bot_tab.update_bot_panel()
+                self.bot_tab.update_info_panel()
+                self.bot_tab.update_output_panel()
+                panel_update_time = current_time
             dpg.render_dearpygui_frame()
         dpg.destroy_context()
+
+    def on_exit(self):
+        self.api.stop_timer()
+        self.bot_tab.stop_bot()

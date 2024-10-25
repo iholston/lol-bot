@@ -1,5 +1,5 @@
 """
-Sets global logging state
+Sets global logging state.
 """
 
 import logging
@@ -31,11 +31,11 @@ class MultiProcessLogHandler(logging.Handler):
 
         filename = os.path.join(config.LOG_DIR, datetime.now().strftime('%d%m%Y_%H%M.log'))
         formatter = logging.Formatter(fmt='[%(asctime)s] [%(levelname)-7s] [%(funcName)-21s] %(message)s',datefmt='%d %b %Y %H:%M:%S')
-        logging.getLogger().setLevel(logging.DEBUG)
+        logging.getLogger().setLevel(logging.INFO)
 
         fh = RotatingFileHandler(filename=filename, maxBytes=1000000, backupCount=1)
         fh.setFormatter(formatter)
-        fh.setLevel(logging.DEBUG)
+        fh.setLevel(logging.INFO)
         logging.getLogger().addHandler(fh)
 
         ch = logging.StreamHandler(sys.stdout)

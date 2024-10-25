@@ -1,6 +1,7 @@
 """
-Handles multi-platform creating/writing configurations to json file
+Handles multi-platform creating/writing LoLBot's configurations to json file.
 """
+
 import os
 import json
 
@@ -18,7 +19,7 @@ ACCOUNT_PATH = os.path.join(CONFIG_DIR, 'accounts.json')
 
 GAME_CFG = 'lolbot/resources/game.cfg'
 
-LOBBIES = {
+ALL_LOBBIES = {
     'Draft Pick': 400,
     'Ranked Solo/Duo': 420,
     'Blind Pick': 430,
@@ -31,6 +32,12 @@ LOBBIES = {
     'Ranked TFT': 1100,
     'Hyper Roll TFT': 1130,
     'Double Up TFT': 1160
+}
+
+BOT_LOBBIES = {
+    'Intro Bots': 870,
+    'Beginner Bots': 880,
+    'Intermediate Bots': 890,
 }
 
 

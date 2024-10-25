@@ -1,13 +1,14 @@
 """
 Handles all HTTP request to the local LoL Client,
-providing functions for interacting with various LoL endpoints
+providing functions for interacting with various LoL endpoints.
 """
 import threading
 
 import requests
-
-import lolbot.lcu.cmd as cmd
 import urllib3
+
+from lolbot.lcu import cmd
+
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
@@ -24,6 +25,7 @@ class LCUApi:
         self.client.headers.update({'Accept': 'application/json'})
         self.client.timeout = 2
         self.client.trust_env = False
+        self.timer = None
         self.endpoint = cmd.get_commandline().auth_url
 
     def update_auth(self):
@@ -31,7 +33,12 @@ class LCUApi:
 
     def update_auth_timer(self, timer: int = 5):
         self.endpoint = cmd.get_commandline().auth_url
-        threading.Timer(timer, self.update_auth_timer).start()
+        self.timer = threading.Timer(timer, self.update_auth_timer)
+        self.timer.start()
+
+    def stop_timer(self):
+        self.timer.cancel()
+        self.timer = None
 
     def make_get_request(self, url):
         url = f"{self.endpoint}{url}"
@@ -91,7 +98,7 @@ class LCUApi:
             response.raise_for_status()
             return int(response.json()['summonerLevel'])
         except requests.RequestException as e:
-            raise LCUError(f"Error retrieving display name: {e}")
+            raise LCUError(f"Error retrieving summoner level: {e}")
 
     def get_patch(self) -> str:
         """Gets current patch"""
@@ -153,7 +160,7 @@ class LCUApi:
             response.raise_for_status()
             return int(response.json()['estimatedQueueTime'])
         except requests.RequestException as e:
-            raise LCUError(f"Error getting dodge timer: {e}")
+            raise LCUError(f"Error retrieving estimated queue time: {e}")
 
     def login(self, username: str, password: str) -> None:
         """Logs into the Riot Client"""
@@ -165,7 +172,7 @@ class LCUApi:
             print(response.json())
         except requests.RequestException as e:
             print(f"1{e}")
-            raise LCUError(f"Error in first part of authorization: {e}")
+            raise LCUError(f"Error in login authorization: {e}")
 
         url = f"{self.endpoint}/rso-auth/v1/session/credentials"
         body = {"username": username, "password": password, "persistLogin": False}
@@ -224,6 +231,16 @@ class LCUApi:
         except requests.RequestException as e:
             raise LCUError(f"Failed to start matchmaking: {e}")
 
+    def get_matchmaking_time(self) -> str:
+        """Gets current time in queue"""
+        url = f"{self.endpoint}/lol-matchmaking/v1/search"
+        try:
+            response = self.client.get(url)
+            response.raise_for_status()
+            return str(int(response.json()['timeInQueue']))
+        except requests.RequestException as e:
+            raise LCUError(f"Could not get time in queue: {e}")
+
     def quit_matchmaking(self) -> None:
         """Cancels matchmaking search"""
         url = f"{self.endpoint}/lol-lobby/v2/lobby/matchmaking/search"
@@ -270,7 +287,7 @@ class LCUApi:
             response = self.client.patch(url, json=data)
             response.raise_for_status()
         except requests.RequestException as e:
-            raise LCUError(f"Error locking in champion {e}")
+            raise LCUError(f"Error hovering champion in champ select {e}")
 
     def lock_in_champion(self, action_id: str, champion_id) -> None:
         """Locks in a champion in champ select"""
@@ -281,6 +298,16 @@ class LCUApi:
             response.raise_for_status()
         except requests.RequestException as e:
             raise LCUError(f"Error locking in champion {e}")
+
+    def get_cs_time_remaining(self) -> str:
+        """Returns time remaining in Champ Select"""
+        url = f"{self.endpoint}/lol-champ-select/v1/session"
+        try:
+            response = self.client.get(url)
+            response.raise_for_status()
+            return response.json()['timer']['adjustedTimeLeftInPhase']
+        except requests.RequestException as e:
+            raise LCUError(f"Error retrieving champ select information: {e}")
 
     def game_reconnect(self):
         """Reconnects to active game"""
@@ -319,7 +346,7 @@ class LCUApi:
             response.raise_for_status()
             return response.json()['eligibleAllies']
         except requests.RequestException as e:
-            raise LCUError(f"Failed to honor player: {e}")
+            raise LCUError(f"Failed to retrieve players to honor player: {e}")
 
     def honor_player(self, summoner_id: int) -> None:
         """Honors player in post game screen"""
@@ -338,7 +365,7 @@ class LCUApi:
             response = self.client.get(open_chats_url)
             response.raise_for_status()
         except requests.RequestException as e:
-            raise LCUError(f"Failed to send message: {e}")
+            raise LCUError(f"Failed to send message, could not retrieve chats: {e}")
 
         chat_id = None
         for conversation in response.json():
@@ -350,8 +377,7 @@ class LCUApi:
 
         message = {"body": msg}
         try:
-            response = self.client.post(send_chat_message_url, data=message)
+            response = self.client.post(send_chat_message_url, json=message)
             response.raise_for_status()
         except requests.RequestException as e:
-            #raise LCUError(f"Failed to send message: {e}")
-            pass
+            raise LCUError(f"Failed to send message: {e}")

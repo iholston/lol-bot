@@ -1,5 +1,5 @@
 """
-View tab that handles bot controls and displays bot output
+View tab that handles bot controls and displays bot output.
 """
 
 import os
@@ -7,6 +7,7 @@ import multiprocessing
 import threading
 import time
 import datetime
+import textwrap
 
 import dearpygui.dearpygui as dpg
 
@@ -30,12 +31,11 @@ class BotTab:
         self.start_time = None
 
     def create_tab(self, parent) -> None:
-        """Creates Bot Tab"""
         with dpg.tab(label="Bot", parent=parent) as self.status_tab:
             dpg.add_spacer()
             dpg.add_text(default_value="Controls")
             with dpg.group(horizontal=True):
-                dpg.add_button(tag="StartButton", label='Start Bot', width=93, callback=self.start_bot)  # width=136
+                dpg.add_button(tag="StartStopButton", label='Start Bot', width=93, callback=self.start_stop_bot)  # width=136
                 dpg.add_button(label="Clear Output", width=93, callback=lambda: self.message_queue.put("Clear"))
                 dpg.add_button(label="Restart UX", width=93, callback=self.restart_ux)
                 dpg.add_button(label="Close Client", width=93, callback=self.close_client)
@@ -51,13 +51,7 @@ class BotTab:
             dpg.add_text(default_value="Output")
             dpg.add_input_text(tag="Output", multiline=True, default_value="", height=162, width=568, enabled=False)
 
-        # Start self updating
-        self.update_info_panel()
-        self.update_bot_panel()
-        self.update_output_panel()
-
-    def start_bot(self) -> None:
-        """Starts bot process"""
+    def start_stop_bot(self) -> None:
         if self.bot_thread is None:
             if not os.path.exists(config.load_config()['league_dir']):
                 self.message_queue.put("Clear")
@@ -65,17 +59,14 @@ class BotTab:
                 return
             self.message_queue.put("Clear")
             self.start_time = time.time()
-            bot = Bot()
-
-            self.bot_thread = multiprocessing.Process(target=bot.run, args=(self.message_queue, self.games_played, self.bot_errors))
+            self.bot_thread = multiprocessing.Process(target=Bot().run, args=(self.message_queue, self.games_played, self.bot_errors))
             self.bot_thread.start()
-            dpg.configure_item("StartButton", label="Quit Bot")
+            dpg.configure_item("StartStopButton", label="Quit Bot")
         else:
-            dpg.configure_item("StartButton", label="Start Bot")
+            dpg.configure_item("StartStopButton", label="Start Bot")
             self.stop_bot()
 
-    def stop_bot(self) -> None:
-        """Stops bot process"""
+    def stop_bot(self):
         if self.bot_thread is not None:
             self.bot_thread.terminate()
             self.bot_thread.join()
@@ -83,13 +74,12 @@ class BotTab:
             self.message_queue.put("Bot Successfully Terminated")
 
     def restart_ux(self) -> None:
-        """Sends restart ux request to api"""
         if not proc.is_league_running():
             self.message_queue.put("Cannot restart UX, League is not running")
             return
         try:
             self.api.restart_ux()
-        except:
+        except LCUError:
             pass
 
     def close_client(self) -> None:
@@ -98,70 +88,79 @@ class BotTab:
         threading.Thread(target=proc.close_all_processes).start()
 
     def update_info_panel(self) -> None:
-        """Updates info panel text continuously"""
-        threading.Timer(2, self.update_info_panel).start()
-
         if not proc.is_league_running():
-            msg = "Accnt: -\nLevel: -\nPhase: Closed\nTime : -\nChamp: -"
+            msg = textwrap.dedent("""\
+            Phase: Closed
+            Accnt: -
+            Level: -
+            Time : -
+            Champ: -""")
             dpg.configure_item("Info", default_value=msg)
             return
-
         try:
-            account = self.api.get_display_name()
-            level = self.api.get_summoner_level()
             phase = self.api.get_phase()
-
-            msg = f"Accnt: {account}\n"
-            if phase == "None":
-                msg += "Phase: In Main Menu\n"
-            elif phase == "Matchmaking":
-                msg += "Phase: In Queue\n"
-            elif phase == "Lobby":
-                lobby_id = self.api.get_lobby_id()
-                for lobby, id in config.LOBBIES.items():
-                    if id == lobby_id:
-                        phase = lobby + " Lobby"
-                msg += f"Phase: {phase}\n"
-            elif phase == "InProgress":
-                msg += "Phase: In Game\n"
-            else:
-                msg += f"Phase: {phase}\n"
-            msg += f"Level: {level}\n"
-            if phase == "InProgress":
-                msg += f"Time : {game_api.get_formatted_time()}"
-                msg += f"Champ: {game_api.get_champ()}"
-            else:
-                msg += "Time : -\n"
-                msg += "Champ: -"
+            game_time = "-"
+            champ = "-"
+            match phase:
+                case "None":
+                    phase = "In Main Menu"
+                case "Matchmaking":
+                    phase = "In Queue"
+                    game_time = self.api.get_matchmaking_time()
+                case "Lobby":
+                    lobby_id = self.api.get_lobby_id()
+                    for lobby, id in config.ALL_LOBBIES.items():
+                        if id == lobby_id:
+                            phase = lobby + " Lobby"
+                case "ChampSelect":
+                    game_time = self.api.get_cs_time_remaining()
+                case "InProgress":
+                    phase = "In Game"
+                    game_time = game_api.get_formatted_time()
+                    champ = game_api.get_champ()
+                case _:
+                    pass
+            msg = textwrap.dedent(f"""\
+            Phase: {phase}
+            Accnt: {self.api.get_display_name()}
+            Level: {self.api.get_summoner_level()}
+            Time : {game_time}
+            Champ: {champ}""")
             dpg.configure_item("Info", default_value=msg)
-        except:
+        except LCUError:
             pass
 
     def update_bot_panel(self):
-        threading.Timer(.5, self.update_bot_panel).start()
         msg = ""
         if self.bot_thread is None:
-            msg += ("Status : Ready\nRunTime: -\nGames  : -\nErrors : -\nAction : -")
+            msg += textwrap.dedent("""\
+            Status : Ready
+            RunTime: -
+            Games  : -
+            Errors : -
+            Action : -""")
         else:
-            msg += "Status : Running\n"
             run_time = datetime.timedelta(seconds=(time.time() - self.start_time))
-            days = run_time.days
             hours, remainder = divmod(run_time.seconds, 3600)
             minutes, seconds = divmod(remainder, 60)
-            if days > 0:
-                msg += f"RunTime: {days} day, {hours:02}:{minutes:02}:{seconds:02}\n"
+            if run_time.days > 0:
+                time_since_start = f"{run_time.days} day, {hours:02}:{minutes:02}:{seconds:02}\n"
             else:
-                msg += f"RunTime: {hours:02}:{minutes:02}:{seconds:02}\n"
-            msg += f"Games  : {self.games_played.value}\n"
-            msg += f"Errors : {self.bot_errors.value}\n"
+                time_since_start = f"{hours:02}:{minutes:02}:{seconds:02}\n"
             if len(self.output_queue) > 0:
-                msg += f"Action : {self.output_queue[-1].split(']')[-1].strip()}"
+                action = f"{self.output_queue[-1].split(']')[-1].strip()}"
             else:
-                msg += "Action : -"
+                action = "-"
+            msg = textwrap.dedent(f"""\
+            Status : Running
+            RunTime: {time_since_start}
+            Games  : {self.games_played.value}
+            Errors : {self.bot_errors.value}
+            Action : {action}""")
         dpg.configure_item("Bot", default_value=msg)
 
     def update_output_panel(self):
-        threading.Timer(.5, self.update_output_panel).start()
+        """Updates output panel with latest log messages."""
         if not self.message_queue.empty():
             display_msg = ""
             self.output_queue.append(self.message_queue.get())
@@ -173,9 +172,9 @@ class BotTab:
                     display_msg = ""
                     break
                 elif "INFO" not in msg and "ERROR" not in msg and "WARNING" not in msg:
-                    display_msg += "[{}] [INFO   ] {}\n".format(datetime.datetime.now().strftime("%H:%M:%S"), msg)
+                    display_msg += f"[{datetime.datetime.now().strftime("%H:%M:%S")}] [INFO   ] {msg}\n"
                 else:
                     display_msg += msg + "\n"
-            dpg.configure_item("Output", default_value=display_msg.strip())
             if "Bot Successfully Terminated" in display_msg:
                 self.output_queue = []
+            dpg.configure_item("Output", default_value=display_msg.strip())

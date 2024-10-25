@@ -1,5 +1,5 @@
 """
-Handles launching League of Legends and logging into an account
+Handles launching League of Legends and logging into an account.
 """
 
 import logging
@@ -7,8 +7,7 @@ import subprocess
 from pathlib import Path
 from time import sleep
 
-import lolbot.common.config as config
-import lolbot.common.proc as proc
+from lolbot.common import config, proc
 from lolbot.lcu.lcu_api import LCUApi, LCUError
 
 log = logging.getLogger(__name__)

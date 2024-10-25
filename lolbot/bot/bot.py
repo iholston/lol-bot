@@ -1,25 +1,21 @@
 """
-Controls the League Client and continually starts League of Legends games
+Controls the League Client and continually starts League of Legends games.
 """
-import os
-import shutil
+
 import logging
-import random
-import traceback
 import multiprocessing as mp
-from time import sleep
+import os
+import random
+import shutil
+import traceback
 from datetime import datetime, timedelta
+from time import sleep
 
 import pyautogui
 
-import lolbot.bot.launcher as launcher
+from lolbot.bot import game, launcher, logger, window
+from lolbot.common import accounts, config, proc
 from lolbot.lcu.lcu_api import LCUApi, LCUError
-
-import lolbot.bot.logger as logger
-import lolbot.bot.game as game
-import lolbot.bot.window as window
-import lolbot.common.config as config
-from lolbot.common import proc
 
 log = logging.getLogger(__name__)
 
@@ -48,6 +44,7 @@ class Bot:
         self.lobby = self.config['lobby']
         self.champs = self.config['champs']
         self.dialog = self.config['dialog']
+        self.account = None
         self.phase = None
         self.prev_phase = None
         self.bot_errors = 0
@@ -64,16 +61,9 @@ class Bot:
         while True:
             try:
                 errors.value = self.bot_errors
-                #account = account.get_unmaxxed_account(self.max_level)
-                #launcher.open_league_with_account(account['username'], account['password'])
+                self.account = accounts.get_account(self.max_level)
+                launcher.open_league_with_account(self.account['username'], self.account['password'])
                 self.leveling_loop(games)
-                try:
-                    pass
-                    # if account['username'] == self.api.get_display_name():
-                    #     account['level'] = self.max_level
-                    #     account.save(account)
-                except LCUApi:
-                    pass
                 proc.close_all_processes()
                 self.bot_errors = 0
                 self.phase_errors = 0
@@ -145,10 +135,10 @@ class Bot:
         raise BotError(f"Could not get phase: {err}")
 
     def start_matchmaking(self) -> None:
-        """Starts matchmaking for expected game mode, will also wait out dodge timers."""
+        """Starts matchmaking for a particular game mode, will also wait out dodge timers."""
         # Create lobby
         lobby_name = ""
-        for lobby, lid in config.LOBBIES.items():
+        for lobby, lid in config.ALL_LOBBIES.items():
             if lid == self.lobby:
                 lobby_name = lobby + " "
         log.info(f"Creating {lobby_name.lower()}lobby")
@@ -175,7 +165,7 @@ class Bot:
         except LCUError:
             return
 
-        # TODO when queue times get too high switch to real person lobby and then back
+        # TODO when queue times get too high switch to pvp lobby, start it, and then switch back
 
     def queue(self) -> None:
         """Waits until the League Client Phase changes to something other than 'Matchmaking'."""
@@ -299,6 +289,9 @@ class Bot:
         """Checks if account has reached max level."""
         try:
             if self.api.get_summoner_level() >= self.max_level:
+                if self.account['username'] == self.api.get_display_name():
+                    self.account['level'] = self.max_level
+                    accounts.save_or_add(self.account)
                 log.info("Account successfully leveled")
                 return True
             return False
@@ -338,4 +331,4 @@ class Bot:
                     ───▄▄██▌█ BEEP BEEP
                     ▄▄▄▌▐██▌█ -15 LP DELIVERY
                     ███████▌█▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▌
-                    ▀(⊙)▀▀▀▀▀▀▀(⊙)(⊙)▀▀▀▀▀▀▀▀▀▀(⊙)\n\n\t\t\tLoL Bot\n\n""")
+                    ▀(⊙)▀▀▀▀▀▀▀(⊙)(⊙)▀▀▀▀▀▀▀▀▀▀(⊙)\n\n\t\t\t\tLoL Bot\n\n""")
