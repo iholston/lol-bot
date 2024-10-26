@@ -15,7 +15,7 @@ from lolbot.lcu.lcu_api import LCUApi, LCUError
 
 log = logging.getLogger(__name__)
 
-MAX_RETRIES = 20
+MAX_RETRIES = 5
 
 
 class LaunchError(Exception):
@@ -28,36 +28,46 @@ def launch_league(username: str, password: str) -> None:
     api = LCUApi()
     api.update_auth()
     login_attempted = False
-    for i in range(MAX_RETRIES):
-        if proc.is_league_running():
-            if login_attempted:
-                log.info("Launch success")
-                proc.close_riot_client()
-            else:
-                log.warning("League opened with prior login")
-                verify_account(api, username)
-            return
-        elif proc.is_rc_running():
-            if api.access_token_exists():
-                if not login_attempted:
-                    log.warning("Riot Client already logged in")
-                try:
-                    api.launch_league_from_rc()
-                    sleep(2)
-                except LCUError:
-                    pass
-                continue
-            else:
-                log.info("Logging into Riot Client")
-                try:
+    logins = 0
+    for i in range(30):
+        try:
+            if proc.is_league_running():
+                if login_attempted:
+                    log.info("Launch success")
+                    proc.close_riot_client()
+                else:
+                    log.warning("League opened with prior login")
+                    verify_account(api, username)
+                return
+            elif proc.is_rc_running():
+                if api.access_token_exists():
+                    if not login_attempted:
+                        log.warning("Riot Client already logged in")
+                    try:
+                        api.launch_league_from_rc()
+                        sleep(2)
+                    except LCUError:
+                        pass
+                    continue
+                else:
+                    if logins == MAX_RETRIES:
+                        raise LaunchError("Max login attempts exceeded. Check username and password")
+                    else:
+                        logins += 1
+                    log.info("Logging into Riot Client")
+                    login_attempted = True
                     # api.login(username, password)  # they turned this off
                     manual_login(username, password)
-                except LCUError:
-                    pass
-        else:
-            start_league()
-        sleep(2)
-    raise LCUError("Could not launch league. Ensure there are no pending updates.")
+                    if not api.access_token_exists():
+                        log.warning("Login attempt failed")
+                        proc.close_riot_client()
+                        sleep(5)
+            else:
+                start_league()
+                sleep(10)
+        except LCUError:
+            sleep(2)
+    raise LaunchError("Could not launch league. Ensure there are no pending updates.")
 
 
 def manual_login(username: str, password: str):
@@ -70,7 +80,7 @@ def manual_login(username: str, password: str):
     controller.write(password)
     sleep(.5)
     controller.keypress('enter')
-    sleep(5)
+    sleep(10)
 
 
 def start_league():

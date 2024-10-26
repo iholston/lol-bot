@@ -42,6 +42,7 @@ def get_window_size(window_title: str) -> tuple:
     window_rect = GetWindowRect(window_handle)
     return window_rect[0], window_rect[1], window_rect[2], window_rect[3]
 
+
 def activate_windw(window_title: str) -> bool:
     """Makes window the active window"""
     try:

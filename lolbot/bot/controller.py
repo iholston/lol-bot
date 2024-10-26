@@ -23,7 +23,7 @@ def write(keys: str, window: str = '', wait: float = 1) -> None:
     """Sends a string of key presses to a window"""
     if window != '' and not window_exists(window):
         raise WindowNotFound
-    pyautogui.write(keys, interval=0.25)
+    pyautogui.write(keys, interval=0.11)
     sleep(wait)
 
 

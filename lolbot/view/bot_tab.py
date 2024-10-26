@@ -147,9 +147,9 @@ class BotTab:
             hours, remainder = divmod(run_time.seconds, 3600)
             minutes, seconds = divmod(remainder, 60)
             if run_time.days > 0:
-                time_since_start = f"{run_time.days} day, {hours:02}:{minutes:02}:{seconds:02}\n"
+                time_since_start = f"{run_time.days} day, {hours:02}:{minutes:02}:{seconds:02}"
             else:
-                time_since_start = f"{hours:02}:{minutes:02}:{seconds:02}\n"
+                time_since_start = f"{hours:02}:{minutes:02}:{seconds:02}"
             if len(self.output_queue) > 0:
                 action = f"{self.output_queue[-1].split(']')[-1].strip()}"
             else:
