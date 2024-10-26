@@ -116,8 +116,11 @@ class BotTab:
                     game_time = self.api.get_cs_time_remaining()
                 case "InProgress":
                     phase = "In Game"
-                    game_time = game_api.get_formatted_time()
-                    champ = game_api.get_champ()
+                    try:
+                        game_time = game_api.get_formatted_time()
+                        champ = game_api.get_champ()
+                    except:
+                        pass
                 case _:
                     pass
             msg = textwrap.dedent(f"""\

@@ -51,12 +51,14 @@ def get_game_time() -> int:
 
 def get_formatted_time() -> str:
     """Converts League of Legends game time to minute:seconds format"""
-    seconds = int(get_game_time())
     try:
+        seconds = int(get_game_time())
         if len(str(int(seconds % 60))) == 1:
             return str(int(seconds / 60)) + ":0" + str(int(seconds % 60))
         else:
             return str(int(seconds / 60)) + ":" + str(int(seconds % 60))
+    except GameAPIError:
+        return "XX:XX"
     except ValueError:
         return "XX:XX"
 

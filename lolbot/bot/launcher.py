@@ -15,7 +15,7 @@ from lolbot.lcu.lcu_api import LCUApi, LCUError
 
 log = logging.getLogger(__name__)
 
-MAX_RETRIES = 30
+MAX_RETRIES = 20
 
 
 class LaunchError(Exception):
@@ -23,55 +23,46 @@ class LaunchError(Exception):
     pass
 
 
-def open_league_with_account(username: str, password: str) -> None:
+def launch_league(username: str, password: str) -> None:
     """Ensures that League is open and logged into a specific account"""
     api = LCUApi()
     api.update_auth()
     login_attempted = False
     for i in range(MAX_RETRIES):
-        if proc.is_league_running() and verify_account(api, username):  # League is running and account is logged in
+        if proc.is_league_running():
+            if login_attempted:
+                log.info("Launch success")
+                proc.close_riot_client()
+            else:
+                log.warning("League opened with prior login")
+                verify_account(api, username)
             return
-        elif proc.is_league_running():  # League is running and wrong account is logged in
-            try:
-                api.logout_on_close()
-            except LCUError:
-                pass
-            proc.close_all_processes()
-            sleep(10)
-            continue
-        elif proc.is_rc_running() and api.access_token_exists():  # Riot Client is open and a user is logged in
-            launch_league()
-        elif proc.is_rc_running():  # Riot Client is open and waiting for login
-            login_attempted = True
-            log.info("Logging into Riot Client")
-            try:
-                # api.login(username, password)
-                manual_login(username, password)
-                sleep(5)
-                api.launch_league_from_rc()
-            except LCUError:
+        elif proc.is_rc_running():
+            if api.access_token_exists():
+                if not login_attempted:
+                    log.warning("Riot Client already logged in")
+                try:
+                    api.launch_league_from_rc()
+                    sleep(2)
+                except LCUError:
+                    pass
                 continue
-        else:  # Nothing is running
-            launch_league()
+            else:
+                log.info("Logging into Riot Client")
+                try:
+                    # api.login(username, password)  # they turned this off
+                    manual_login(username, password)
+                except LCUError:
+                    pass
+        else:
+            start_league()
         sleep(2)
-
-    if login_attempted:
-        raise LaunchError("Launch Error. Most likely the Riot Client or League needs an update from within RC")
-    else:
-        raise LaunchError("Could not launch League of Legends")
+    raise LCUError("Could not launch league. Ensure there are no pending updates.")
 
 
 def manual_login(username: str, password: str):
     log.info('Manually logging into Riot Client')
     window.activate_windw("Riot Client")
-    controller.keypress('tab')
-    sleep(.1)
-    controller.keypress('tab')
-    sleep(.1)
-    controller.keypress('tab')
-    sleep(.1)
-    controller.keypress('tab')
-    sleep(.1)
     controller.write(username)
     sleep(.5)
     controller.keypress('tab')
@@ -79,9 +70,10 @@ def manual_login(username: str, password: str):
     controller.write(password)
     sleep(.5)
     controller.keypress('enter')
+    sleep(5)
 
 
-def launch_league():
+def start_league():
     """Launches League of Legends from Riot Client."""
     log.info('Launching League of Legends')
     c = config.load_config()

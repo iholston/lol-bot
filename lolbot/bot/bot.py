@@ -62,7 +62,7 @@ class Bot:
             try:
                 errors.value = self.bot_errors
                 self.account = accounts.get_account(self.max_level)
-                launcher.open_league_with_account(self.account['username'], self.account['password'])
+                launcher.launch_league(self.account['username'], self.account['password'])
                 self.leveling_loop(games)
                 proc.close_all_processes()
                 self.bot_errors = 0
