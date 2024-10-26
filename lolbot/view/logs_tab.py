@@ -1,5 +1,5 @@
 """
-View tab that displays logs in the /logs folder
+View tab that displays logs in the /logs folder.
 """
 
 import subprocess
@@ -9,7 +9,7 @@ from datetime import datetime
 
 import dearpygui.dearpygui as dpg
 
-from lolbot.common.config import Constants
+import lolbot.common.config as config
 
 
 class LogsTab:
@@ -20,7 +20,6 @@ class LogsTab:
         self.logs_group = None
 
     def create_tab(self, parent) -> None:
-        """Creates Log Tab"""
         with dpg.tab(label="Logs", parent=parent) as self.id:
             with dpg.window(label="Delete Files", modal=True, show=False, tag="DeleteFiles", pos=[115, 130]):
                 dpg.add_text("All files in the logs folder will be deleted")
@@ -36,7 +35,7 @@ class LogsTab:
                 dpg.add_text(tag="LogUpdatedTime", default_value='Last Updated: {}'.format(datetime.now()))
                 dpg.add_button(label='Update', width=54, callback=self.create_log_table)
                 dpg.add_button(label='Clear', width=54, callback=lambda: dpg.configure_item("DeleteFiles", show=True))
-                dpg.add_button(label='Show in File Explorer', callback=lambda: subprocess.Popen('explorer /select, {}'.format(Constants.LOG_DIR)))
+                dpg.add_button(label='Show in File Explorer', callback=lambda: subprocess.Popen('explorer /select, {}'.format(config.LOG_DIR)))
             dpg.add_spacer()
             dpg.add_separator()
             dpg.add_spacer()
@@ -48,8 +47,8 @@ class LogsTab:
             dpg.delete_item(self.logs_group)
         dpg.set_value('LogUpdatedTime', 'Last Updated: {}'.format(datetime.now()))
         with dpg.group(parent=self.id) as self.logs_group:
-            for filename in self.sorted_dir_creation_time(Constants.LOG_DIR):
-                f = os.path.join(Constants.LOG_DIR, filename)
+            for filename in self.sorted_dir_creation_time(config.LOG_DIR):
+                f = os.path.join(config.LOG_DIR, filename)
                 if f.endswith('.1'):
                     os.unlink(f)
                     continue
@@ -61,7 +60,7 @@ class LogsTab:
     def clear_logs(self) -> None:
         """Empties the log folder"""
         dpg.configure_item("DeleteFiles", show=False)
-        folder = Constants.LOG_DIR
+        folder = config.LOG_DIR
         for filename in os.listdir(folder):
             file_path = os.path.join(folder, filename)
             try:

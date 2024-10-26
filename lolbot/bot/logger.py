@@ -1,22 +1,22 @@
 """
-Handles bot logging
+Sets global logging state.
 """
 
 import logging
 import os
 import sys
 from datetime import datetime
+from logging.handlers import RotatingFileHandler
 from multiprocessing import Queue
 
-from logging.handlers import RotatingFileHandler
+import lolbot.common.config as config
 
 
 class MultiProcessLogHandler(logging.Handler):
-    """Class that handles bot log messsages, writes to log file, terminal, and view"""
+    """Sets log configuration and pushes logs onto message queue for display in view"""
 
-    def __init__(self, message_queue: Queue, path: str) -> None:
+    def __init__(self, message_queue: Queue) -> None:
         logging.Handler.__init__(self)
-        self.log_dir = path
         self.message_queue = message_queue
 
     def emit(self, record: logging.LogRecord) -> None:
@@ -26,16 +26,16 @@ class MultiProcessLogHandler(logging.Handler):
 
     def set_logs(self) -> None:
         """Sets log configurations"""
-        if not os.path.exists(self.log_dir):
-            os.makedirs(self.log_dir)
+        if not os.path.exists(config.LOG_DIR):
+            os.makedirs(config.LOG_DIR)
 
-        filename = os.path.join(self.log_dir, datetime.now().strftime('%d%m%Y_%H%M.log'))
+        filename = os.path.join(config.LOG_DIR, datetime.now().strftime('%d%m%Y_%H%M.log'))
         formatter = logging.Formatter(fmt='[%(asctime)s] [%(levelname)-7s] [%(funcName)-21s] %(message)s',datefmt='%d %b %Y %H:%M:%S')
-        logging.getLogger().setLevel(logging.DEBUG)
+        logging.getLogger().setLevel(logging.INFO)
 
         fh = RotatingFileHandler(filename=filename, maxBytes=1000000, backupCount=1)
         fh.setFormatter(formatter)
-        fh.setLevel(logging.DEBUG)
+        fh.setLevel(logging.INFO)
         logging.getLogger().addHandler(fh)
 
         ch = logging.StreamHandler(sys.stdout)

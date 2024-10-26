@@ -1,5 +1,5 @@
 """
-View tab that handles creation/editing of accounts
+View tab that handles creation/editing of accounts.
 """
 
 import subprocess
@@ -9,8 +9,7 @@ import threading
 from typing import Any
 
 import dearpygui.dearpygui as dpg
-from lolbot.common.config import Constants
-from lolbot.common.account import Account, AccountManager
+from lolbot.common import config, accounts
 
 
 class AccountsTab:
@@ -18,12 +17,10 @@ class AccountsTab:
 
     def __init__(self) -> None:
         self.id = None
-        self.am = AccountManager()
         self.accounts = None
         self.accounts_table = None
 
     def create_tab(self, parent: int) -> None:
-        """Creates Accounts Tab"""
         with dpg.tab(label="Accounts", parent=parent) as self.id:
             dpg.add_text("Options")
             dpg.add_spacer()
@@ -39,7 +36,7 @@ class AccountsTab:
                     dpg.add_button(label="Cancel", width=113, callback=lambda: dpg.configure_item("AccountSubmit", show=False))
             with dpg.group(horizontal=True):
                 dpg.add_button(label="Add New Account", width=184, callback=lambda: dpg.configure_item("AccountSubmit", show=True))
-                dpg.add_button(label="Show in File Explorer", width=184, callback=lambda: subprocess.Popen('explorer /select, {}'.format(Constants.ACCOUNT_PATH)))
+                dpg.add_button(label="Show in File Explorer", width=184, callback=lambda: subprocess.Popen('explorer /select, {}'.format(config.ACCOUNT_PATH)))
                 dpg.add_button(tag="BackupButton", label="Create Backup", width=184, callback=self.create_backup)
                 with dpg.tooltip(dpg.last_item()):
                     dpg.add_text("Creates a backup of the accounts.json file in the bak folder")
@@ -53,10 +50,9 @@ class AccountsTab:
             self.create_accounts_table()
 
     def create_accounts_table(self) -> None:
-        """Creates a table from account data"""
         if self.accounts_table is not None:
             dpg.delete_item(self.accounts_table)
-        self.accounts = self.am.get_all_accounts()
+        self.accounts = accounts.load_accounts()
         with dpg.group(parent=self.id) as self.accounts_table:
             with dpg.group(horizontal=True):
                 dpg.add_input_text(default_value="      Username", width=147)
@@ -78,16 +74,17 @@ class AccountsTab:
                     dpg.add_button(label="Delete", callback=self.delete_account_dialog, user_data=acc)
 
     def add_account(self) -> None:
-        """Adds a new account to accounts.json and updates view"""
         dpg.configure_item("AccountSubmit", show=False)
-        self.am.add_account(Account(dpg.get_value("UsernameField"), dpg.get_value("PasswordField"), dpg.get_value("LevelField")))
+        account = {"username": dpg.get_value("UsernameField"), "password": dpg.get_value("PasswordField"), "level": dpg.get_value("LevelField")}
+        accounts.save_or_add(account)
         dpg.configure_item("UsernameField", default_value="")
         dpg.configure_item("PasswordField", default_value="")
         dpg.configure_item("LevelField", default_value=False)
         self.create_accounts_table()
 
     def edit_account(self, sender, app_data, user_data: Any) -> None:
-        self.am.edit_account(user_data, Account(dpg.get_value("EditUsernameField"), dpg.get_value("EditPasswordField"), dpg.get_value("EditLevelField")))
+        account = {"username": dpg.get_value("EditUsernameField"), "password": dpg.get_value("EditPasswordField"), "level": dpg.get_value("EditLevelField")}
+        accounts.update(user_data, account)
         dpg.delete_item("EditAccount")
         self.create_accounts_table()
 
@@ -101,7 +98,7 @@ class AccountsTab:
                 dpg.add_button(label="Cancel", width=113, callback=lambda: dpg.delete_item("EditAccount"))
 
     def delete_account(self, sender, app_data, user_data: Any) -> None:
-        self.am.delete_account(Account(user_data['username'], user_data['password'], user_data['level']))
+        accounts.delete(user_data['username'])
         dpg.delete_item("DeleteAccount")
         self.create_accounts_table()
 
@@ -119,10 +116,10 @@ class AccountsTab:
     @staticmethod
     def create_backup(sender: int) -> None:
         bak = "{}{}".format(time.strftime("%Y%m%d-%H%M%S"), ".json")
-        shutil.copyfile(Constants.ACCOUNT_PATH, '{}/{}'.format(Constants.BAK_DIR, bak))
+        shutil.copyfile(config.ACCOUNT_PATH, '{}/{}'.format(config.BAK_DIR, bak))
         dpg.configure_item("BackupButton", label="Backup Created!")
         threading.Timer(1, lambda: dpg.configure_item("BackupButton", label="Create Backup")).start()
 
     @staticmethod
-    def copy_2_clipboard(sender: int):
+    def copy_2_clipboard(sender: int) -> None:
         subprocess.run("clip", text=True, input=dpg.get_item_label(sender))
