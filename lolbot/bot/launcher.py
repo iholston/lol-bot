@@ -7,6 +7,7 @@ import subprocess
 from pathlib import Path
 from time import sleep
 
+from lolbot.bot import controller
 from lolbot.common import config, proc
 from lolbot.lcu.lcu_api import LCUApi, LCUError
 
@@ -42,7 +43,8 @@ def open_league_with_account(username: str, password: str) -> None:
             login_attempted = True
             log.info("Logging into Riot Client")
             try:
-                api.login(username, password)
+                # api.login(username, password)
+                manual_login(username, password)
                 sleep(5)
                 api.launch_league_from_rc()
             except LCUError:
@@ -55,6 +57,16 @@ def open_league_with_account(username: str, password: str) -> None:
         raise LaunchError("Launch Error. Most likely the Riot Client or League needs an update from within RC")
     else:
         raise LaunchError("Could not launch League of Legends")
+
+
+def manual_login(username: str, password: str):
+    controller.write(username)
+    sleep(.5)
+    controller.keypress('tab')
+    sleep(.5)
+    controller.write(password)
+    sleep(.5)
+    controller.keypress('enter')
 
 
 def launch_league():

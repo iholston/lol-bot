@@ -172,7 +172,7 @@ class BotTab:
                     display_msg = ""
                     break
                 elif "INFO" not in msg and "ERROR" not in msg and "WARNING" not in msg:
-                    display_msg += f"[{datetime.datetime.now().strftime("%H:%M:%S")}] [INFO   ] {msg}\n"
+                    display_msg += f'[{datetime.datetime.now().strftime("%H:%M:%S")}] [INFO   ] {msg}\n'
                 else:
                     display_msg += msg + "\n"
             if "Bot Successfully Terminated" in display_msg:

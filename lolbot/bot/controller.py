@@ -11,17 +11,17 @@ import pyautogui
 from lolbot.bot.window import *
 
 
-def keypress(key: str, window: str, wait: float = 1) -> None:
+def keypress(key: str, window: str = '', wait: float = 1) -> None:
     """Sends a keypress to a window"""
-    if not window_exists(window):
+    if window != '' and not window_exists(window):
         raise WindowNotFound
     keyboard.press_and_release(key)
     sleep(wait)
 
 
-def write(keys: str, expected_window: str = '', wait: float = 1) -> None:
+def write(keys: str, window: str = '', wait: float = 1) -> None:
     """Sends a string of key presses to a window"""
-    if expected_window != '' and not window_exists(expected_window):
+    if window != '' and not window_exists(window):
         raise WindowNotFound
     pyautogui.typewrite(keys)
     sleep(wait)
