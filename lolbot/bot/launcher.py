@@ -7,6 +7,8 @@ import subprocess
 from pathlib import Path
 from time import sleep
 
+import lolbot.bot.window as window
+
 from lolbot.bot import controller
 from lolbot.common import config, proc
 from lolbot.lcu.lcu_api import LCUApi, LCUError
@@ -60,6 +62,16 @@ def open_league_with_account(username: str, password: str) -> None:
 
 
 def manual_login(username: str, password: str):
+    log.info('Manually logging into Riot Client')
+    window.activate_windw("Riot Client")
+    controller.keypress('tab')
+    sleep(.1)
+    controller.keypress('tab')
+    sleep(.1)
+    controller.keypress('tab')
+    sleep(.1)
+    controller.keypress('tab')
+    sleep(.1)
     controller.write(username)
     sleep(.5)
     controller.keypress('tab')
