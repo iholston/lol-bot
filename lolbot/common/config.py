@@ -4,6 +4,9 @@ Handles multi-platform creating/writing LoLBot's configurations to json file.
 
 import os
 import json
+import platform
+
+OS = platform.system()
 
 CONFIG_DIR = os.path.join(os.getenv('LOCALAPPDATA'), 'LoLBot')
 os.makedirs(CONFIG_DIR, exist_ok=True)

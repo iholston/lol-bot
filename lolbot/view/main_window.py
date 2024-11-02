@@ -2,8 +2,6 @@
 Main window that displays all the tabs.
 """
 
-import ctypes; ctypes.windll.shcore.SetProcessDpiAwareness(0)  # This must be set before importing pyautogui/dpg
-import multiprocessing; multiprocessing.freeze_support()  # https://stackoverflow.com/questions/24944558/pyinstaller-built-windows-exe-fails-with-multiprocessing
 import time
 
 import dearpygui.dearpygui as dpg
@@ -20,7 +18,6 @@ ICON_PATH = 'lolbot/resources/images/a.ico'
 
 
 class MainWindow:
-    """Class that displays the view"""
 
     def __init__(self, width: int, height: int) -> None:
         self.width = width
@@ -36,7 +33,6 @@ class MainWindow:
         self.api.update_auth_timer()
 
     def show(self) -> None:
-        """Renders view"""
         dpg.create_context()
         with dpg.window(label='', tag='primary window', width=self.width, height=self.height, no_move=True, no_resize=True, no_title_bar=True):
             with dpg.theme(tag="__hyperlinkTheme"):
