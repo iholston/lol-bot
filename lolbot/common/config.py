@@ -5,15 +5,15 @@ Handles multi-platform creating/writing LoLBot's configurations to json file.
 import os
 import json
 
-if os.name == 'nt':
-    CONFIG_DIR = os.path.join(os.getenv('LOCALAPPDATA'), 'LoLBot')
-else:
-    CONFIG_DIR = os.path.join(os.path.expanduser('~'), 'Library', 'Application Support', 'LoLBot')
-
+CONFIG_DIR = os.path.join(os.getenv('LOCALAPPDATA'), 'LoLBot')
 os.makedirs(CONFIG_DIR, exist_ok=True)
 
 BAK_DIR = os.path.join(CONFIG_DIR, 'bak')
+os.makedirs(BAK_DIR, exist_ok=True)
+
 LOG_DIR = os.path.join(CONFIG_DIR, 'logs')
+os.makedirs(LOG_DIR, exist_ok=True)
+
 CONFIG_PATH = os.path.join(CONFIG_DIR, 'config.json')
 ACCOUNT_PATH = os.path.join(CONFIG_DIR, 'accounts.json')
 

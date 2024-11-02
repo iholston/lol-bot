@@ -13,7 +13,7 @@ from time import sleep
 
 import pyautogui
 
-from lolbot.bot import game, launcher, logger, window
+from lolbot.bot import game, launcher, logger, window, controller
 from lolbot.common import accounts, config, proc
 from lolbot.lcu.lcu_api import LCUApi, LCUError
 
@@ -31,19 +31,21 @@ MAX_PHASE_ERRORS = 20
 
 class BotError(Exception):
     """Indicates the League Client instance should be restarted."""
+
     pass
 
 
 class Bot:
     """Handles the League Client and all tasks needed to start a new game."""
+
     def __init__(self) -> None:
         self.api = LCUApi()
         self.config = config.load_config()
-        self.league_dir = self.config['league_dir']
-        self.max_level = self.config['max_level']
-        self.lobby = self.config['lobby']
-        self.champs = self.config['champs']
-        self.dialog = self.config['dialog']
+        self.league_dir = self.config["league_dir"]
+        self.max_level = self.config["max_level"]
+        self.lobby = self.config["lobby"]
+        self.champs = self.config["champs"]
+        self.dialog = self.config["dialog"]
         self.account = None
         self.phase = None
         self.prev_phase = None
@@ -62,7 +64,9 @@ class Bot:
             try:
                 errors.value = self.bot_errors
                 self.account = accounts.get_account(self.max_level)
-                launcher.launch_league(self.account['username'], self.account['password'])
+                launcher.launch_league(
+                    self.account["username"], self.account["password"]
+                )
                 self.leveling_loop(games)
                 proc.close_all_processes()
                 self.bot_errors = 0
@@ -93,23 +97,23 @@ class Bot:
         """Loop that takes action based on the phase of the League Client, continuously starts games."""
         while not self.account_leveled():
             match self.get_phase():
-                case 'None' | 'Lobby':
+                case "None" | "Lobby":
                     self.start_matchmaking()
-                case 'Matchmaking':
+                case "Matchmaking":
                     self.queue()
-                case 'ReadyCheck':
+                case "ReadyCheck":
                     self.accept_match()
-                case 'ChampSelect':
+                case "ChampSelect":
                     self.champ_select()
-                case 'InProgress':
+                case "InProgress":
                     game.play_game()
-                case 'Reconnect':
+                case "Reconnect":
                     self.reconnect()
-                case 'WaitingForStats':
+                case "WaitingForStats":
                     self.wait_for_stats()
-                case 'PreEndOfGame':
+                case "PreEndOfGame":
                     self.pre_end_of_game()
-                case 'EndOfGame':
+                case "EndOfGame":
                     self.end_of_game()
                     games.value += 1
                 case _:
@@ -122,7 +126,11 @@ class Bot:
             try:
                 self.prev_phase = self.phase
                 self.phase = self.api.get_phase()
-                if self.prev_phase == self.phase and self.phase != "Matchmaking" and self.phase != 'ReadyCheck':
+                if (
+                    self.prev_phase == self.phase
+                    and self.phase != "Matchmaking"
+                    and self.phase != "ReadyCheck"
+                ):
                     self.phase_errors += 1
                     if self.phase_errors == MAX_PHASE_ERRORS:
                         raise BotError("Transition error. Phase will not change")
@@ -173,7 +181,7 @@ class Bot:
         start = datetime.now()
         while True:
             try:
-                if self.api.get_phase() != 'Matchmaking':
+                if self.api.get_phase() != "Matchmaking":
                     return
                 elif datetime.now() - start > timedelta(minutes=15):
                     raise BotError("Queue Timeout")
@@ -201,13 +209,21 @@ class Bot:
             except LCUError:
                 return
             try:
-                for action in data['actions'][0]:
-                    if action['actorCellId'] == data['localPlayerCellId']:
-                        if action['championId'] == 0:  # No champ hovered. Hover a champion.
+                for action in data["actions"][0]:
+                    if action["actorCellId"] == data["localPlayerCellId"]:
+                        if (
+                            action["championId"] == 0
+                        ):  # No champ hovered. Hover a champion.
                             champ_index += 1
-                            self.api.hover_champion(action['id'], champ_list[champ_index])
-                        elif not action['completed']:  # Champ is hovered but not locked in.
-                            self.api.lock_in_champion(action['id'], action['championId'])
+                            self.api.hover_champion(
+                                action["id"], champ_list[champ_index]
+                            )
+                        elif not action[
+                            "completed"
+                        ]:  # Champ is hovered but not locked in.
+                            self.api.lock_in_champion(
+                                action["id"], action["championId"]
+                            )
                         else:  # Champ is locked in. Nothing left to do.
                             sleep(2)
             except LCUError:
@@ -223,7 +239,7 @@ class Bot:
                 return
             except LCUError:
                 sleep(2)
-        log.warning('Could not reconnect to game')
+        log.warning("Could not reconnect to game")
 
     def wait_for_stats(self) -> None:
         """Waits for the League Client Phase to change to something other than 'WaitingForStats'."""
@@ -231,7 +247,7 @@ class Bot:
         for i in range(60):
             sleep(2)
             try:
-                if self.api.get_phase() != 'WaitingForStats':
+                if self.api.get_phase() != "WaitingForStats":
                     return
             except LCUError:
                 pass
@@ -242,14 +258,22 @@ class Bot:
         log.info("Honoring teammates and accepting rewards")
         sleep(3)
         try:
-            proc.click(POPUP_SEND_EMAIL_X_RATIO, proc.LEAGUE_CLIENT_WINNAME, 2)
+            controller.left_click(
+                POPUP_SEND_EMAIL_X_RATIO, proc.LEAGUE_CLIENT_WINNAME, 2
+            )
             if not self.honor_player():
                 sleep(60)  # Honor failed for some reason, wait out the honor screen
-            proc.click(POPUP_SEND_EMAIL_X_RATIO, proc.LEAGUE_CLIENT_WINNAME, 2)
+            controller.left_click(
+                POPUP_SEND_EMAIL_X_RATIO, proc.LEAGUE_CLIENT_WINNAME, 2
+            )
             for i in range(3):
-                proc.click(POST_GAME_SELECT_CHAMP_RATIO, proc.LEAGUE_CLIENT_WINNAME, 1)
-                proc.click(POST_GAME_OK_RATIO, proc.LEAGUE_CLIENT_WINNAME, 1)
-            proc.click(POPUP_SEND_EMAIL_X_RATIO, proc.LEAGUE_CLIENT_WINNAME, 1)
+                controller.left_click(
+                    POST_GAME_SELECT_CHAMP_RATIO, proc.LEAGUE_CLIENT_WINNAME, 1
+                )
+                controller.left_click(POST_GAME_OK_RATIO, proc.LEAGUE_CLIENT_WINNAME, 1)
+            controller.left_click(
+                POPUP_SEND_EMAIL_X_RATIO, proc.LEAGUE_CLIENT_WINNAME, 1
+            )
         except (window.WindowNotFound, pyautogui.FailSafeException):
             sleep(3)
 
@@ -259,12 +283,12 @@ class Bot:
             try:
                 players = self.api.get_players_to_honor()
                 index = random.randint(0, len(players) - 1)
-                self.api.honor_player(players[index]['summonerId'])
+                self.api.honor_player(players[index]["summonerId"])
                 sleep(2)
                 return True
             except LCUError as e:
                 log.warning(e)
-        log.warning('Honor Failure')
+        log.warning("Honor Failure")
         return False
 
     def end_of_game(self) -> None:
@@ -273,7 +297,7 @@ class Bot:
         posted = False
         for i in range(15):
             try:
-                if self.api.get_phase() != 'EndOfGame':
+                if self.api.get_phase() != "EndOfGame":
                     return
                 if not posted:
                     self.api.play_again()
@@ -289,8 +313,8 @@ class Bot:
         """Checks if account has reached max level."""
         try:
             if self.api.get_summoner_level() >= self.max_level:
-                if self.account['username'] == self.api.get_display_name():
-                    self.account['level'] = self.max_level
+                if self.account["username"] == self.api.get_display_name():
+                    self.account["level"] = self.max_level
                     accounts.save_or_add(self.account)
                 log.info("Account successfully leveled")
                 return True
@@ -312,7 +336,7 @@ class Bot:
     def set_game_config(self) -> None:
         """Overwrites the League of Legends game config."""
         log.info("Overwriting game configs")
-        path = self.league_dir + '/Config/game.cfg'
+        path = self.league_dir + "/Config/game.cfg"
         folder = os.path.abspath(os.path.join(path, os.pardir))
         for filename in os.listdir(folder):
             file_path = os.path.join(folder, filename)
@@ -320,15 +344,17 @@ class Bot:
                 if os.path.isfile(file_path) or os.path.islink(file_path):
                     os.unlink(file_path)
             except Exception as e:
-                log.error('Failed to delete %s. Reason: %s' % (file_path, e))
+                log.error("Failed to delete %s. Reason: %s" % (file_path, e))
         shutil.copy(proc.resource_path(config.GAME_CFG), path)
 
     @staticmethod
     def print_ascii() -> None:
         """Prints some League ascii art."""
-        print("""\n\n            
+        print(
+            """\n\n            
                     ──────▄▌▐▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▌
                     ───▄▄██▌█ BEEP BEEP
                     ▄▄▄▌▐██▌█ -15 LP DELIVERY
                     ███████▌█▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▌
-                    ▀(⊙)▀▀▀▀▀▀▀(⊙)(⊙)▀▀▀▀▀▀▀▀▀▀(⊙)\n\n\t\t\t\tLoL Bot\n\n""")
+                    ▀(⊙)▀▀▀▀▀▀▀(⊙)(⊙)▀▀▀▀▀▀▀▀▀▀(⊙)\n\n\t\t\t\tLoL Bot\n\n"""
+        )
