@@ -8,7 +8,11 @@ import platform
 
 OS = platform.system()
 
-CONFIG_DIR = os.path.join(os.getenv('LOCALAPPDATA'), 'LoLBot')
+if OS == "Windows":
+    CONFIG_DIR = os.path.join(os.getenv('LOCALAPPDATA'), 'LoLBot')
+else:
+    CONFIG_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'LoLBot')
+
 os.makedirs(CONFIG_DIR, exist_ok=True)
 
 BAK_DIR = os.path.join(CONFIG_DIR, 'bak')
