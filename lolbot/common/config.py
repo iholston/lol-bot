@@ -4,27 +4,18 @@ Handles multi-platform creating/writing LoLBot's configurations to json file.
 
 import os
 import json
-import platform
 
-OS = platform.system()
-
-if OS == "Windows":
-    CONFIG_DIR = os.path.join(os.getenv('LOCALAPPDATA'), 'LoLBot')
-else:
-    CONFIG_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'LoLBot')
+CONFIG_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'settings')
+BAK_DIR = os.path.join(CONFIG_DIR, 'bak')
+LOG_DIR = os.path.join(CONFIG_DIR, 'logs')
 
 os.makedirs(CONFIG_DIR, exist_ok=True)
-
-BAK_DIR = os.path.join(CONFIG_DIR, 'bak')
 os.makedirs(BAK_DIR, exist_ok=True)
-
-LOG_DIR = os.path.join(CONFIG_DIR, 'logs')
 os.makedirs(LOG_DIR, exist_ok=True)
 
 CONFIG_PATH = os.path.join(CONFIG_DIR, 'config.json')
 ACCOUNT_PATH = os.path.join(CONFIG_DIR, 'accounts.json')
-
-GAME_CFG = 'lolbot/resources/game.cfg'
+GAME_CFG_PATH = 'lolbot/resources/game.cfg'
 
 ALL_LOBBIES = {
     'Draft Pick': 400,

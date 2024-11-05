@@ -1,8 +1,8 @@
 """
-Where bot execution starts
+Application entry point.
 """
 
-from lolbot.view.main_window import MainWindow
+from view.main_window import MainWindow
 
 if __name__ == '__main__':
     gui: MainWindow = MainWindow(600, 420)
