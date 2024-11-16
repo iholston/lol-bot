@@ -4,7 +4,7 @@ Module that handles clicks and key presses.
 
 from time import sleep
 
-import keyboard
+import keys
 import pyautogui
 
 from lolbot.bot.window import WindowNotFound, window_exists, get_window_size

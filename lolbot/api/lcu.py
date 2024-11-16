@@ -7,7 +7,7 @@ import threading
 import requests
 import urllib3
 
-from lolbot.lcu import cmd
+from lolbot.system import cmd
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -26,13 +26,13 @@ class LCUApi:
         self.client.timeout = 2
         self.client.trust_env = False
         self.timer = None
-        self.endpoint = cmd.get_commandline().auth_url
+        self.endpoint = cmd.get_auth_string()
 
     def update_auth(self):
-        self.endpoint = cmd.get_commandline().auth_url
+        self.endpoint = cmd.get_auth_string()
 
     def update_auth_timer(self, timer: int = 5):
-        self.endpoint = cmd.get_commandline().auth_url
+        self.endpoint = cmd.get_auth_string()
         self.timer = threading.Timer(timer, self.update_auth_timer)
         self.timer.start()
 

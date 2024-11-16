@@ -8,7 +8,7 @@ import subprocess
 
 import dearpygui.dearpygui as dpg
 
-from lolbot.lcu.lcu_api import LCUApi
+from lolbot.api.lcu import LCUApi
 
 
 class HTTPTab:

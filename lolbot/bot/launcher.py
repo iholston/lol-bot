@@ -7,11 +7,9 @@ import subprocess
 from pathlib import Path
 from time import sleep
 
-import lolbot.bot.window as window
-
-from lolbot.bot import controller
-from lolbot.common import config, proc
-from lolbot.lcu.lcu_api import LCUApi, LCUError
+from lolbot.system import utils
+from lolbot.common import config
+from lolbot.api.lcu import LCUApi, LCUError
 
 log = logging.getLogger(__name__)
 
@@ -31,15 +29,15 @@ def launch_league(username: str, password: str) -> None:
     logins = 0
     for i in range(30):
         try:
-            if proc.is_league_running():
+            if utils.is_league_running():
                 if login_attempted:
                     log.info("Launch success")
-                    proc.close_riot_client()
+                    utils.close_riot_client()
                 else:
                     log.warning("League opened with prior login")
                     verify_account(api, username)
                 return
-            elif proc.is_rc_running():
+            elif utils.is_rc_running():
                 if api.access_token_exists():
                     if not login_attempted:
                         log.warning("Riot Client already logged in")
@@ -60,7 +58,7 @@ def launch_league(username: str, password: str) -> None:
                     manual_login(username, password)
                     if not api.access_token_exists():
                         log.warning("Login attempt failed")
-                        proc.close_riot_client()
+                        utils.close_riot_client()
                         sleep(5)
             else:
                 start_league()
@@ -72,14 +70,13 @@ def launch_league(username: str, password: str) -> None:
 
 def manual_login(username: str, password: str):
     log.info('Manually logging into Riot Client')
-    window.activate_windw("Riot Client")
-    controller.write(username)
+    utils.write(username)
     sleep(.5)
-    controller.keypress('tab')
+    utils.keypress('tab')
     sleep(.5)
-    controller.write(password)
+    utils.write(password)
     sleep(.5)
-    controller.keypress('enter')
+    utils.keypress('enter')
     sleep(10)
 
 

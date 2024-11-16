@@ -1,8 +1,10 @@
 keyboard
 mouse
-pywin32
 requests
 urllib3
 pyautogui
 dearpygui
 psutil
+
+pyobjc-framework-Quartz
+PyGetWindow

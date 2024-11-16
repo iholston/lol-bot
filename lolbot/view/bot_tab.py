@@ -11,9 +11,10 @@ import textwrap
 
 import dearpygui.dearpygui as dpg
 
-from lolbot.common import config, proc
-from lolbot.lcu.lcu_api import LCUApi, LCUError
-import lolbot.lcu.game_api as game_api
+from lolbot.common import config
+from lolbot.system import utils
+from lolbot.api.lcu import LCUApi, LCUError
+import lolbot.api.game as game_api
 from lolbot.bot.bot import Bot
 
 
@@ -35,7 +36,7 @@ class BotTab:
             dpg.add_spacer()
             dpg.add_text(default_value="Controls")
             with dpg.group(horizontal=True):
-                dpg.add_button(tag="StartStopButton", label='Start Bot', width=93, callback=self.start_stop_bot)  # width=136
+                dpg.add_button(tag="StartStopButton", label='Start Bot', width=93, callback=self.start_stop_bot)
                 dpg.add_button(label="Clear Output", width=93, callback=lambda: self.message_queue.put("Clear"))
                 dpg.add_button(label="Restart UX", width=93, callback=self.restart_ux)
                 dpg.add_button(label="Close Client", width=93, callback=self.close_client)
@@ -74,7 +75,7 @@ class BotTab:
             self.message_queue.put("Bot Successfully Terminated")
 
     def restart_ux(self) -> None:
-        if not proc.is_league_running():
+        if not utils.is_league_running():
             self.message_queue.put("Cannot restart UX, League is not running")
             return
         try:
@@ -85,10 +86,10 @@ class BotTab:
     def close_client(self) -> None:
         """Closes all league related processes"""
         self.message_queue.put('Closing League Processes')
-        threading.Thread(target=proc.close_all_processes).start()
+        threading.Thread(target=utils.close_all_processes).start()
 
     def update_info_panel(self) -> None:
-        if not proc.is_league_running():
+        if not utils.is_league_running():
             msg = textwrap.dedent("""\
             Phase: Closed
             Accnt: -

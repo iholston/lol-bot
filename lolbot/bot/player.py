@@ -4,12 +4,11 @@ Game logic that plays and through a single League of Legends match.
 
 import logging
 import random
+from time import sleep
 from datetime import datetime, timedelta
 
-import lolbot.lcu.game_api as api
-from lolbot.bot.controller import *
-from lolbot.bot.window import game_window_exists, WindowNotFound, GAME_WINDOW_NAME
-from lolbot.common import proc
+import lolbot.api.game as api
+from lolbot.system import mouse, keys, window, cmd
 
 log = logging.getLogger(__name__)
 
@@ -66,16 +65,16 @@ def play_game() -> None:
             else:
                 raise GameError("Game has exceeded the max time limit")
     except GameError as e:
-        log.warning(str(e))
-        proc.close_game()
+        log.warning(e)
+        cmd.run(cmd.CLOSE_GAME)
         sleep(30)
     except api.GameAPIError as e:
         game_errors += 1
         if game_errors == MAX_ERRORS:
             log.error(f"Max Game Errors reached. {e}")
-            proc.close_game()
+            cmd.run(cmd.CLOSE_GAME)
             sleep(30)
-    except (WindowNotFound, pyautogui.FailSafeException):
+    except window.WindowNotFound:
         log.info(f"Game Complete")
 
 
@@ -83,16 +82,15 @@ def wait_for_game_window() -> None:
     """Loop that waits for game window to open"""
     for i in range(120):
         sleep(1)
-        if game_window_exists():
+        if window.check_window_exists(window.GAME_WINDOW):
             log.debug("Game window open")
-            left_click(CENTER_OF_SCREEN, GAME_WINDOW_NAME, 2)
-            left_click(CENTER_OF_SCREEN, GAME_WINDOW_NAME)
+            left_click(CENTER_OF_SCREEN)
+            left_click(CENTER_OF_SCREEN)
             return
     raise GameError("Game window did not open")
 
 
 def wait_for_connection() -> None:
-    """Loop that waits for connection to local game server"""
     for i in range(120):
         if api.is_connected():
             return
@@ -101,14 +99,13 @@ def wait_for_connection() -> None:
 
 
 def loading_screen() -> None:
-    """Loop that waits for loading screen to end"""
     log.info("Waiting for game to start")
     start = datetime.now()
     while api.get_game_time() < LOADING_SCREEN_TIME:
         sleep(2)
         if datetime.now() - start > timedelta(minutes=10):
             raise GameError("Loading screen max time limit exceeded")
-    left_click(CENTER_OF_SCREEN, GAME_WINDOW_NAME, 2)
+    left_click(CENTER_OF_SCREEN)
 
 
 def game_start() -> None:
@@ -116,52 +113,84 @@ def game_start() -> None:
     log.info("Buying items, heading mid, and waiting for minions")
     sleep(10)
     shop()
-    keypress('y', GAME_WINDOW_NAME)  # lock screen
+    keypress('y')  # lock screen
     upgrade_abilities()
 
     # Sit under turret till minions clash mid lane
     while api.get_game_time() < MINION_CLASH_TIME:
-        right_click(MINI_MAP_UNDER_TURRET, GAME_WINDOW_NAME, 2)  # to prevent afk warning popup
-        left_click(AFK_OK_BUTTON, GAME_WINDOW_NAME)
+        right_click(MINI_MAP_UNDER_TURRET)  # to prevent afk warning popup
+        left_click(AFK_OK_BUTTON)
 
 
-def play(attack: tuple, retreat: tuple, time_to_lane: int) -> None:
+def play(attack_position: tuple, retreat: tuple, time_to_lane: int) -> None:
     """Buys items, levels up abilities, heads to lane, attacks, retreats, backs"""
     shop()
     upgrade_abilities()
-    left_click(AFK_OK_BUTTON, GAME_WINDOW_NAME)
+    left_click(AFK_OK_BUTTON)
 
     # Walk to lane
-    attack_move_click(attack, GAME_WINDOW_NAME)
-    keypress('d', GAME_WINDOW_NAME)  # ghost
+    attack_click(attack_position)
+    keypress('d')  # ghost
     sleep(time_to_lane)
 
     # Main attack move loop. This sequence attacks and then de-aggros to prevent them from dying 50 times.
     for i in range(7):
-        attack_move_click(attack, GAME_WINDOW_NAME, 8)
-        right_click(retreat, GAME_WINDOW_NAME, 2.5)
+        attack_click(attack_position)
+        sleep(8)
+        right_click(retreat)
+        sleep(2.5)
 
     # Ult and back
-    keypress('f', GAME_WINDOW_NAME)
-    attack_move_click(ULT_DIRECTION, GAME_WINDOW_NAME)
-    keypress('r', GAME_WINDOW_NAME, 4)
-    right_click(MINI_MAP_UNDER_TURRET, GAME_WINDOW_NAME, 6)
-    keypress('b', GAME_WINDOW_NAME, 10)
+    keypress('f')
+    attack_click(ULT_DIRECTION)
+    keypress('r')
+    right_click(MINI_MAP_UNDER_TURRET)
+    sleep(6)
+    keypress('b')
+    sleep(10)
 
 
 def shop() -> None:
     """Opens the shop and attempts to purchase items via default shop hotkeys"""
-    keypress('p', GAME_WINDOW_NAME, 1.5)  # open shop
-    left_click(random.choice(SHOP_ITEM_BUTTONS), GAME_WINDOW_NAME, 1.5)
-    left_click(SHOP_PURCHASE_ITEM_BUTTON, GAME_WINDOW_NAME, 1.5)
-    keypress('esc', GAME_WINDOW_NAME, 1.5)
-    left_click(SYSTEM_MENU_X_BUTTON, GAME_WINDOW_NAME, 1.5)
+    keypress('p')  # open shop
+    left_click(random.choice(SHOP_ITEM_BUTTONS))
+    left_click(SHOP_PURCHASE_ITEM_BUTTON)
+    keypress('esc')
+    left_click(SYSTEM_MENU_X_BUTTON)
 
 
 def upgrade_abilities() -> None:
-    """Upgrades abilities and then rotates which ability will be upgraded first next time"""
-    keypress('ctrl+r', GAME_WINDOW_NAME)
+    window.check_window_exists(window.GAME_WINDOW)
+    keys.press_and_release('ctrl+r')
     upgrades = ['ctrl+q', 'ctrl+w', 'ctrl+e']
     random.shuffle(upgrades)
     for upgrade in upgrades:
-        keypress(upgrade, GAME_WINDOW_NAME)
+        keys.press_and_release(upgrade)
+
+def left_click(ratio: tuple) -> None:
+    coords = window.convert_ratio(ratio, window.GAME_WINDOW)
+    mouse.move(coords)
+    mouse.left_click()
+    sleep(1)
+
+def right_click(ratio: tuple) -> None:
+    coords = window.convert_ratio(ratio, window.GAME_WINDOW)
+    mouse.move(coords)
+    mouse.right_click()
+    sleep(1)
+
+def attack_click(ratio: tuple) -> None:
+    coords = window.convert_ratio(ratio, window.GAME_WINDOW)
+    mouse.move(coords)
+    keys.key_down('a')
+    sleep(.1)
+    mouse.left_click()
+    sleep(.1)
+    mouse.left_click()
+    keys.key_up('a')
+    sleep(1)
+
+def keypress(key: str) -> None:
+    window.check_window_exists(window.GAME_WINDOW)
+    keys.press_and_release(key)
+    sleep(1)

@@ -11,11 +11,10 @@ import traceback
 from datetime import datetime, timedelta
 from time import sleep
 
-import pyautogui
-
-from lolbot.bot import game, launcher, logger, window, controller
-from lolbot.common import accounts, config, proc
-from lolbot.lcu.lcu_api import LCUApi, LCUError
+from lolbot.bot import player, launcher
+from lolbot.system import mouse, window, cmd
+from lolbot.common import accounts, config, logger
+from lolbot.api.lcu import LCUApi, LCUError
 
 log = logging.getLogger(__name__)
 
@@ -68,7 +67,7 @@ class Bot:
                     self.account["username"], self.account["password"]
                 )
                 self.leveling_loop(games)
-                proc.close_all_processes()
+                cmd.run(cmd.CLOSE_ALL)
                 self.bot_errors = 0
                 self.phase_errors = 0
                 self.game_errors = 0
@@ -81,7 +80,7 @@ class Bot:
                     log.error("Max errors reached. Exiting")
                     return
                 else:
-                    proc.close_all_processes()
+                    cmd.run(cmd.CLOSE_ALL)
             except launcher.LaunchError as le:
                 log.error(le)
                 log.error("Launcher Error. Exiting")
@@ -106,7 +105,7 @@ class Bot:
                 case "ChampSelect":
                     self.champ_select()
                 case "InProgress":
-                    game.play_game()
+                    player.play_game()
                 case "Reconnect":
                     self.reconnect()
                 case "WaitingForStats":
@@ -256,25 +255,20 @@ class Bot:
     def pre_end_of_game(self) -> None:
         """Handles league of legends client reopening after a game, honoring teammates, and clearing level-up/mission rewards."""
         log.info("Honoring teammates and accepting rewards")
-        sleep(3)
+        sleep(10)
+        popup_x_coords = window.convert_ratio(POPUP_SEND_EMAIL_X_RATIO, window.CLIENT_WINDOW)
+        select_champ_coords = window.convert_ratio(POST_GAME_SELECT_CHAMP_RATIO, window.CLIENT_WINDOW)
+        ok_button_coords = window.convert_ratio(POST_GAME_OK_RATIO, window.CLIENT_WINDOW)
         try:
-            controller.left_click(
-                POPUP_SEND_EMAIL_X_RATIO, proc.LEAGUE_CLIENT_WINNAME, 2
-            )
+            mouse.move_and_click(popup_x_coords)
             if not self.honor_player():
                 sleep(60)  # Honor failed for some reason, wait out the honor screen
-            controller.left_click(
-                POPUP_SEND_EMAIL_X_RATIO, proc.LEAGUE_CLIENT_WINNAME, 2
-            )
+            mouse.move_and_click(popup_x_coords)
             for i in range(3):
-                controller.left_click(
-                    POST_GAME_SELECT_CHAMP_RATIO, proc.LEAGUE_CLIENT_WINNAME, 1
-                )
-                controller.left_click(POST_GAME_OK_RATIO, proc.LEAGUE_CLIENT_WINNAME, 1)
-            controller.left_click(
-                POPUP_SEND_EMAIL_X_RATIO, proc.LEAGUE_CLIENT_WINNAME, 1
-            )
-        except (window.WindowNotFound, pyautogui.FailSafeException):
+                mouse.move_and_click(select_champ_coords)
+                mouse.move_and_click(ok_button_coords)
+            mouse.move_and_click(popup_x_coords)
+        except window.WindowNotFound:
             sleep(3)
 
     def honor_player(self) -> bool:
@@ -345,7 +339,7 @@ class Bot:
                     os.unlink(file_path)
             except Exception as e:
                 log.error("Failed to delete %s. Reason: %s" % (file_path, e))
-        shutil.copy(proc.resource_path(config.GAME_CFG), path)
+        shutil.copy(utils.resource_path(config.GAME_CFG), path)
 
     @staticmethod
     def print_ascii() -> None:

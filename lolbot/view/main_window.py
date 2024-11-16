@@ -6,15 +6,14 @@ import time
 
 import dearpygui.dearpygui as dpg
 
-from lolbot.lcu.lcu_api import LCUApi
+from lolbot.api.lcu import LCUApi
 from lolbot.view.bot_tab import BotTab
 from lolbot.view.accounts_tab import AccountsTab
 from lolbot.view.config_tab import ConfigTab
 from lolbot.view.http_tab import HTTPTab
 from lolbot.view.logs_tab import LogsTab
 from lolbot.view.about_tab import AboutTab
-
-ICON_PATH = 'lolbot/resources/images/a.ico'
+from lolbot.common.config import ICON_PATH
 
 
 class MainWindow:
