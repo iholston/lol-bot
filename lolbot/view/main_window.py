@@ -6,21 +6,22 @@ import time
 
 import dearpygui.dearpygui as dpg
 
-from lolbot.api.lcu import LCUApi
 from lolbot.view.bot_tab import BotTab
 from lolbot.view.accounts_tab import AccountsTab
 from lolbot.view.config_tab import ConfigTab
 from lolbot.view.http_tab import HTTPTab
 from lolbot.view.logs_tab import LogsTab
 from lolbot.view.about_tab import AboutTab
+from lolbot.api.lcu import LCUApi
+from lolbot.system import RESOLUTION
 from lolbot.common.config import ICON_PATH
 
 
 class MainWindow:
 
-    def __init__(self, width: int, height: int) -> None:
-        self.width = width
-        self.height = height
+    def __init__(self) -> None:
+        self.width = RESOLUTION[0]
+        self.height = RESOLUTION[1]
         self.tab_bar = None
         self.api = LCUApi()
         self.bot_tab = BotTab(self.api)

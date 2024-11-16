@@ -9,6 +9,9 @@ PORT_REGEX = re.compile(r"--app-port=(\d+)")
 TOKEN_REGEX = re.compile(r"--remoting-auth-token=(\S+)")
 
 # Commands
+LAUNCH_CLIENT = 'open "/Applications/League of Legends.app"'
+
+IS_GAME_INSTALLED = 'test -d "/Applications/League of Legends.app"'
 IS_GAME_RUNNING = 'pgrep -fl "LeagueOfLegends.app"'
 IS_CLIENT_RUNNING = 'pgrep -fl "LeagueClient"'
 IS_LAUNCHER_RUNNING = 'pgrep -fl "Riot"'

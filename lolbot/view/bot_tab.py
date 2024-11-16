@@ -12,7 +12,7 @@ import textwrap
 import dearpygui.dearpygui as dpg
 
 from lolbot.common import config
-from lolbot.system import utils
+from lolbot.system import cmd
 from lolbot.api.lcu import LCUApi, LCUError
 import lolbot.api.game as game_api
 from lolbot.bot.bot import Bot
@@ -54,7 +54,7 @@ class BotTab:
 
     def start_stop_bot(self) -> None:
         if self.bot_thread is None:
-            if not os.path.exists(config.load_config()['league_dir']):
+            if not cmd.run(cmd.IS_GAME_INSTALLED):
                 self.message_queue.put("Clear")
                 self.message_queue.put("League Installation Path is Invalid. Update Path to START")
                 return
@@ -75,7 +75,7 @@ class BotTab:
             self.message_queue.put("Bot Successfully Terminated")
 
     def restart_ux(self) -> None:
-        if not utils.is_league_running():
+        if not cmd.run(cmd.IS_CLIENT_RUNNING):
             self.message_queue.put("Cannot restart UX, League is not running")
             return
         try:
@@ -86,10 +86,10 @@ class BotTab:
     def close_client(self) -> None:
         """Closes all league related processes"""
         self.message_queue.put('Closing League Processes')
-        threading.Thread(target=utils.close_all_processes).start()
+        threading.Thread(target=cmd.run, args=(cmd.CLOSE_ALL,)).start()
 
     def update_info_panel(self) -> None:
-        if not utils.is_league_running():
+        if not cmd.run(cmd.IS_CLIENT_RUNNING):
             msg = textwrap.dedent("""\
             Phase: Closed
             Accnt: -

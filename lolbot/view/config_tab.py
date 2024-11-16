@@ -8,6 +8,7 @@ import os
 import dearpygui.dearpygui as dpg
 
 import lolbot.common.config as config
+from lolbot.system import OS
 
 
 class ConfigTab:
@@ -26,9 +27,10 @@ class ConfigTab:
                 dpg.add_button(label="Value", enabled=False, width=380)
             dpg.add_spacer()
             dpg.add_spacer()
-            with dpg.group(horizontal=True):
-                dpg.add_input_text(default_value='League Installation Path', width=180, enabled=False)
-                dpg.add_input_text(tag="LeaguePath", default_value=self.config['league_dir'], width=380, callback=self.save_config)
+            if OS == 'Windows':
+                with dpg.group(horizontal=True):
+                    dpg.add_input_text(default_value='League Installation Path', width=180, enabled=False)
+                    dpg.add_input_text(tag="LeaguePath", default_value=self.config['league_dir'], width=380, callback=self.save_config)
             with dpg.group(horizontal=True):
                 dpg.add_input_text(default_value='Game Mode', width=180, readonly=True)
                 lobby = int(self.config['lobby'])
@@ -55,7 +57,11 @@ class ConfigTab:
                 x = ""
                 for dia in self.config['dialog']:
                     x += dia.replace("'", "") + "\n"
-                dpg.add_input_text(tag="Dialog", default_value=x, width=380, multiline=True, height=215, callback=self.save_config)
+                if OS == "Windows":
+                    height = 215
+                else:
+                    height = 238
+                dpg.add_input_text(tag="Dialog", default_value=x, width=380, multiline=True, height=height, callback=self.save_config)
 
     def save_config(self):
         if os.path.exists(dpg.get_value('LeaguePath')):

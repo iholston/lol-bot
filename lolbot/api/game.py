@@ -8,7 +8,6 @@ import json
 import requests
 
 GAME_SERVER_URL = 'https://127.0.0.1:2999/liveclientdata/allgamedata'
-GAME_PROCESS_NAME = "League of Legends.exe"
 
 
 class GameAPIError(Exception):

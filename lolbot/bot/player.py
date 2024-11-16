@@ -16,11 +16,11 @@ log = logging.getLogger(__name__)
 LOADING_SCREEN_TIME = 3
 MINION_CLASH_TIME = 85
 FIRST_TOWER_TIME = 630
-MAX_GAME_TIME = 2400
+MAX_GAME_TIME = 3000
 
 # Click coordinates to move/aim
-MINI_MAP_UNDER_TURRET = (0.8760, 0.8846)
-MINI_MAP_CENTER_MID = (0.8981, 0.8674)
+MINI_MAP_UNDER_TURRET = (0.89, 0.89)
+MINI_MAP_CENTER_MID = (0.91, 0.87)
 MINI_MAP_ENEMY_NEXUS = (0.9628, 0.7852)
 ULT_DIRECTION = (0.7298, 0.2689)
 CENTER_OF_SCREEN = (0.5, 0.5)
@@ -31,7 +31,7 @@ SYSTEM_MENU_X_BUTTON = (0.7729, 0.2488)
 SHOP_ITEM_BUTTONS = [(0.3216, 0.5036), (0.4084, 0.5096), (0.4943, 0.4928)]
 SHOP_PURCHASE_ITEM_BUTTON = (0.7586, 0.6012)
 
-MAX_ERRORS = 15
+MAX_API_ERRORS = 15
 
 
 class GameError(Exception):
@@ -70,7 +70,7 @@ def play_game() -> None:
         sleep(30)
     except api.GameAPIError as e:
         game_errors += 1
-        if game_errors == MAX_ERRORS:
+        if game_errors == MAX_API_ERRORS:
             log.error(f"Max Game Errors reached. {e}")
             cmd.run(cmd.CLOSE_GAME)
             sleep(30)
@@ -169,18 +169,21 @@ def upgrade_abilities() -> None:
 
 def left_click(ratio: tuple) -> None:
     coords = window.convert_ratio(ratio, window.GAME_WINDOW)
+    print(coords)
     mouse.move(coords)
     mouse.left_click()
     sleep(1)
 
 def right_click(ratio: tuple) -> None:
     coords = window.convert_ratio(ratio, window.GAME_WINDOW)
+    print(coords)
     mouse.move(coords)
     mouse.right_click()
     sleep(1)
 
 def attack_click(ratio: tuple) -> None:
     coords = window.convert_ratio(ratio, window.GAME_WINDOW)
+    print(coords)
     mouse.move(coords)
     keys.key_down('a')
     sleep(.1)

@@ -39,6 +39,7 @@ class Bot:
 
     def __init__(self) -> None:
         self.api = LCUApi()
+        self.launcher = launcher.Launcher()
         self.config = config.load_config()
         self.league_dir = self.config["league_dir"]
         self.max_level = self.config["max_level"]
@@ -58,14 +59,12 @@ class Bot:
         self.api.update_auth_timer()
         self.print_ascii()
         # self.wait_for_patching()
-        self.set_game_config()
+        # self.set_game_config()
         while True:
             try:
                 errors.value = self.bot_errors
                 self.account = accounts.get_account(self.max_level)
-                launcher.launch_league(
-                    self.account["username"], self.account["password"]
-                )
+                self.launcher.launch_league(self.account["username"], self.account["password"])
                 self.leveling_loop(games)
                 cmd.run(cmd.CLOSE_ALL)
                 self.bot_errors = 0
