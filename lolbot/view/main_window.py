@@ -12,7 +12,7 @@ from lolbot.view.config_tab import ConfigTab
 from lolbot.view.http_tab import HTTPTab
 from lolbot.view.logs_tab import LogsTab
 from lolbot.view.about_tab import AboutTab
-from lolbot.api.lcu import LCUApi
+from lolbot.lcu.league_client import LeagueClient
 from lolbot.system import RESOLUTION
 from lolbot.common.config import ICON_PATH
 
@@ -23,7 +23,7 @@ class MainWindow:
         self.width = RESOLUTION[0]
         self.height = RESOLUTION[1]
         self.tab_bar = None
-        self.api = LCUApi()
+        self.api = LeagueClient()
         self.bot_tab = BotTab(self.api)
         self.accounts_tab = AccountsTab()
         self.config_tab = ConfigTab()

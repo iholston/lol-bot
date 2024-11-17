@@ -11,7 +11,7 @@ BAK_DIR = os.path.join(CONFIG_DIR, 'bak')
 LOG_DIR = os.path.join(CONFIG_DIR, 'logs')
 CONFIG_PATH = os.path.join(CONFIG_DIR, 'config.json')
 ACCOUNT_PATH = os.path.join(CONFIG_DIR, 'accounts.json')
-GAME_CFG_PATH = 'lolbot/resources/game.cfg'
+GAME_CFG_PATH = 'assets/game.cfg'
 ICON_PATH = 'assets/logo.ico'
 
 os.makedirs(CONFIG_DIR, exist_ok=True)

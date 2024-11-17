@@ -13,7 +13,7 @@ LAUNCH_CLIENT = 'open "/Applications/League of Legends.app"'
 
 IS_GAME_INSTALLED = 'test -d "/Applications/League of Legends.app"'
 IS_GAME_RUNNING = 'pgrep -fl "LeagueOfLegends.app"'
-IS_CLIENT_RUNNING = 'pgrep -fl "LeagueClient"'
+IS_CLIENT_RUNNING = 'pgrep -fl "LeagueClient" | grep -v "Riot"'
 IS_LAUNCHER_RUNNING = 'pgrep -fl "Riot"'
 
 CLOSE_GAME = 'kill -9 $(pgrep -f "LeagueOfLegends.app")'

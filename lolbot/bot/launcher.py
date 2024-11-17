@@ -6,7 +6,7 @@ import logging
 from time import sleep
 
 from lolbot.system import cmd, keys
-from lolbot.api.lcu import LCUApi, LCUError
+from lolbot.lcu.league_client import LeagueClient, LCUError
 
 log = logging.getLogger(__name__)
 
@@ -19,7 +19,7 @@ class Launcher:
     """Handles launching the League of Legends client and logging in"""
 
     def __init__(self):
-        self.api = LCUApi()
+        self.api = LeagueClient()
         self.username = ''
         self.password = ''
         self.attempts = 0
@@ -31,6 +31,7 @@ class Launcher:
         for i in range(30):
             self.launch_sequence()
             if self.success:
+                sleep(30)
                 return
         raise LaunchError("Could not open League. Ensure there are no pending updates.")
 
@@ -44,7 +45,7 @@ class Launcher:
                 self.verify_account()
             else:
                 log.info("Launch success")
-                cmd.run(cmd.CLOSE_LAUNCHER)
+                #cmd.run(cmd.CLOSE_LAUNCHER)
             self.success = True
 
         # Riot Client is opened and Logged In
@@ -52,18 +53,19 @@ class Launcher:
             if self.attempts == 0:
                 log.warning("Riot Client has previous login")
             try:
+                log.info("Logged into client. Launching League")
                 self.api.launch_league_from_rc()
             except LCUError:
                 pass
             return
 
         # Riot Client is opened and Not Logged In
-        elif cmd.run(cmd.IS_GAME_RUNNING):
+        elif cmd.run(cmd.IS_LAUNCHER_RUNNING):
             if self.attempts == 5:
                 raise LaunchError("Max login attempts exceeded. Check username and password")
             log.info("Logging into Riot Client")
             self.attempts += 1
-            # self.api.login(self.username, self.password)
+            # self.lcu.login(self.username, self.password)
             self.manual_login()
 
         # Nothing is opened
@@ -72,11 +74,10 @@ class Launcher:
             cmd.run(cmd.LAUNCH_CLIENT)
             sleep(15)
 
-
     def manual_login(self):
         """
         Sends keystrokes into username and password fields. Only use if
-        Riot Client api login does not work.
+        Riot Client lcu login does not work.
         """
         log.info('Manually logging into Riot Client')
         keys.write(self.username)
@@ -92,12 +93,11 @@ class Launcher:
             cmd.run(cmd.CLOSE_ALL)
             sleep(5)
 
-
     def verify_account(self) -> bool:
         """Checks if account username match the account that is currently logged in."""
         log.info("Verifying logged-in account credentials")
         try:
-            if self.username == self.api.get_display_name():
+            if self.username == self.api.get_summoner_name():
                 log.info("Account Verified")
                 return True
             else:

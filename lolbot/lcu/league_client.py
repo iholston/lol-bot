@@ -17,7 +17,7 @@ class LCUError(Exception):
     pass
 
 
-class LCUApi:
+class LeagueClient:
 
     def __init__(self):
         self.client = requests.Session()
@@ -80,13 +80,16 @@ class LCUApi:
         except Exception as e:
             raise e
 
-    def get_display_name(self) -> str:
+    def get_summoner_name(self) -> str:
         """Gets display name of logged in account"""
         url = f"{self.endpoint}/lol-summoner/v1/current-summoner"
         try:
             response = self.client.get(url)
             response.raise_for_status()
-            return response.json()['displayName']
+            if response.json()['displayName']:
+                return response.json()['displayName']
+            else:
+                return response.json()['gameName']
         except requests.RequestException as e:
             raise LCUError(f"Error retrieving display name: {e}")
 

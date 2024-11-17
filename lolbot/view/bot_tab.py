@@ -13,15 +13,15 @@ import dearpygui.dearpygui as dpg
 
 from lolbot.common import config
 from lolbot.system import cmd
-from lolbot.api.lcu import LCUApi, LCUError
-import lolbot.api.game as game_api
+from lolbot.lcu.league_client import LeagueClient, LCUError
+import lolbot.lcu.game_server as game_api
 from lolbot.bot.bot import Bot
 
 
 class BotTab:
     """Class that displays the BotTab and handles bot controls/output"""
 
-    def __init__(self, api: LCUApi):
+    def __init__(self, api: LeagueClient):
         self.message_queue = multiprocessing.Queue()
         self.games_played = multiprocessing.Value('i', 0)
         self.bot_errors = multiprocessing.Value('i', 0)
@@ -126,7 +126,7 @@ class BotTab:
                     pass
             msg = textwrap.dedent(f"""\
             Phase: {phase}
-            Accnt: {self.api.get_display_name()}
+            Accnt: {self.api.get_summoner_name()}
             Level: {self.api.get_summoner_level()}
             Time : {game_time}
             Champ: {champ}""")

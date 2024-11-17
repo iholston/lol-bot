@@ -11,10 +11,10 @@ import traceback
 from datetime import datetime, timedelta
 from time import sleep
 
-from lolbot.bot import player, launcher
-from lolbot.system import mouse, window, cmd
+from lolbot.bot import game, launcher
+from lolbot.system import mouse, window, cmd, OS
 from lolbot.common import accounts, config, logger
-from lolbot.api.lcu import LCUApi, LCUError
+from lolbot.lcu.league_client import LeagueClient, LCUError
 
 log = logging.getLogger(__name__)
 
@@ -30,7 +30,6 @@ MAX_PHASE_ERRORS = 20
 
 class BotError(Exception):
     """Indicates the League Client instance should be restarted."""
-
     pass
 
 
@@ -38,7 +37,7 @@ class Bot:
     """Handles the League Client and all tasks needed to start a new game."""
 
     def __init__(self) -> None:
-        self.api = LCUApi()
+        self.api = LeagueClient()
         self.launcher = launcher.Launcher()
         self.config = config.load_config()
         self.league_dir = self.config["league_dir"]
@@ -59,7 +58,10 @@ class Bot:
         self.api.update_auth_timer()
         self.print_ascii()
         # self.wait_for_patching()
-        # self.set_game_config()
+        if OS == 'Windows':
+            self.set_game_config()
+        else:
+            self.set_config_mac()
         while True:
             try:
                 errors.value = self.bot_errors
@@ -104,7 +106,7 @@ class Bot:
                 case "ChampSelect":
                     self.champ_select()
                 case "InProgress":
-                    player.play_game()
+                    game.play_game()
                 case "Reconnect":
                     self.reconnect()
                 case "WaitingForStats":
@@ -306,7 +308,7 @@ class Bot:
         """Checks if account has reached max level."""
         try:
             if self.api.get_summoner_level() >= self.max_level:
-                if self.account["username"] == self.api.get_display_name():
+                if self.account["username"] == self.api.get_summoner_name():
                     self.account["level"] = self.max_level
                     accounts.save_or_add(self.account)
                 log.info("Account successfully leveled")
@@ -338,7 +340,13 @@ class Bot:
                     os.unlink(file_path)
             except Exception as e:
                 log.error("Failed to delete %s. Reason: %s" % (file_path, e))
-        shutil.copy(utils.resource_path(config.GAME_CFG), path)
+        shutil.copy(config.GAME_CFG_PATH, path)
+
+    @staticmethod
+    def set_config_mac() -> None:
+        log.info("Overwriting game configs")
+        path = '/Applications/League of Legends.app/contents/lol/config/game.cfg'
+        shutil.copy(config.GAME_CFG_PATH, path)
 
     @staticmethod
     def print_ascii() -> None:

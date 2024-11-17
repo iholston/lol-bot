@@ -27,6 +27,12 @@ def press_and_release(key: str):
             with keyboard.pressed(Key.ctrl):
                 keyboard.press('e')
                 keyboard.release('e')
+        case 'tab':
+            keyboard.press(Key.tab)
+            keyboard.release(Key.tab)
+        case 'enter':
+            keyboard.press(Key.enter)
+            keyboard.release(Key.enter)
         case _:
             keyboard.press(key)
             keyboard.release(key)
