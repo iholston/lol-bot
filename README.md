@@ -29,7 +29,7 @@
 ## Usage
 - Download the [latest release](https://github.com/iholston/lol-bot/releases)
 - Ensure [Python 3.10+](https://www.python.org/downloads/) is installed
-- Run ```pip3 install -r requirements.txt``` 
+- Run ```pip install -r requirements.txt``` 
 - Run ```python main.pyw```
 
 ## League Account Requirements
