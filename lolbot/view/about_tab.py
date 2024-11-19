@@ -7,7 +7,7 @@ import requests
 
 import dearpygui.dearpygui as dpg
 
-VERSION = '3.1.0'
+VERSION = '4.0.0'
 
 
 class AboutTab:
@@ -47,10 +47,10 @@ class AboutTab:
         notes = "\t\t\t\t\t\t\t\t\tNotes\n"
 
         notes += """
-Due to the release of Vanguard, it is recommended to run the bot as a python 
-script. There has been a distinct increase in accounts being banned on Windows 
-since Vanguard release. The bot is currently being ported to MacOS where there 
-is no Vanguard. Running on MacOS is the best way to not get banned.
+Due to the release of Vanguard, it is recommended to run this bot only on macOS. 
+If running on Windows, run the bot as a python script. As of v4.0.0 there will 
+be no executable file for Windows. 
+
 
 If you have any problems create an issue on the github repo.
 """

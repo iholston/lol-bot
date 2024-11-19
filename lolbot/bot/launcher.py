@@ -52,9 +52,12 @@ class Launcher:
         elif cmd.run(cmd.IS_LAUNCHER_RUNNING) and self.api.access_token_exists():
             if self.attempts == 0:
                 log.warning("Riot Client has previous login")
+            else:
+                log.info("Login Successful")
             try:
-                log.info("Logged into client. Launching League")
+                log.info("Launching League from Client")
                 self.api.launch_league_from_rc()
+                sleep(20)
             except LCUError:
                 pass
             return
