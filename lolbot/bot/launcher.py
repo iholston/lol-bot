@@ -63,7 +63,6 @@ class Launcher:
         elif cmd.run(cmd.IS_LAUNCHER_RUNNING):
             if self.attempts == 5:
                 raise LaunchError("Max login attempts exceeded. Check username and password")
-            log.info("Logging into Riot Client")
             self.attempts += 1
             # self.lcu.login(self.username, self.password)
             self.manual_login()
@@ -87,11 +86,11 @@ class Launcher:
         keys.write(self.password)
         sleep(.5)
         keys.press_and_release('enter')
-        sleep(10)
-        if not self.api.access_token_exists():
-            log.warning("Login attempt failed")
-            cmd.run(cmd.CLOSE_ALL)
-            sleep(5)
+        sleep(15)
+        #if not self.api.access_token_exists():
+        #    log.warning("Login attempt failed")
+        #    cmd.run(cmd.CLOSE_ALL)
+        #    sleep(10)
 
     def verify_account(self) -> bool:
         """Checks if account username match the account that is currently logged in."""

@@ -9,7 +9,6 @@ from datetime import datetime, timedelta
 
 from lolbot.lcu.game_server import GameServer, GameServerError
 from lolbot.system import mouse, keys, window, cmd
-from lolbot.system.macos.window import WindowNotFound
 
 log = logging.getLogger(__name__)
 
@@ -65,7 +64,7 @@ def wait_for_game_window() -> None:
                 left_click(CENTER_OF_SCREEN)
                 left_click(CENTER_OF_SCREEN)
                 return
-        except WindowNotFound:
+        except window.WindowNotFound:
             pass
     raise GameError("Game window did not open")
 

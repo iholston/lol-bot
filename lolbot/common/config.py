@@ -8,7 +8,7 @@ from pathlib import Path
 
 from lolbot.system import OS
 
-CONFIG_DIR = Path(__file__).resolve().parents[2] / 'settings'
+CONFIG_DIR = Path(__file__).resolve().parents[3] / 'lolbot-settings'
 BAK_DIR = os.path.join(CONFIG_DIR, 'bak')
 LOG_DIR = os.path.join(CONFIG_DIR, 'logs')
 CONFIG_PATH = os.path.join(CONFIG_DIR, 'config.json')
