@@ -6,6 +6,8 @@ import logging
 import multiprocessing as mp
 import os
 import random
+import configparser
+import json
 import shutil
 import traceback
 from datetime import datetime, timedelta
@@ -40,11 +42,9 @@ class Bot:
         self.api = LeagueClient()
         self.launcher = launcher.Launcher()
         self.config = config.load_config()
-        self.league_dir = self.config["league_dir"]
         self.max_level = self.config["max_level"]
         self.lobby = self.config["lobby"]
         self.champs = self.config["champs"]
-        self.dialog = self.config["dialog"]
         self.account = None
         self.phase = None
         self.prev_phase = None
@@ -58,15 +58,12 @@ class Bot:
         self.api.update_auth_timer()
         self.print_ascii()
         # self.wait_for_patching()
-        if OS == 'Windows':
-            self.set_game_config()
-        else:
-            self.set_config_mac()
         while True:
             try:
                 errors.value = self.bot_errors
                 self.account = accounts.get_account(self.max_level)
                 self.launcher.launch_league(self.account["username"], self.account["password"])
+                self.set_game_config()
                 self.leveling_loop(games)
                 cmd.run(cmd.CLOSE_ALL)
                 self.bot_errors = 0
@@ -202,6 +199,7 @@ class Bot:
         """Handles the Champ Select Lobby."""
         log.info("Locking in champ")
         champ_index = -1
+        logged = False
         while True:
             try:
                 data = self.api.get_champ_select_data()
@@ -211,20 +209,15 @@ class Bot:
             try:
                 for action in data["actions"][0]:
                     if action["actorCellId"] == data["localPlayerCellId"]:
-                        if (
-                            action["championId"] == 0
-                        ):  # No champ hovered. Hover a champion.
+                        if action["championId"] == 0:  # No champ hovered. Hover a champion.
                             champ_index += 1
-                            self.api.hover_champion(
-                                action["id"], champ_list[champ_index]
-                            )
-                        elif not action[
-                            "completed"
-                        ]:  # Champ is hovered but not locked in.
-                            self.api.lock_in_champion(
-                                action["id"], action["championId"]
-                            )
+                            self.api.hover_champion(action["id"], champ_list[champ_index])
+                        elif not action["completed"]:  # Champ is hovered but not locked in.
+                            self.api.lock_in_champion(action["id"], action["championId"])
                         else:  # Champ is locked in. Nothing left to do.
+                            if not logged:
+                                log.info("Waiting for game to launch")
+                                logged = True
                             sleep(2)
             except LCUError:
                 pass
@@ -288,7 +281,7 @@ class Bot:
 
     def end_of_game(self) -> None:
         """Transitions out of EndOfGame."""
-        log.info("Getting back into queue")
+        log.info("Starting new game loop")
         posted = False
         for i in range(15):
             try:
@@ -331,22 +324,57 @@ class Bot:
     def set_game_config(self) -> None:
         """Overwrites the League of Legends game config."""
         log.info("Overwriting game configs")
-        path = self.league_dir + "/Config/game.cfg"
-        folder = os.path.abspath(os.path.join(path, os.pardir))
-        for filename in os.listdir(folder):
-            file_path = os.path.join(folder, filename)
-            try:
-                if os.path.isfile(file_path) or os.path.islink(file_path):
-                    os.unlink(file_path)
-            except Exception as e:
-                log.error("Failed to delete %s. Reason: %s" % (file_path, e))
-        shutil.copy(config.GAME_CFG_PATH, path)
+        if OS == 'Windows':
+            config_dir = os.path.join(self.config['windows_install_dir'], 'Config')
+        else:
+            config_dir = os.path.join(self.config['macos_install_dir'], 'contents/lol/config')
 
-    @staticmethod
-    def set_config_mac() -> None:
-        log.info("Overwriting game configs")
-        path = '/Applications/League of Legends.app/contents/lol/config/game.cfg'
-        shutil.copy(config.GAME_CFG_PATH, path)
+        game_config = os.path.join(config_dir, 'game.cfg')
+        persisted_settings = os.path.join(config_dir, 'PersistedSettings.json')
+        try:
+            os.remove(game_config)
+        except FileNotFoundError:
+            pass
+        config_settings = configparser.ConfigParser()
+        config_settings.optionxform = str
+        config_settings["General"] = {
+            "WindowMode": "2",
+            "Height": "768",
+            "Width": "1024",
+        }
+        config_settings["Performance"] = {
+            "ShadowQuality": "0",
+            "FrameCapType": "5",
+            "EnvironmentQuality": "0",
+            "EffectsQuality": "0",
+            "CharacterQuality": "0",
+            "EnableGrassSwaying": "0",
+            "EnableFXAA": "0",
+        }
+        with open(game_config, "w") as configfile:
+            config_settings.write(configfile)
+        with open(persisted_settings, 'r') as file:
+            data = json.load(file)
+        for file in data.get('files', []):
+            for section in file.get('sections', []):
+                if section.get('name') == 'ItemShop':
+                    for setting in section.get('settings', []):
+                        if setting.get('name') == 'CurrentTab':
+                            setting['value'] = str(0)
+                        if setting.get('name') == 'NativeOffsetX':
+                            setting['value'] = str(0)
+                        if setting.get('name') == 'NativeOffsetY':
+                            setting['value'] = str(0)
+                if section.get('name') == 'HUD':
+                    for setting in section.get('settings', []):
+                        if setting.get('name') == 'FlipMiniMap':
+                            setting['value'] = str(0)
+                        if setting.get('name') == 'MinimapScale':
+                            setting['value'] = str(1.0000)
+                        if setting.get('name') == 'ShopScale':
+                            setting['value'] = str(0.4444)
+        with open(persisted_settings, 'w') as file:
+            json.dump(data, file, indent=4)
 
     @staticmethod
     def print_ascii() -> None:

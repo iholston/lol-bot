@@ -31,7 +31,6 @@ class Launcher:
         for i in range(30):
             self.launch_sequence()
             if self.success:
-                sleep(30)
                 return
         raise LaunchError("Could not open League. Ensure there are no pending updates.")
 
@@ -42,10 +41,11 @@ class Launcher:
         if cmd.run(cmd.IS_CLIENT_RUNNING):
             if self.attempts == 0:
                 log.warning("League opened with prior login")
-                self.verify_account()
+                #self.verify_account()
             else:
                 log.info("Launch success")
                 #cmd.run(cmd.CLOSE_LAUNCHER)
+                sleep(30)
             self.success = True
 
         # Riot Client is opened and Logged In

@@ -9,6 +9,7 @@ from datetime import datetime, timedelta
 
 from lolbot.lcu.game_server import GameServer, GameServerError
 from lolbot.system import mouse, keys, window, cmd
+from lolbot.system.macos.window import WindowNotFound
 
 log = logging.getLogger(__name__)
 
@@ -29,7 +30,7 @@ CENTER_OF_SCREEN = (0.5, 0.5)
 AFK_OK_BUTTON = (0.4981, 0.4647)
 SYSTEM_MENU_X_BUTTON = (0.7729, 0.2488)
 SHOP_ITEM_BUTTONS = [(0.3216, 0.5036), (0.4084, 0.5096), (0.4943, 0.4928)]
-SHOP_PURCHASE_ITEM_BUTTON = (0.7586, 0.6012)
+SHOP_PURCHASE_ITEM_BUTTON = (0.7586, 0.5712)
 
 MAX_SERVER_ERRORS = 15
 
@@ -58,11 +59,14 @@ def wait_for_game_window() -> None:
     """Loop that waits for game window to open"""
     for i in range(120):
         sleep(1)
-        if window.check_window_exists(window.GAME_WINDOW):
-            log.debug("Game window open")
-            left_click(CENTER_OF_SCREEN)
-            left_click(CENTER_OF_SCREEN)
-            return
+        try:
+            if window.check_window_exists(window.GAME_WINDOW):
+                log.info("Game Launched")
+                left_click(CENTER_OF_SCREEN)
+                left_click(CENTER_OF_SCREEN)
+                return
+        except WindowNotFound:
+            pass
     raise GameError("Game window did not open")
 
 
@@ -102,7 +106,7 @@ def game_loop(game_server: GameServer) -> None:
 
 
 def loading_screen(game_server: GameServer) -> None:
-    log.info("Waiting for game to start")
+    log.info("Waiting through Loading Screen")
     start = datetime.now()
     while game_server.get_game_time() < LOADING_SCREEN_TIME:
         sleep(2)
@@ -113,7 +117,7 @@ def loading_screen(game_server: GameServer) -> None:
 
 def game_start(game_server: GameServer) -> None:
     """Buys starter items and waits for minions to clash (minions clash at 90 seconds)"""
-    log.info("Buying items, heading mid, and waiting for minions")
+    log.info("Waiting for Minion Clash")
     sleep(10)
     shop()
     keypress('y')  # lock screen
@@ -138,7 +142,7 @@ def play(game_server: GameServer, attack_position: tuple, retreat: tuple, time_t
 
     # Main attack move loop. This sequence attacks and then de-aggros to prevent them from dying 50 times.
     for i in range(8):
-        if game_server.get_summoner_health() < .5:
+        if game_server.get_summoner_health() < .7:
             right_click(retreat)
             sleep(4)
             break

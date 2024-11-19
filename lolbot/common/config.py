@@ -6,12 +6,13 @@ import os
 import json
 from pathlib import Path
 
+from lolbot.system import OS
+
 CONFIG_DIR = Path(__file__).resolve().parents[2] / 'settings'
 BAK_DIR = os.path.join(CONFIG_DIR, 'bak')
 LOG_DIR = os.path.join(CONFIG_DIR, 'logs')
 CONFIG_PATH = os.path.join(CONFIG_DIR, 'config.json')
 ACCOUNT_PATH = os.path.join(CONFIG_DIR, 'accounts.json')
-GAME_CFG_PATH = 'assets/game.cfg'
 ICON_PATH = 'assets/logo.ico'
 
 os.makedirs(CONFIG_DIR, exist_ok=True)
@@ -39,15 +40,15 @@ BOT_LOBBIES = {
     'Intermediate Bots': 890,
 }
 
-
 def load_config() -> dict:
     """Load configuration from disk or set defaults"""
     default_config = {
-        'league_dir': 'C:/Riot Games/League of Legends',
+        'windows_install_dir': 'C:/Riot Games/League of Legends',
+        'macos_install_dir': '/Applications/League of Legends.app',
         'lobby': 880,
         'max_level': 30,
         'champs': [21, 18, 22, 67],
-        'dialog': ["mid ples", "plannin on goin mid team", "mid por favor", "bienvenidos, mid", "howdy, mid", "goin mid", "mid"]
+        'fps': 60,
     }
     if not os.path.exists(CONFIG_PATH):
         with open(CONFIG_PATH, 'w') as configfile:

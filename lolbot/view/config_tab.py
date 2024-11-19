@@ -29,8 +29,12 @@ class ConfigTab:
             dpg.add_spacer()
             if OS == 'Windows':
                 with dpg.group(horizontal=True):
-                    dpg.add_input_text(default_value='League Installation Path', width=180, enabled=False)
-                    dpg.add_input_text(tag="LeaguePath", default_value=self.config['league_dir'], width=380, callback=self.save_config)
+                    dpg.add_input_text(default_value='League Install Folder', width=180, enabled=False)
+                    dpg.add_input_text(tag="WinLeaguePath", default_value=self.config['windows_install_dir'], width=380, callback=self.save_config)
+            else:
+                with dpg.group(horizontal=True):
+                    dpg.add_input_text(default_value='League Install Folder', width=180, enabled=False)
+                    dpg.add_input_text(tag="MacLeaguePath", default_value=self.config['macos_install_dir'], width=380, callback=self.save_config)
             with dpg.group(horizontal=True):
                 dpg.add_input_text(default_value='Game Mode', width=180, readonly=True)
                 lobby = int(self.config['lobby'])
@@ -50,25 +54,16 @@ class ConfigTab:
                 with dpg.tooltip(dpg.last_item()):
                     dpg.add_text("Open ddragon.leagueoflegends.com in webbrowser")
                 dpg.bind_item_theme(b, "__hyperlinkTheme")
-            with dpg.group(horizontal=True):
-                dpg.add_input_text(default_value='Ask for Mid Dialog', width=180, enabled=False)
-                with dpg.tooltip(dpg.last_item()):
-                    dpg.add_text("The bot will type a random phrase in the\nchamp select lobby. Each line is a phrase.\nIt will autosave.")
-                x = ""
-                for dia in self.config['dialog']:
-                    x += dia.replace("'", "") + "\n"
-                if OS == "Windows":
-                    height = 215
-                else:
-                    height = 238
-                dpg.add_input_text(tag="Dialog", default_value=x, width=380, multiline=True, height=height, callback=self.save_config)
 
     def save_config(self):
-        if os.path.exists(dpg.get_value('LeaguePath')):
-            self.config['league_dir'] = dpg.get_value('LeaguePath')
+        if OS == 'Windows':
+            if os.path.exists(dpg.get_value('WinLeaguePath')):
+                self.config['windows_install_dir'] = dpg.get_value('WinLeaguePath')
+        else:
+            if os.path.exists(dpg.get_value('MacLeaguePath')):
+                self.config['macos_install_dir'] = dpg.get_value('MacLeaguePath')
         self.config['lobby'] = config.BOT_LOBBIES.get(dpg.get_value('GameMode'))
         self.config['max_level'] = dpg.get_value('MaxLevel')
         champs = dpg.get_value('Champs')
         self.config['champs'] = [int(s) for s in champs.split(',')]
-        self.config['dialog'] = dpg.get_value("Dialog").strip().split("\n")
         config.save_config(self.config)

@@ -355,7 +355,7 @@ class LeagueClient:
         """Honors player in post game screen"""
         url = f"{self.endpoint}/lol-honor-v2/v1/honor-player"
         try:
-            response = self.client.post(url, data={"summonerID": summoner_id})
+            response = self.client.post(url, json={"summonerID": summoner_id})
             response.raise_for_status()
         except requests.RequestException as e:
             raise LCUError(f"Failed to honor player: {e}")
