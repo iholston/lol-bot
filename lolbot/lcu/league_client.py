@@ -7,7 +7,7 @@ import threading
 import requests
 import urllib3
 
-from lolbot.lcu import cmd
+from lolbot.system import cmd
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -17,7 +17,7 @@ class LCUError(Exception):
     pass
 
 
-class LCUApi:
+class LeagueClient:
 
     def __init__(self):
         self.client = requests.Session()
@@ -26,13 +26,13 @@ class LCUApi:
         self.client.timeout = 2
         self.client.trust_env = False
         self.timer = None
-        self.endpoint = cmd.get_commandline().auth_url
+        self.endpoint = cmd.get_auth_string()
 
     def update_auth(self):
-        self.endpoint = cmd.get_commandline().auth_url
+        self.endpoint = cmd.get_auth_string()
 
     def update_auth_timer(self, timer: int = 5):
-        self.endpoint = cmd.get_commandline().auth_url
+        self.endpoint = cmd.get_auth_string()
         self.timer = threading.Timer(timer, self.update_auth_timer)
         self.timer.start()
 
@@ -80,13 +80,16 @@ class LCUApi:
         except Exception as e:
             raise e
 
-    def get_display_name(self) -> str:
+    def get_summoner_name(self) -> str:
         """Gets display name of logged in account"""
         url = f"{self.endpoint}/lol-summoner/v1/current-summoner"
         try:
             response = self.client.get(url)
             response.raise_for_status()
-            return response.json()['displayName']
+            if response.json()['displayName']:
+                return response.json()['displayName']
+            else:
+                return response.json()['gameName']
         except requests.RequestException as e:
             raise LCUError(f"Error retrieving display name: {e}")
 
@@ -352,7 +355,7 @@ class LCUApi:
         """Honors player in post game screen"""
         url = f"{self.endpoint}/lol-honor-v2/v1/honor-player"
         try:
-            response = self.client.post(url, data={"summonerID": summoner_id})
+            response = self.client.post(url, json={"summonerID": summoner_id})
             response.raise_for_status()
         except requests.RequestException as e:
             raise LCUError(f"Failed to honor player: {e}")

@@ -17,9 +17,9 @@ def load_accounts() -> list:
     try:
         with open(ACCOUNT_PATH, 'r') as account_file:
             accounts = json.load(account_file)
-    except json.JSONDecodeError as e:
+    except json.JSONDecodeError:
         return accounts
-    except KeyError as e:
+    except KeyError:
         return accounts
     if "accounts" in accounts:  # convert old format to new
         accounts = accounts['accounts']

@@ -3,108 +3,108 @@ Handles launching League of Legends and logging into an account.
 """
 
 import logging
-import subprocess
-from pathlib import Path
 from time import sleep
 
-import lolbot.bot.window as window
-
-from lolbot.bot import controller
-from lolbot.common import config, proc
-from lolbot.lcu.lcu_api import LCUApi, LCUError
+from lolbot.system import cmd, keys
+from lolbot.lcu.league_client import LeagueClient, LCUError
 
 log = logging.getLogger(__name__)
-
-MAX_RETRIES = 5
 
 
 class LaunchError(Exception):
     """Indicates that League could not be opened."""
     pass
 
+class Launcher:
+    """Handles launching the League of Legends client and logging in"""
 
-def launch_league(username: str, password: str) -> None:
-    """Ensures that League is open and logged into a specific account"""
-    api = LCUApi()
-    api.update_auth()
-    login_attempted = False
-    logins = 0
-    for i in range(30):
-        try:
-            if proc.is_league_running():
-                if login_attempted:
-                    log.info("Launch success")
-                    proc.close_riot_client()
-                else:
-                    log.warning("League opened with prior login")
-                    verify_account(api, username)
+    def __init__(self):
+        self.api = LeagueClient()
+        self.username = ''
+        self.password = ''
+        self.attempts = 0
+        self.success = False
+
+    def launch_league(self, username: str = '', password: str = ''):
+        self.username = username
+        self.password = password
+        for i in range(30):
+            self.launch_sequence()
+            if self.success:
                 return
-            elif proc.is_rc_running():
-                if api.access_token_exists():
-                    if not login_attempted:
-                        log.warning("Riot Client already logged in")
-                    try:
-                        api.launch_league_from_rc()
-                        sleep(2)
-                    except LCUError:
-                        pass
-                    continue
-                else:
-                    if logins == MAX_RETRIES:
-                        raise LaunchError("Max login attempts exceeded. Check username and password")
-                    else:
-                        logins += 1
-                    log.info("Logging into Riot Client")
-                    login_attempted = True
-                    # api.login(username, password)  # they turned this off
-                    manual_login(username, password)
-                    if not api.access_token_exists():
-                        log.warning("Login attempt failed")
-                        proc.close_riot_client()
-                        sleep(5)
+        raise LaunchError("Could not open League. Ensure there are no pending updates.")
+
+    def launch_sequence(self):
+        self.api.update_auth()
+
+        # League is Running
+        if cmd.run(cmd.IS_CLIENT_RUNNING):
+            if self.attempts == 0:
+                log.warning("League opened with prior login")
+                #self.verify_account()
             else:
-                start_league()
-                sleep(10)
+                log.info("Launch success")
+                #cmd.run(cmd.CLOSE_LAUNCHER)
+                sleep(30)
+            self.success = True
+
+        # Riot Client is opened and Logged In
+        elif cmd.run(cmd.IS_LAUNCHER_RUNNING) and self.api.access_token_exists():
+            if self.attempts == 0:
+                log.warning("Riot Client has previous login")
+            else:
+                log.info("Login Successful")
+            try:
+                log.info("Launching League from Client")
+                self.api.launch_league_from_rc()
+                sleep(20)
+            except LCUError:
+                pass
+            return
+
+        # Riot Client is opened and Not Logged In
+        elif cmd.run(cmd.IS_LAUNCHER_RUNNING):
+            if self.attempts == 5:
+                raise LaunchError("Max login attempts exceeded. Check username and password")
+            self.attempts += 1
+            # self.lcu.login(self.username, self.password)
+            self.manual_login()
+
+        # Nothing is opened
+        else:
+            log.info("Launching League of Legends")
+            cmd.run(cmd.LAUNCH_CLIENT)
+            sleep(15)
+
+    def manual_login(self):
+        """
+        Sends keystrokes into username and password fields. Only use if
+        Riot Client lcu login does not work.
+        """
+        log.info('Manually logging into Riot Client')
+        keys.write(self.username)
+        sleep(.5)
+        keys.press_and_release('tab')
+        sleep(.5)
+        keys.write(self.password)
+        sleep(.5)
+        keys.press_and_release('enter')
+        sleep(15)
+        #if not self.api.access_token_exists():
+        #    log.warning("Login attempt failed")
+        #    cmd.run(cmd.CLOSE_ALL)
+        #    sleep(10)
+
+    def verify_account(self) -> bool:
+        """Checks if account username match the account that is currently logged in."""
+        log.info("Verifying logged-in account credentials")
+        try:
+            if self.username == self.api.get_summoner_name():
+                log.info("Account Verified")
+                return True
+            else:
+                log.warning("Accounts do not match!")
+                return False
         except LCUError:
-            sleep(2)
-    raise LaunchError("Could not launch league. Ensure there are no pending updates.")
-
-
-def manual_login(username: str, password: str):
-    log.info('Manually logging into Riot Client')
-    window.activate_windw("Riot Client")
-    controller.write(username)
-    sleep(.5)
-    controller.keypress('tab')
-    sleep(.5)
-    controller.write(password)
-    sleep(.5)
-    controller.keypress('enter')
-    sleep(10)
-
-
-def start_league():
-    """Launches League of Legends from Riot Client."""
-    log.info('Launching League of Legends')
-    c = config.load_config()
-    riot_client_dir = Path(c['league_dir']).parent.absolute()
-    riot_client_path = str(riot_client_dir) + "/Riot Client/RiotClientServices"
-    subprocess.Popen([riot_client_path, "--launch-product=league_of_legends", "--launch-patchline=live"])
-    sleep(3)
-
-
-def verify_account(api: LCUApi, username: str = None) -> bool:
-    """Checks if account username match the account that is currently logged in."""
-    log.info("Verifying logged-in account credentials")
-    name = ""
-    try:
-        name = api.get_display_name()
-    except LCUError:
-        return False
-
-    if username == name:
-        log.info("Account Verified")
-        return True
-    else:
-        log.warning("Accounts do not match!")
-        return False
+            log.warning("Could not get account information")
+            return False

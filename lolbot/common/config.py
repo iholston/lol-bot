@@ -4,20 +4,20 @@ Handles multi-platform creating/writing LoLBot's configurations to json file.
 
 import os
 import json
+from pathlib import Path
 
-CONFIG_DIR = os.path.join(os.getenv('LOCALAPPDATA'), 'LoLBot')
-os.makedirs(CONFIG_DIR, exist_ok=True)
+from lolbot.system import OS
 
+CONFIG_DIR = Path(__file__).resolve().parents[3] / 'lolbot-settings'
 BAK_DIR = os.path.join(CONFIG_DIR, 'bak')
-os.makedirs(BAK_DIR, exist_ok=True)
-
 LOG_DIR = os.path.join(CONFIG_DIR, 'logs')
-os.makedirs(LOG_DIR, exist_ok=True)
-
 CONFIG_PATH = os.path.join(CONFIG_DIR, 'config.json')
 ACCOUNT_PATH = os.path.join(CONFIG_DIR, 'accounts.json')
+ICON_PATH = 'assets/logo.ico'
 
-GAME_CFG = 'lolbot/resources/game.cfg'
+os.makedirs(CONFIG_DIR, exist_ok=True)
+os.makedirs(BAK_DIR, exist_ok=True)
+os.makedirs(LOG_DIR, exist_ok=True)
 
 ALL_LOBBIES = {
     'Draft Pick': 400,
@@ -40,15 +40,15 @@ BOT_LOBBIES = {
     'Intermediate Bots': 890,
 }
 
-
 def load_config() -> dict:
     """Load configuration from disk or set defaults"""
     default_config = {
-        'league_dir': 'C:/Riot Games/League of Legends',
+        'windows_install_dir': 'C:/Riot Games/League of Legends',
+        'macos_install_dir': '/Applications/League of Legends.app',
         'lobby': 880,
         'max_level': 30,
         'champs': [21, 18, 22, 67],
-        'dialog': ["mid ples", "plannin on goin mid team", "mid por favor", "bienvenidos, mid", "howdy, mid", "goin mid", "mid"]
+        'fps': 60,
     }
     if not os.path.exists(CONFIG_PATH):
         with open(CONFIG_PATH, 'w') as configfile:

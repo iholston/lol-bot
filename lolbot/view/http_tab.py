@@ -8,13 +8,13 @@ import subprocess
 
 import dearpygui.dearpygui as dpg
 
-from lolbot.lcu.lcu_api import LCUApi
+from lolbot.lcu.league_client import LeagueClient
 
 
 class HTTPTab:
     """Class that displays the HTTPTab and sends custom HTTP requests to the LCU API"""
 
-    def __init__(self, api: LCUApi) -> None:
+    def __init__(self, api: LeagueClient) -> None:
         self.id = -1
         self.api = api
 

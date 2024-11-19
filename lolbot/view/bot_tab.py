@@ -11,16 +11,17 @@ import textwrap
 
 import dearpygui.dearpygui as dpg
 
-from lolbot.common import config, proc
-from lolbot.lcu.lcu_api import LCUApi, LCUError
-import lolbot.lcu.game_api as game_api
+from lolbot.common import config
+from lolbot.system import cmd
+from lolbot.lcu.league_client import LeagueClient, LCUError
+import lolbot.lcu.game_server as game_api
 from lolbot.bot.bot import Bot
 
 
 class BotTab:
     """Class that displays the BotTab and handles bot controls/output"""
 
-    def __init__(self, api: LCUApi):
+    def __init__(self, api: LeagueClient):
         self.message_queue = multiprocessing.Queue()
         self.games_played = multiprocessing.Value('i', 0)
         self.bot_errors = multiprocessing.Value('i', 0)
@@ -35,7 +36,7 @@ class BotTab:
             dpg.add_spacer()
             dpg.add_text(default_value="Controls")
             with dpg.group(horizontal=True):
-                dpg.add_button(tag="StartStopButton", label='Start Bot', width=93, callback=self.start_stop_bot)  # width=136
+                dpg.add_button(tag="StartStopButton", label='Start Bot', width=93, callback=self.start_stop_bot)
                 dpg.add_button(label="Clear Output", width=93, callback=lambda: self.message_queue.put("Clear"))
                 dpg.add_button(label="Restart UX", width=93, callback=self.restart_ux)
                 dpg.add_button(label="Close Client", width=93, callback=self.close_client)
@@ -53,7 +54,7 @@ class BotTab:
 
     def start_stop_bot(self) -> None:
         if self.bot_thread is None:
-            if not os.path.exists(config.load_config()['league_dir']):
+            if not cmd.run(cmd.IS_GAME_INSTALLED):
                 self.message_queue.put("Clear")
                 self.message_queue.put("League Installation Path is Invalid. Update Path to START")
                 return
@@ -74,7 +75,7 @@ class BotTab:
             self.message_queue.put("Bot Successfully Terminated")
 
     def restart_ux(self) -> None:
-        if not proc.is_league_running():
+        if not cmd.run(cmd.IS_CLIENT_RUNNING):
             self.message_queue.put("Cannot restart UX, League is not running")
             return
         try:
@@ -85,10 +86,10 @@ class BotTab:
     def close_client(self) -> None:
         """Closes all league related processes"""
         self.message_queue.put('Closing League Processes')
-        threading.Thread(target=proc.close_all_processes).start()
+        threading.Thread(target=cmd.run, args=(cmd.CLOSE_ALL,)).start()
 
     def update_info_panel(self) -> None:
-        if not proc.is_league_running():
+        if not cmd.run(cmd.IS_CLIENT_RUNNING):
             msg = textwrap.dedent("""\
             Phase: Closed
             Accnt: -
@@ -125,7 +126,7 @@ class BotTab:
                     pass
             msg = textwrap.dedent(f"""\
             Phase: {phase}
-            Accnt: {self.api.get_display_name()}
+            Accnt: {self.api.get_summoner_name()}
             Level: {self.api.get_summoner_level()}
             Time : {game_time}
             Champ: {champ}""")

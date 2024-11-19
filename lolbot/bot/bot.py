@@ -6,16 +6,17 @@ import logging
 import multiprocessing as mp
 import os
 import random
+import configparser
+import json
 import shutil
 import traceback
 from datetime import datetime, timedelta
 from time import sleep
 
-import pyautogui
-
-from lolbot.bot import game, launcher, logger, window, controller
-from lolbot.common import accounts, config, proc
-from lolbot.lcu.lcu_api import LCUApi, LCUError
+from lolbot.bot import game, launcher
+from lolbot.system import mouse, window, cmd, OS
+from lolbot.common import accounts, config, logger
+from lolbot.lcu.league_client import LeagueClient, LCUError
 
 log = logging.getLogger(__name__)
 
@@ -31,7 +32,6 @@ MAX_PHASE_ERRORS = 20
 
 class BotError(Exception):
     """Indicates the League Client instance should be restarted."""
-
     pass
 
 
@@ -39,13 +39,12 @@ class Bot:
     """Handles the League Client and all tasks needed to start a new game."""
 
     def __init__(self) -> None:
-        self.api = LCUApi()
+        self.api = LeagueClient()
+        self.launcher = launcher.Launcher()
         self.config = config.load_config()
-        self.league_dir = self.config["league_dir"]
         self.max_level = self.config["max_level"]
         self.lobby = self.config["lobby"]
         self.champs = self.config["champs"]
-        self.dialog = self.config["dialog"]
         self.account = None
         self.phase = None
         self.prev_phase = None
@@ -59,16 +58,14 @@ class Bot:
         self.api.update_auth_timer()
         self.print_ascii()
         # self.wait_for_patching()
-        self.set_game_config()
         while True:
             try:
                 errors.value = self.bot_errors
                 self.account = accounts.get_account(self.max_level)
-                launcher.launch_league(
-                    self.account["username"], self.account["password"]
-                )
+                self.launcher.launch_league(self.account["username"], self.account["password"])
+                self.set_game_config()
                 self.leveling_loop(games)
-                proc.close_all_processes()
+                cmd.run(cmd.CLOSE_ALL)
                 self.bot_errors = 0
                 self.phase_errors = 0
                 self.game_errors = 0
@@ -81,7 +78,7 @@ class Bot:
                     log.error("Max errors reached. Exiting")
                     return
                 else:
-                    proc.close_all_processes()
+                    cmd.run(cmd.CLOSE_ALL)
             except launcher.LaunchError as le:
                 log.error(le)
                 log.error("Launcher Error. Exiting")
@@ -202,6 +199,7 @@ class Bot:
         """Handles the Champ Select Lobby."""
         log.info("Locking in champ")
         champ_index = -1
+        logged = False
         while True:
             try:
                 data = self.api.get_champ_select_data()
@@ -211,20 +209,15 @@ class Bot:
             try:
                 for action in data["actions"][0]:
                     if action["actorCellId"] == data["localPlayerCellId"]:
-                        if (
-                            action["championId"] == 0
-                        ):  # No champ hovered. Hover a champion.
+                        if action["championId"] == 0:  # No champ hovered. Hover a champion.
                             champ_index += 1
-                            self.api.hover_champion(
-                                action["id"], champ_list[champ_index]
-                            )
-                        elif not action[
-                            "completed"
-                        ]:  # Champ is hovered but not locked in.
-                            self.api.lock_in_champion(
-                                action["id"], action["championId"]
-                            )
+                            self.api.hover_champion(action["id"], champ_list[champ_index])
+                        elif not action["completed"]:  # Champ is hovered but not locked in.
+                            self.api.lock_in_champion(action["id"], action["championId"])
                         else:  # Champ is locked in. Nothing left to do.
+                            if not logged:
+                                log.info("Waiting for game to launch")
+                                logged = True
                             sleep(2)
             except LCUError:
                 pass
@@ -256,25 +249,20 @@ class Bot:
     def pre_end_of_game(self) -> None:
         """Handles league of legends client reopening after a game, honoring teammates, and clearing level-up/mission rewards."""
         log.info("Honoring teammates and accepting rewards")
-        sleep(3)
+        sleep(10)
+        popup_x_coords = window.convert_ratio(POPUP_SEND_EMAIL_X_RATIO, window.CLIENT_WINDOW)
+        select_champ_coords = window.convert_ratio(POST_GAME_SELECT_CHAMP_RATIO, window.CLIENT_WINDOW)
+        ok_button_coords = window.convert_ratio(POST_GAME_OK_RATIO, window.CLIENT_WINDOW)
         try:
-            controller.left_click(
-                POPUP_SEND_EMAIL_X_RATIO, proc.LEAGUE_CLIENT_WINNAME, 2
-            )
+            mouse.move_and_click(popup_x_coords)
             if not self.honor_player():
                 sleep(60)  # Honor failed for some reason, wait out the honor screen
-            controller.left_click(
-                POPUP_SEND_EMAIL_X_RATIO, proc.LEAGUE_CLIENT_WINNAME, 2
-            )
+            mouse.move_and_click(popup_x_coords)
             for i in range(3):
-                controller.left_click(
-                    POST_GAME_SELECT_CHAMP_RATIO, proc.LEAGUE_CLIENT_WINNAME, 1
-                )
-                controller.left_click(POST_GAME_OK_RATIO, proc.LEAGUE_CLIENT_WINNAME, 1)
-            controller.left_click(
-                POPUP_SEND_EMAIL_X_RATIO, proc.LEAGUE_CLIENT_WINNAME, 1
-            )
-        except (window.WindowNotFound, pyautogui.FailSafeException):
+                mouse.move_and_click(select_champ_coords)
+                mouse.move_and_click(ok_button_coords)
+            mouse.move_and_click(popup_x_coords)
+        except window.WindowNotFound:
             sleep(3)
 
     def honor_player(self) -> bool:
@@ -293,7 +281,7 @@ class Bot:
 
     def end_of_game(self) -> None:
         """Transitions out of EndOfGame."""
-        log.info("Getting back into queue")
+        log.info("Starting new game loop")
         posted = False
         for i in range(15):
             try:
@@ -313,7 +301,7 @@ class Bot:
         """Checks if account has reached max level."""
         try:
             if self.api.get_summoner_level() >= self.max_level:
-                if self.account["username"] == self.api.get_display_name():
+                if self.account["username"] == self.api.get_summoner_name():
                     self.account["level"] = self.max_level
                     accounts.save_or_add(self.account)
                 log.info("Account successfully leveled")
@@ -336,16 +324,57 @@ class Bot:
     def set_game_config(self) -> None:
         """Overwrites the League of Legends game config."""
         log.info("Overwriting game configs")
-        path = self.league_dir + "/Config/game.cfg"
-        folder = os.path.abspath(os.path.join(path, os.pardir))
-        for filename in os.listdir(folder):
-            file_path = os.path.join(folder, filename)
-            try:
-                if os.path.isfile(file_path) or os.path.islink(file_path):
-                    os.unlink(file_path)
-            except Exception as e:
-                log.error("Failed to delete %s. Reason: %s" % (file_path, e))
-        shutil.copy(proc.resource_path(config.GAME_CFG), path)
+        if OS == 'Windows':
+            config_dir = os.path.join(self.config['windows_install_dir'], 'Config')
+        else:
+            config_dir = os.path.join(self.config['macos_install_dir'], 'contents/lol/config')
+
+        game_config = os.path.join(config_dir, 'game.cfg')
+        persisted_settings = os.path.join(config_dir, 'PersistedSettings.json')
+        try:
+            os.remove(game_config)
+        except FileNotFoundError:
+            pass
+        config_settings = configparser.ConfigParser()
+        config_settings.optionxform = str
+        config_settings["General"] = {
+            "WindowMode": "2",
+            "Height": "768",
+            "Width": "1024",
+        }
+        config_settings["Performance"] = {
+            "ShadowQuality": "0",
+            "FrameCapType": "5",
+            "EnvironmentQuality": "0",
+            "EffectsQuality": "0",
+            "CharacterQuality": "0",
+            "EnableGrassSwaying": "0",
+            "EnableFXAA": "0",
+        }
+        with open(game_config, "w") as configfile:
+            config_settings.write(configfile)
+        with open(persisted_settings, 'r') as file:
+            data = json.load(file)
+        for file in data.get('files', []):
+            for section in file.get('sections', []):
+                if section.get('name') == 'ItemShop':
+                    for setting in section.get('settings', []):
+                        if setting.get('name') == 'CurrentTab':
+                            setting['value'] = str(0)
+                        if setting.get('name') == 'NativeOffsetX':
+                            setting['value'] = str(0)
+                        if setting.get('name') == 'NativeOffsetY':
+                            setting['value'] = str(0)
+                if section.get('name') == 'HUD':
+                    for setting in section.get('settings', []):
+                        if setting.get('name') == 'FlipMiniMap':
+                            setting['value'] = str(0)
+                        if setting.get('name') == 'MinimapScale':
+                            setting['value'] = str(1.0000)
+                        if setting.get('name') == 'ShopScale':
+                            setting['value'] = str(0.4444)
+        with open(persisted_settings, 'w') as file:
+            json.dump(data, file, indent=4)
 
     @staticmethod
     def print_ascii() -> None:

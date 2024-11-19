@@ -1,8 +1,9 @@
 keyboard
-mouse
-pywin32
+pyautogui
 requests
 urllib3
-pyautogui
 dearpygui
-psutil
+psutil; sys_platform == "win32"
+mouse; sys_platform == "win32"
+pyobjc-framework-Quartz; sys_platform == "darwin"
+PyGetWindow; sys_platform == "darwin"
