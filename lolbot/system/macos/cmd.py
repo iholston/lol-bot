@@ -21,9 +21,11 @@ CLOSE_CLIENT = 'kill -9 $(pgrep -f "LeagueClient")'
 CLOSE_LAUNCHER = 'kill -9 $(pgrep -f "Riot")'
 CLOSE_ALL = 'kill -9 $(pgrep -f "League");' + CLOSE_LAUNCHER
 
+
 def run(command: str) -> bool:
     result = subprocess.run(command, shell=True, text=True, capture_output=True)
     return result.returncode == 0
+
 
 def get_auth_string() -> str:
     result = subprocess.run(IS_CLIENT_RUNNING, shell=True, text=True, capture_output=True)

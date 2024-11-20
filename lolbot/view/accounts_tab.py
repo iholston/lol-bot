@@ -36,7 +36,10 @@ class AccountsTab:
                     dpg.add_button(label="Cancel", width=113, callback=lambda: dpg.configure_item("AccountSubmit", show=False))
             with dpg.group(horizontal=True):
                 dpg.add_button(label="Add New Account", width=184, callback=lambda: dpg.configure_item("AccountSubmit", show=True))
-                dpg.add_button(label="Show in File Explorer", width=184, callback=lambda: subprocess.Popen('explorer /select, {}'.format(config.ACCOUNT_PATH)))
+                if config.OS == 'Windows':
+                    dpg.add_button(label="Show in File Explorer", width=184, callback=lambda: subprocess.Popen('explorer /select, {}'.format(config.ACCOUNT_PATH)))
+                else:
+                    dpg.add_button(label="Show in Finder", width=184, callback=lambda: subprocess.Popen(['open', config.CONFIG_DIR]))
                 dpg.add_button(tag="BackupButton", label="Create Backup", width=184, callback=self.create_backup)
                 with dpg.tooltip(dpg.last_item()):
                     dpg.add_text("Creates a backup of the accounts.json file in the bak folder")
@@ -122,4 +125,7 @@ class AccountsTab:
 
     @staticmethod
     def copy_2_clipboard(sender: int) -> None:
-        subprocess.run("clip", text=True, input=dpg.get_item_label(sender))
+        if config.OS == "Windows":
+            subprocess.run("clip", text=True, input=dpg.get_item_label(sender))
+        else:
+            subprocess.run("pbcopy", text=True, input=dpg.get_item_label(sender))

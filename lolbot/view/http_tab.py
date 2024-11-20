@@ -9,6 +9,7 @@ import subprocess
 import dearpygui.dearpygui as dpg
 
 from lolbot.lcu.league_client import LeagueClient
+from lolbot.common.config import OS
 
 
 class HTTPTab:
@@ -46,7 +47,11 @@ class HTTPTab:
             with dpg.group(horizontal=True):
                 dpg.add_text("Response:")
                 dpg.add_button(tag='StatusOutput', width=50)
-                dpg.add_button(label="Copy to Clipboard", callback=lambda: subprocess.run("clip", text=True, input=dpg.get_value('ResponseOutput')))
+                if OS == "Windows":
+                    command = "clip"
+                else:
+                    command = "pbcopy"
+                dpg.add_button(label="Copy to Clipboard", callback=lambda: subprocess.run(command, text=True, input=dpg.get_value('ResponseOutput')))
             dpg.add_input_text(tag='ResponseOutput', width=568, height=124, multiline=True)
 
     @staticmethod
