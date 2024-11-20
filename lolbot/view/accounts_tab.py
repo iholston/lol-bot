@@ -10,6 +10,7 @@ from typing import Any
 
 import dearpygui.dearpygui as dpg
 from lolbot.common import config, accounts
+from lolbot.system import OS
 
 
 class AccountsTab:
@@ -36,7 +37,7 @@ class AccountsTab:
                     dpg.add_button(label="Cancel", width=113, callback=lambda: dpg.configure_item("AccountSubmit", show=False))
             with dpg.group(horizontal=True):
                 dpg.add_button(label="Add New Account", width=184, callback=lambda: dpg.configure_item("AccountSubmit", show=True))
-                if config.OS == 'Windows':
+                if OS == 'Windows':
                     dpg.add_button(label="Show in File Explorer", width=184, callback=lambda: subprocess.Popen('explorer /select, {}'.format(config.ACCOUNT_PATH)))
                 else:
                     dpg.add_button(label="Show in Finder", width=184, callback=lambda: subprocess.Popen(['open', config.CONFIG_DIR]))
@@ -125,7 +126,7 @@ class AccountsTab:
 
     @staticmethod
     def copy_2_clipboard(sender: int) -> None:
-        if config.OS == "Windows":
+        if OS == "Windows":
             subprocess.run("clip", text=True, input=dpg.get_item_label(sender))
         else:
             subprocess.run("pbcopy", text=True, input=dpg.get_item_label(sender))

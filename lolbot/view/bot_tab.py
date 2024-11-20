@@ -2,7 +2,6 @@
 View tab that handles bot controls and displays bot output.
 """
 
-import os
 import multiprocessing
 import threading
 import time

@@ -9,8 +9,7 @@ import subprocess
 import dearpygui.dearpygui as dpg
 
 from lolbot.lcu.league_client import LeagueClient
-from lolbot.common.config import OS
-
+from lolbot.system import OS
 
 class HTTPTab:
     """Class that displays the HTTPTab and sends custom HTTP requests to the LCU API"""
