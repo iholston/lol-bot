@@ -15,8 +15,8 @@ class WindowNotFound(Exception):
 
 def check_window_exists(window_name: str):
     if FindWindow(None, window_name) == 0:
-        return False
-    raise WindowNotFound
+        raise WindowNotFound
+    return True
 
 
 def get_window_size(window_name: str):
@@ -30,6 +30,6 @@ def get_window_size(window_name: str):
 
 def convert_ratio(ratio: tuple, window_name: str):
     x, y, l, h = get_window_size(window_name)
-    updated_x = (l * ratio[0]) + x
-    updated_y = (h * ratio[1]) + y
+    updated_x = ((l - x) * ratio[0]) + x
+    updated_y = ((h - y) * ratio[1]) + y
     return updated_x, updated_y
