@@ -7,7 +7,7 @@ import requests
 
 import dearpygui.dearpygui as dpg
 
-VERSION = '4.0.3'
+VERSION = '4.0.4'
 
 
 class AboutTab:
