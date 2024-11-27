@@ -3,6 +3,7 @@ View tab that handles bot controls and displays bot output.
 """
 
 import multiprocessing
+import os.path
 import threading
 import time
 import datetime
@@ -52,16 +53,17 @@ class BotTab:
             dpg.add_input_text(tag="Output", multiline=True, default_value="", height=162, width=568, enabled=False)
 
     def start_stop_bot(self) -> None:
+        conf = config.load_config()
         if self.bot_thread is None:
-            if not cmd.run(cmd.IS_GAME_INSTALLED):
+            if os.path.exists(conf.windows_install_dir) or os.path.exists(conf.macos_install_dir):
                 self.message_queue.put("Clear")
-                self.message_queue.put("League Installation Path is Invalid. Update Path to START")
+                self.start_time = time.time()
+                self.bot_thread = multiprocessing.Process(target=Bot().run, args=(self.message_queue, self.games_played, self.bot_errors))
+                self.bot_thread.start()
+                dpg.configure_item("StartStopButton", label="Quit Bot")
                 return
             self.message_queue.put("Clear")
-            self.start_time = time.time()
-            self.bot_thread = multiprocessing.Process(target=Bot().run, args=(self.message_queue, self.games_played, self.bot_errors))
-            self.bot_thread.start()
-            dpg.configure_item("StartStopButton", label="Quit Bot")
+            self.message_queue.put("League Installation Path is Invalid. Update Path to START")
         else:
             dpg.configure_item("StartStopButton", label="Start Bot")
             self.stop_bot()

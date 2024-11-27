@@ -12,7 +12,6 @@ TOKEN_REGEX = re.compile(r"--remoting-auth-token=(\S+)")
 # Commands
 LAUNCH_CLIENT = r'"C:\Riot Games\Riot Client\RiotClientServices" --launch-product=league_of_legends --launch-patchline=live'
 
-IS_GAME_INSTALLED = f'if exist "C:\Riot Games\League of Legends" (exit 0) else (exit 1)'
 IS_GAME_RUNNING = 'tasklist | findstr /r /i "\<League of Legends\>"'
 IS_CLIENT_RUNNING = 'tasklist | findstr /i "LeagueClient"'
 IS_LAUNCHER_RUNNING = 'tasklist | findstr /i "Riot"'
