@@ -8,7 +8,6 @@ import os
 import random
 import configparser
 import json
-import shutil
 import traceback
 from datetime import datetime, timedelta
 from time import sleep
@@ -42,15 +41,13 @@ class Bot:
         self.api = LeagueClient()
         self.launcher = launcher.Launcher()
         self.config = config.load_config()
-        self.max_level = self.config["max_level"]
-        self.lobby = self.config["lobby"]
-        self.champs = self.config["champs"]
+        self.max_level = self.config.max_level
+        self.lobby = self.config.lobby
         self.account = None
         self.phase = None
         self.prev_phase = None
         self.bot_errors = 0
         self.phase_errors = 0
-        self.game_errors = 0
 
     def run(self, message_queue: mp.Queue, games: mp.Value, errors: mp.Value) -> None:
         """Main loop, gets an account, launches league, monitors account level, and repeats."""
@@ -68,12 +65,10 @@ class Bot:
                 cmd.run(cmd.CLOSE_ALL)
                 self.bot_errors = 0
                 self.phase_errors = 0
-                self.game_errors = 0
             except BotError as be:
                 log.error(be)
                 self.bot_errors += 1
                 self.phase_errors = 0
-                self.game_errors = 0
                 if self.bot_errors == MAX_BOT_ERRORS:
                     log.error("Max errors reached. Exiting")
                     return
@@ -203,7 +198,7 @@ class Bot:
         while True:
             try:
                 data = self.api.get_champ_select_data()
-                champ_list = self.champs + self.api.get_available_champion_ids()
+                champ_list = self.api.get_available_champion_ids()
             except LCUError:
                 return
             try:
@@ -325,9 +320,9 @@ class Bot:
         """Overwrites the League of Legends game config."""
         log.info("Overwriting game configs")
         if OS == 'Windows':
-            config_dir = os.path.join(self.config['windows_install_dir'], 'Config')
+            config_dir = os.path.join(self.config.windows_install_dir, 'Config')
         else:
-            config_dir = os.path.join(self.config['macos_install_dir'], 'contents/lol/config')
+            config_dir = os.path.join(self.config.macos_install_dir, 'contents/lol/config')
 
         game_config = os.path.join(config_dir, 'game.cfg')
         persisted_settings = os.path.join(config_dir, 'PersistedSettings.json')
@@ -344,7 +339,7 @@ class Bot:
         }
         config_settings["Performance"] = {
             "ShadowQuality": "0",
-            "FrameCapType": "5",
+            "FrameCapType": str(self.config.fps_type),
             "EnvironmentQuality": "0",
             "EffectsQuality": "0",
             "CharacterQuality": "0",

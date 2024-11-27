@@ -4,6 +4,7 @@ Handles multi-platform creating/writing LoLBot's configurations to json file.
 
 import os
 import json
+from dataclasses import dataclass
 from pathlib import Path
 
 CONFIG_DIR = Path(__file__).resolve().parents[3] / 'lolbot-settings'
@@ -38,29 +39,41 @@ BOT_LOBBIES = {
     'Intermediate Bots': 890,
 }
 
-def load_config() -> dict:
-    """Load configuration from disk or set defaults"""
-    default_config = {
-        'windows_install_dir': 'C:/Riot Games/League of Legends',
-        'macos_install_dir': '/Applications/League of Legends.app',
-        'lobby': 880,
-        'max_level': 30,
-        'champs': [21, 18, 22, 67],
-        'fps': 60,
-    }
+FPS_OPTIONS = {
+    "25": 3,
+    "30": 4,
+    "60": 5,
+    "80": 6,
+    "120": 7,
+    "144": 8,
+    "200": 9,
+    "240": 2,
+    "Uncapped": 10,
+}
+
+
+@dataclass
+class Config:
+    windows_install_dir: str = "C:/Riot Games/League of Legends"
+    macos_install_dir: str = "/Applications/League of Legends.app"
+    lobby: int = 880
+    max_level: int = 30
+    fps_type: int = FPS_OPTIONS.get("60")
+
+
+def load_config() -> Config:
     if not os.path.exists(CONFIG_PATH):
-        with open(CONFIG_PATH, 'w') as configfile:
-            json.dump(default_config, configfile, indent=4)
+        default_config = Config()
+        save_config(default_config)
         return default_config
-    else:
-        try:
-            with open(CONFIG_PATH, 'r') as configfile:
-                return json.load(configfile)
-        except json.JSONDecodeError:
-            return default_config
+    try:
+        with open(CONFIG_PATH, 'r') as configfile:
+            data = json.load(configfile)
+            return Config(**data)
+    except json.JSONDecodeError:
+        return Config()
 
 
-def save_config(config) -> None:
-    """Save the configuration to disk"""
+def save_config(config: Config) -> None:
     with open(CONFIG_PATH, 'w') as configfile:
-        json.dump(config, configfile, indent=4)
+        json.dump(config.__dict__, configfile, indent=4)
