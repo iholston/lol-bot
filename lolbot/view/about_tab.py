@@ -7,18 +7,21 @@ import requests
 
 import dearpygui.dearpygui as dpg
 
-VERSION = '4.0.2'
+VERSION = '4.0.3'
 
 
 class AboutTab:
     """Class that displays the About Tab and information about the bot"""
 
     def __init__(self) -> None:
-        response = requests.get("https://api.github.com/repos/iholston/lol-bot/releases/latest")
-        self.version = 'v' + VERSION
-        self.latest_version = response.json()["name"]
+        self.version = f"v{VERSION}"
+        try:
+            response = requests.get("https://api.github.com/repos/iholston/lol-bot/releases/latest")
+            self.release_version = response.json()["name"]
+        except:
+            self.release_version = self.version
         self.need_update = False
-        if self.latest_version != self.version:
+        if self.release_version != self.version:
             self.need_update = True
 
     def create_tab(self, parent: int) -> None:
@@ -29,7 +32,7 @@ class AboutTab:
                 dpg.add_button(label='Bot Version', width=100, enabled=False)
                 dpg.add_text(default_value=self.version)
                 if self.need_update:
-                    update = dpg.add_button(label="- Update Available ({})".format(self.latest_version), callback=lambda: webbrowser.open('https://github.com/iholston/lol-bot/releases/latest'))
+                    update = dpg.add_button(label="- Update Available ({})".format(self.release_version), callback=lambda: webbrowser.open('https://github.com/iholston/lol-bot/releases/latest'))
                     with dpg.tooltip(dpg.last_item()):
                         dpg.add_text("Get latest release")
                     dpg.bind_item_theme(update, "__hyperlinkTheme")
