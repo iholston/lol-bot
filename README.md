@@ -1,5 +1,5 @@
 >[!NOTE]
->Due the release of [Valorant's Vanguard anti-cheat for League of Legends](https://support-leagueoflegends.riotgames.com/hc/en-us/articles/24169857932435-Riot-Vanguard-FAQ-League-of-Legends), it is NOT recommended to run this bot on Windows. It will most likely result in a four month hardware ID ban (VAN 152). Instead, run the bot on macOS.
+>Due the release of [Valorant's Vanguard anti-cheat for League of Legends](https://support-leagueoflegends.riotgames.com/hc/en-us/articles/24169857932435-Riot-Vanguard-FAQ-League-of-Legends), it is NOT recommended to run this bot on Windows.
 
 <p align="center">
   <a href="https://github.com/iholston/lol-bot">
@@ -9,7 +9,6 @@
 
 ## Welcome to LoL Bot
 - This is a python bot that uses the local League Client API to start games and plays them with a simple but effective game loop
-- This bot has leveled up [thousands of league accounts](https://www.playerauctions.com/lol-account/) and is still going strong
 - No pixel botting and/or image recognition makes it easy to run on any setup
 - New [GUI](https://imgur.com/a/8PlsMmi) with v2.0.0+
 
