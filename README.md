@@ -25,11 +25,13 @@
 - End game, earn experience, collect rewards
 - Loop 🥡🧋
 
-## Usage
+## Usage (Windows or macOS)
 - Clone the repo or download the [latest release](https://github.com/iholston/lol-bot/releases)
 - Ensure [Python 3.10+](https://www.python.org/downloads/) is installed
 - Run ```pip install -r requirements.txt``` 
 - Run ```python main.pyw```
+
+NOTE: On Windows, it may also be necessary to download [Microsoft C and C++ (MSVC) runtime libraries](https://learn.microsoft.com/en-GB/cpp/windows/latest-supported-vc-redist?view=msvc-170)
 
 ## League Account Requirements
 League accounts should have already completed:
