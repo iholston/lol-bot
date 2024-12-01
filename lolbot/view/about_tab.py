@@ -32,13 +32,13 @@ class AboutTab:
                 dpg.add_button(label='Bot Version', width=100, enabled=False)
                 dpg.add_text(default_value=self.version)
                 if self.need_update:
-                    update = dpg.add_button(label="- Update Available ({})".format(self.release_version), callback=lambda: webbrowser.open('https://github.com/iholston/lol-bot/releases/latest'))
+                    update = dpg.add_button(label="- Update Available ({})".format(self.release_version), callback=lambda: webbrowser.open("https://github.com/iholston/lol-bot/releases/latest"))
                     with dpg.tooltip(dpg.last_item()):
                         dpg.add_text("Get latest release")
                     dpg.bind_item_theme(update, "__hyperlinkTheme")
             with dpg.group(horizontal=True):
                 dpg.add_button(label='Github', width=100, enabled=False)
-                dpg.add_button(label='www.github.com/iholston/lol-bot', callback=lambda: webbrowser.open('www.github.com/iholston/lol-bot'))
+                dpg.add_button(label='www.github.com/iholston/lol-bot', callback=lambda: webbrowser.open("https://www.github.com/iholston/lol-bot"))
                 with dpg.tooltip(dpg.last_item()):
                     dpg.add_text("Open link in webbrowser")
             dpg.add_spacer()
