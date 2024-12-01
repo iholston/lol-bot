@@ -50,10 +50,8 @@ class AboutTab:
         notes = "\t\t\t\t\t\t\t\t\tNotes\n"
 
         notes += """
-Due to the release of Vanguard, it is recommended to run this bot only on macOS. 
-If running on Windows, run the bot as a python script. As of v4.0.0 there will 
-be no executable file for Windows. 
-
+Due to the release of Vanguard, it is NOT recommended to run this bot on
+Windows.
 
 If you have any problems create an issue on the github repo.
 """
