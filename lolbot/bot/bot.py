@@ -193,7 +193,6 @@ class Bot:
     def champ_select(self) -> None:
         """Handles the Champ Select Lobby."""
         log.info("Locking in champ")
-        champ_index = -1
         logged = False
         while True:
             try:
@@ -205,8 +204,8 @@ class Bot:
                 for action in data["actions"][0]:
                     if action["actorCellId"] == data["localPlayerCellId"]:
                         if action["championId"] == 0:  # No champ hovered. Hover a champion.
-                            champ_index += 1
-                            self.api.hover_champion(action["id"], champ_list[champ_index])
+                            champ = random.choice(champ_list)
+                            self.api.hover_champion(action["id"], champ)
                         elif not action["completed"]:  # Champ is hovered but not locked in.
                             self.api.lock_in_champion(action["id"], action["championId"])
                         else:  # Champ is locked in. Nothing left to do.
