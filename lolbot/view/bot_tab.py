@@ -14,7 +14,7 @@ import dearpygui.dearpygui as dpg
 from lolbot.common import config
 from lolbot.system import cmd
 from lolbot.lcu.league_client import LeagueClient, LCUError
-import lolbot.lcu.game_server as game_api
+from lolbot.lcu import game_server
 from lolbot.bot.bot import Bot
 
 
@@ -26,6 +26,7 @@ class BotTab:
         self.games_played = multiprocessing.Value('i', 0)
         self.bot_errors = multiprocessing.Value('i', 0)
         self.api = api
+        self.game_server = game_server.GameServer()
         self.output_queue = []
         self.endpoint = None
         self.bot_thread = None
@@ -119,8 +120,8 @@ class BotTab:
                 case "InProgress":
                     phase = "In Game"
                     try:
-                        game_time = game_api.get_formatted_time()
-                        champ = game_api.get_champ()
+                        game_time = self.game_server.get_formatted_time()
+                        champ = self.game_server.get_champ()
                     except:
                         pass
                 case _:
