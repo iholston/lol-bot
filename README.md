@@ -31,7 +31,7 @@
 - Run ```pip install -r requirements.txt``` 
 - Run ```python main.pyw```
 
-NOTE: On Windows, it may also be necessary to download [Microsoft C and C++ (MSVC) runtime libraries](https://learn.microsoft.com/en-GB/cpp/windows/latest-supported-vc-redist?view=msvc-170)
+NOTE: ~~On Windows, it may also be necessary to download [Microsoft C and C++ (MSVC) runtime libraries](https://learn.microsoft.com/en-GB/cpp/windows/latest-supported-vc-redist?view=msvc-170)~~
 
 ## League Account Requirements
 League accounts should have already completed:
