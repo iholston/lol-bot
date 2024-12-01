@@ -41,10 +41,8 @@ class Launcher:
         if cmd.run(cmd.IS_CLIENT_RUNNING):
             if self.attempts == 0:
                 log.warning("League opened with prior login")
-                #self.verify_account()
             else:
                 log.info("Launch success")
-                #cmd.run(cmd.CLOSE_LAUNCHER)
                 sleep(30)
             self.success = True
 
@@ -57,7 +55,7 @@ class Launcher:
             try:
                 log.info("Launching League from Client")
                 self.api.launch_league_from_rc()
-                sleep(20)
+                sleep(30)
             except LCUError:
                 pass
             return
@@ -66,15 +64,25 @@ class Launcher:
         elif cmd.run(cmd.IS_LAUNCHER_RUNNING):
             if self.attempts == 5:
                 raise LaunchError("Max login attempts exceeded. Check username and password")
+            elif self.username == "" or self.password == "":
+                raise LaunchError("Username or Password not set")
+
+            log.info("Riot Client opened. Logging in")
             self.attempts += 1
             # self.lcu.login(self.username, self.password)
             self.manual_login()
+            sleep(30)
+            self.api.update_auth()
+            if not self.api.access_token_exists():
+                log.warning("Login attempt failed")
+                cmd.run(cmd.CLOSE_ALL)
+                sleep(10)
 
         # Nothing is opened
         else:
             log.info("Launching League of Legends")
             cmd.run(cmd.LAUNCH_CLIENT)
-            sleep(15)
+            sleep(30)
 
     def manual_login(self):
         """
@@ -89,11 +97,7 @@ class Launcher:
         keys.write(self.password)
         sleep(.5)
         keys.press_and_release('enter')
-        sleep(15)
-        #if not self.api.access_token_exists():
-        #    log.warning("Login attempt failed")
-        #    cmd.run(cmd.CLOSE_ALL)
-        #    sleep(10)
+        sleep(1)
 
     def verify_account(self) -> bool:
         """Checks if account username match the account that is currently logged in."""
