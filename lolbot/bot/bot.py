@@ -54,7 +54,7 @@ class Bot:
         logger.MultiProcessLogHandler(message_queue).set_logs()
         self.api.update_auth_timer()
         self.print_ascii()
-        # self.wait_for_patching()
+        self.wait_for_patching()
         while True:
             try:
                 errors.value = self.bot_errors

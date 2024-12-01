@@ -336,7 +336,6 @@ class LeagueClient:
         try:
             response = self.client.get(url)
             response.raise_for_status()
-            print(response.json())
             return not response.json()['isUpToDate']
         except requests.RequestException as e:
             return False
