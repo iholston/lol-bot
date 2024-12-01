@@ -25,7 +25,7 @@
 - End game, earn experience, collect rewards
 - Loop 🥡🧋
 
-## Usage (Windows or macOS)
+## Usage (macOS or ~~Windows~~)
 - Clone the repo or download the [latest release](https://github.com/iholston/lol-bot/releases)
 - Ensure [Python 3.10+](https://www.python.org/downloads/) is installed
 - Run ```pip install -r requirements.txt``` 
