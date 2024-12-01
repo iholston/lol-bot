@@ -54,13 +54,13 @@ class Bot:
         logger.MultiProcessLogHandler(message_queue).set_logs()
         self.api.update_auth_timer()
         self.print_ascii()
-        self.wait_for_patching()
         while True:
             try:
                 errors.value = self.bot_errors
                 self.account = accounts.get_account(self.max_level)
                 self.launcher.launch_league(self.account["username"], self.account["password"])
                 self.set_game_config()
+                self.wait_for_patching()
                 self.leveling_loop(games)
                 cmd.run(cmd.CLOSE_ALL)
                 self.bot_errors = 0
