@@ -6,7 +6,11 @@ if sys.platform == "darwin":  # macOS
     OS = 'macOS'
 elif sys.platform == "win32":  # Windows
     from .windows import mouse, keys, window, cmd
-    RESOLUTION = (600, 420)
+    version_info = sys.getwindowsversion()
+    if version_info.major == 10 and version_info.build >= 22000:
+        RESOLUTION = (606, 440)
+    else:
+        RESOLUTION = (600, 420)
     OS = 'Windows'
 else:
     raise ImportError("Unsupported operating system")
