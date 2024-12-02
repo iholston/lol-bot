@@ -59,8 +59,8 @@ class Bot:
                 errors.value = self.bot_errors
                 self.account = accounts.get_account(self.max_level)
                 self.launcher.launch_league(self.account["username"], self.account["password"])
-                self.set_game_config()
                 self.wait_for_patching()
+                self.set_game_config()
                 self.leveling_loop(games)
                 cmd.run(cmd.CLOSE_ALL)
                 self.bot_errors = 0
@@ -194,6 +194,7 @@ class Bot:
         """Handles the Champ Select Lobby."""
         log.info("Locking in champ")
         logged = False
+        champ = ""
         while True:
             try:
                 data = self.api.get_champ_select_data()
@@ -210,6 +211,7 @@ class Bot:
                             self.api.lock_in_champion(action["id"], action["championId"])
                         else:  # Champ is locked in. Nothing left to do.
                             if not logged:
+                                log.info(f"Locked in: {champ}")
                                 log.info("Waiting for game to launch")
                                 logged = True
                             sleep(2)
@@ -275,7 +277,7 @@ class Bot:
 
     def end_of_game(self) -> None:
         """Transitions out of EndOfGame."""
-        log.info("Starting new game loop")
+        log.info("Starting new game")
         posted = False
         for i in range(15):
             try:
@@ -324,6 +326,8 @@ class Bot:
             config_dir = os.path.join(self.config.macos_install_dir, 'contents/lol/config')
         game_config = os.path.join(config_dir, 'game.cfg')
         persisted_settings = os.path.join(config_dir, 'PersistedSettings.json')
+        if OS != "Windows":
+            os.chmod(persisted_settings, 0o644)
         try:
             os.remove(game_config)
         except FileNotFoundError:
@@ -366,8 +370,14 @@ class Bot:
                             setting['value'] = str(1.0000)
                         if setting.get('name') == 'ShopScale':
                             setting['value'] = str(0.4444)
+                if section.get('name') == "General":
+                    for setting in section.get('settings', []):
+                        if setting.get('name') == 'EnableTargetedAttackMove':
+                            setting['value'] = str(0)
         with open(persisted_settings, 'w') as file:
             json.dump(data, file, indent=4)
+        if OS != "Windows":
+            os.chmod(persisted_settings, 0o444)
 
     @staticmethod
     def print_ascii() -> None:

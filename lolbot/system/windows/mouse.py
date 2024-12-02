@@ -7,6 +7,8 @@ from time import sleep
 import mouse
 import pyautogui
 
+pyautogui.FAILSAFE = False
+
 def left_click(wait=1):
     mouse.click()
     sleep(wait)

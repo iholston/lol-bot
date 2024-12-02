@@ -19,8 +19,8 @@ FIRST_TOWER_TIME = 1500
 MAX_GAME_TIME = 3000
 
 # Click coordinates to move/aim
-MINI_MAP_UNDER_TURRET = (0.89, 0.89)
-MINI_MAP_CENTER_MID = (0.91, 0.87)
+MINI_MAP_UNDER_TURRET = (0.88, 0.90)
+MINI_MAP_CENTER_MID = (0.9035, 0.87)
 MINI_MAP_ENEMY_NEXUS = (0.9628, 0.7852)
 ULT_DIRECTION = (0.7298, 0.2689)
 CENTER_OF_SCREEN = (0.5, 0.5)
@@ -29,7 +29,7 @@ CENTER_OF_SCREEN = (0.5, 0.5)
 AFK_OK_BUTTON = (0.4981, 0.4647)
 SYSTEM_MENU_X_BUTTON = (0.7729, 0.2488)
 SHOP_ITEM_BUTTONS = [(0.3216, 0.5036), (0.4084, 0.5096), (0.4943, 0.4928)]
-SHOP_PURCHASE_ITEM_BUTTON = (0.7586, 0.5712)
+SHOP_PURCHASE_ITEM_BUTTON = (0.7586, 0.58)
 
 MAX_SERVER_ERRORS = 15
 
@@ -105,13 +105,14 @@ def game_loop(game_server: GameServer) -> None:
 
 
 def loading_screen(game_server: GameServer) -> None:
-    log.info("Waiting through Loading Screen")
+    log.info("In Loading Screen")
     start = datetime.now()
     while game_server.get_game_time() < LOADING_SCREEN_TIME:
         sleep(2)
         if datetime.now() - start > timedelta(minutes=10):
             raise GameError("Loading screen max time limit exceeded")
     left_click(CENTER_OF_SCREEN)
+    log.info("Game Started")
 
 
 def game_start(game_server: GameServer) -> None:
@@ -126,6 +127,7 @@ def game_start(game_server: GameServer) -> None:
     while game_server.get_game_time() < MINION_CLASH_TIME:
         right_click(MINI_MAP_UNDER_TURRET)  # to prevent afk warning popup
         left_click(AFK_OK_BUTTON)
+    log.info("Playing Game")
 
 
 def play(game_server: GameServer, attack_position: tuple, retreat: tuple, time_to_lane: int) -> None:
@@ -142,20 +144,26 @@ def play(game_server: GameServer, attack_position: tuple, retreat: tuple, time_t
     # Main attack move loop. This sequence attacks and then de-aggros to prevent them from dying 50 times.
     for i in range(8):
         if game_server.get_summoner_health() < .7:
+            keypress('f')
             right_click(retreat)
             sleep(4)
             break
+        if game_server.summoner_is_dead():
+            return
         attack_click(attack_position)
         sleep(5)
         right_click(retreat)
         sleep(3)
 
+    if game_server.summoner_is_dead():
+        return
     # Ult and back
     keypress('f')
     attack_click(ULT_DIRECTION)
     keypress('r')
+    sleep(1)
     right_click(MINI_MAP_UNDER_TURRET)
-    sleep(6)
+    sleep(4)
     keypress('b')
     sleep(10)
 
