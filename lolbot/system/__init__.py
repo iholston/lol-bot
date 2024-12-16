@@ -4,7 +4,7 @@ if sys.platform == "darwin":  # macOS
     from .macos import mouse, keys, window, cmd
     RESOLUTION = (584, 383)
     OS = 'macOS'
-    font_path = ""
+    font_path = "/System/Library/Fonts/STHeiti Light.ttc"
 elif sys.platform == "win32":  # Windows
     from .windows import mouse, keys, window, cmd
     version_info = sys.getwindowsversion()

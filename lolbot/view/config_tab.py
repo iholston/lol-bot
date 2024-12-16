@@ -54,14 +54,20 @@ class ConfigTab:
     def add_install_path_entry(self):
         if OS == "Windows":
             dv = self.config.windows_install_dir
+            with dpg.group(horizontal=True):
+                dpg.add_input_text(default_value="League Install Folder", width=180, enabled=False)
+                dpg.add_input_text(tag=TAG_LEAGUE_PATH, default_value=dv, width=320, callback=self.save_config)
+                dpg.add_button(label="Browse", width=52, callback=self.open_file_selector)
+                if self.font:
+                    dpg.bind_item_font(TAG_LEAGUE_PATH, self.font)
         else:
             dv = self.config.macos_install_dir
-        with dpg.group(horizontal=True):
-            dpg.add_input_text(default_value="League Install Folder", width=180, enabled=False)
-            dpg.add_input_text(tag=TAG_LEAGUE_PATH, default_value=dv, width=320, callback=self.save_config)
-            dpg.add_button(label="Browse", width=52, callback=self.open_file_selector)
-            if self.font:
-                dpg.bind_item_font(TAG_LEAGUE_PATH, self.font)
+            with dpg.group(horizontal=True):
+                dpg.add_input_text(default_value="League Install Folder", width=180, enabled=False)
+                # tkinter dialog does not work on mac with dearpygui https://github.com/hoffstadt/DearPyGui/issues/2338
+                dpg.add_input_text(tag=TAG_LEAGUE_PATH, default_value=dv, width=380, callback=self.save_config)
+                if self.font:
+                    dpg.bind_item_font(TAG_LEAGUE_PATH, self.font)
 
     def open_file_selector(self):
         Tk().withdraw()
