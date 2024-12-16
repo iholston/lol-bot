@@ -4,6 +4,7 @@ if sys.platform == "darwin":  # macOS
     from .macos import mouse, keys, window, cmd
     RESOLUTION = (584, 383)
     OS = 'macOS'
+    font_path = ""
 elif sys.platform == "win32":  # Windows
     from .windows import mouse, keys, window, cmd
     version_info = sys.getwindowsversion()
@@ -12,5 +13,6 @@ elif sys.platform == "win32":  # Windows
     else:
         RESOLUTION = (600, 420)
     OS = 'Windows'
+    font_path = r"C:\Windows\Fonts\simsun.ttc"
 else:
     raise ImportError("Unsupported operating system")

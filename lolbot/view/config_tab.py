@@ -3,11 +3,13 @@ View tab that sets configurations for the bot.
 """
 
 import os
+from tkinter import Tk
+from tkinter.filedialog import askdirectory
 
 import dearpygui.dearpygui as dpg
 
 import lolbot.common.config as config
-from lolbot.system import OS
+from lolbot.system import OS, font_path
 
 TAG_LEAGUE_PATH = "LeaguePath"
 TAG_LOBBY = "Lobby"
@@ -21,6 +23,15 @@ class ConfigTab:
     def __init__(self) -> None:
         self.id = None
         self.config = config.load_config()
+        try:
+            dpg.create_context()
+            with dpg.font_registry():
+                with dpg.font(font_path, 13) as self.font:
+                    dpg.add_font_range_hint(dpg.mvFontRangeHint_Chinese_Full)
+                    dpg.add_font_range_hint(dpg.mvFontRangeHint_Japanese)
+                    dpg.add_font_range_hint(dpg.mvFontRangeHint_Korean)
+        except:
+            self.font = None
 
     def create_tab(self, parent: int) -> None:
         """Creates Settings Tab"""
@@ -47,7 +58,17 @@ class ConfigTab:
             dv = self.config.macos_install_dir
         with dpg.group(horizontal=True):
             dpg.add_input_text(default_value="League Install Folder", width=180, enabled=False)
-            dpg.add_input_text(tag=TAG_LEAGUE_PATH, default_value=dv, width=380, callback=self.save_config)
+            dpg.add_input_text(tag=TAG_LEAGUE_PATH, default_value=dv, width=320, callback=self.save_config)
+            dpg.add_button(label="Browse", width=52, callback=self.open_file_selector)
+            if self.font:
+                dpg.bind_item_font(TAG_LEAGUE_PATH, self.font)
+
+    def open_file_selector(self):
+        Tk().withdraw()
+        filename = askdirectory()
+        if filename:
+            dpg.configure_item(TAG_LEAGUE_PATH, default_value=filename)
+            self.save_config()
 
     def add_game_mode_entry(self):
         with dpg.group(horizontal=True):
