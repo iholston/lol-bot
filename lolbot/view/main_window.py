@@ -20,6 +20,7 @@ from lolbot.common.config import ICON_PATH
 class MainWindow:
 
     def __init__(self) -> None:
+        dpg.create_context()
         self.width = RESOLUTION[0]
         self.height = RESOLUTION[1]
         self.tab_bar = None
@@ -33,7 +34,6 @@ class MainWindow:
         self.api.update_auth_timer()
 
     def show(self) -> None:
-        dpg.create_context()
         with dpg.window(label='', tag='primary window', width=self.width, height=self.height, no_move=True, no_resize=True, no_title_bar=True):
             with dpg.theme(tag="__hyperlinkTheme"):
                 with dpg.theme_component(dpg.mvButton):

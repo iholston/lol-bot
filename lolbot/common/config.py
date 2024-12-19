@@ -13,6 +13,7 @@ LOG_DIR = os.path.join(CONFIG_DIR, 'logs')
 CONFIG_PATH = os.path.join(CONFIG_DIR, 'config.json')
 ACCOUNT_PATH = os.path.join(CONFIG_DIR, 'accounts.json')
 ICON_PATH = 'assets/logo.ico'
+FONT_PATH = 'assets/fonts/NotoSansMonoCJK-VF.otf.ttc'
 
 os.makedirs(CONFIG_DIR, exist_ok=True)
 os.makedirs(BAK_DIR, exist_ok=True)
@@ -59,6 +60,8 @@ class Config:
     lobby: int = 880
     max_level: int = 30
     fps_type: int = FPS_OPTIONS.get("60")
+    cjk_support: bool = False
+    font_scale: float = .7
 
 
 def load_config() -> Config:
