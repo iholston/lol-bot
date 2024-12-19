@@ -37,8 +37,10 @@ class ConfigTab:
             self.add_game_mode_entry()
             self.add_max_level_entry()
             self.add_fps_entry()
-            self.add_language_support()
-        self.language_support()
+            if OS == "Windows":
+                self.add_language_support()
+        if OS == "Windows":
+            self.language_support()
 
     @staticmethod
     def add_config_header():
