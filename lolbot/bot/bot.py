@@ -323,7 +323,7 @@ class Bot:
         if OS == 'Windows':
             config_dir = os.path.join(self.config.windows_install_dir, 'Config')
         else:
-            config_dir = os.path.join(self.config.macos_install_dir, 'contents/lol/config')
+            config_dir = os.path.join(self.config.macos_install_dir, 'Contents/LoL/Config')
         game_config = os.path.join(config_dir, 'game.cfg')
         persisted_settings = os.path.join(config_dir, 'PersistedSettings.json')
         if OS != "Windows":
