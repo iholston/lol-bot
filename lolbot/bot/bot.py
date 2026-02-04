@@ -13,7 +13,7 @@ from datetime import datetime, timedelta
 from time import sleep
 
 from lolbot.bot import game, launcher
-from lolbot.system import mouse, window, cmd, OS
+from lolbot.system.macos import mouse, window, cmd
 from lolbot.common import accounts, config, logger
 from lolbot.lcu.league_client import LeagueClient, LCUError
 
@@ -320,14 +320,10 @@ class Bot:
     def set_game_config(self) -> None:
         """Overwrites the League of Legends game config."""
         log.info("Overwriting game configs")
-        if OS == 'Windows':
-            config_dir = os.path.join(self.config.windows_install_dir, 'Config')
-        else:
-            config_dir = os.path.join(self.config.macos_install_dir, 'contents/lol/config')
+        config_dir = os.path.join(self.config.macos_install_dir, 'contents/lol/config')
         game_config = os.path.join(config_dir, 'game.cfg')
         persisted_settings = os.path.join(config_dir, 'PersistedSettings.json')
-        if OS != "Windows":
-            os.chmod(persisted_settings, 0o644)
+        os.chmod(persisted_settings, 0o644)
         try:
             os.remove(game_config)
         except FileNotFoundError:
@@ -376,8 +372,7 @@ class Bot:
                             setting['value'] = str(0)
         with open(persisted_settings, 'w') as file:
             json.dump(data, file, indent=4)
-        if OS != "Windows":
-            os.chmod(persisted_settings, 0o444)
+        os.chmod(persisted_settings, 0o444)
 
     @staticmethod
     def print_ascii() -> None:

@@ -3,22 +3,20 @@ View tab that sets configurations for the bot.
 """
 
 import os
-from tkinter import Tk
-from tkinter.filedialog import askdirectory
 
 import dearpygui.dearpygui as dpg
 
 import lolbot.common.config as config
-from lolbot.common.config import FONT_PATH
-from lolbot.system import OS
 
 TAG_LEAGUE_PATH = "LeaguePath"
 TAG_LOBBY = "Lobby"
 TAG_MAX_LEVEL = "AccountMaxLevel"
 TAG_FPS = "FPS"
-TAG_CJK_SUPPORT = "CJKSupport"
-TAG_FONT_SCALE_GROUP = "FontScaleGroup"
+TAG_FONT_PATH = "FontPath"
+TAG_FONT_SIZE = "FontSize"
 TAG_FONT_SCALE = "FontScale"
+TAG_FONT_STATUS = "FontStatus"
+TAG_FONT_RESTART_NOTICE = "FontRestartNotice"
 
 
 class ConfigTab:
@@ -27,6 +25,7 @@ class ConfigTab:
     def __init__(self) -> None:
         self.id = None
         self.font = None
+        self.font_registry = None
         self.config = config.load_config()
 
     def create_tab(self, parent: int) -> None:
@@ -37,10 +36,8 @@ class ConfigTab:
             self.add_game_mode_entry()
             self.add_max_level_entry()
             self.add_fps_entry()
-            if OS == "Windows":
-                self.add_language_support()
-        if OS == "Windows":
-            self.language_support()
+            self.add_font_settings()
+        
 
     @staticmethod
     def add_config_header():
@@ -52,24 +49,10 @@ class ConfigTab:
         dpg.add_spacer()
 
     def add_install_path_entry(self):
-        if OS == "Windows":
-            dv = self.config.windows_install_dir
-            with dpg.group(horizontal=True):
-                dpg.add_input_text(default_value="League Install Folder", width=180, enabled=False)
-                dpg.add_input_text(tag=TAG_LEAGUE_PATH, default_value=dv, width=320, callback=self.save_config)
-                dpg.add_button(label="Browse", width=52, callback=self.open_file_selector)
-        else:
-            dv = self.config.macos_install_dir
-            with dpg.group(horizontal=True):
-                dpg.add_input_text(default_value="League Install Folder", width=180, enabled=False)
-                dpg.add_input_text(tag=TAG_LEAGUE_PATH, default_value=dv, width=380, callback=self.save_config) # tkinter dialog does not work on mac with dearpygui https://github.com/hoffstadt/DearPyGui/issues/2338
-
-    def open_file_selector(self):
-        Tk().withdraw()
-        filename = askdirectory()
-        if filename:
-            dpg.configure_item(TAG_LEAGUE_PATH, default_value=filename)
-            self.save_config()
+        dv = self.config.macos_install_dir
+        with dpg.group(horizontal=True):
+            dpg.add_input_text(default_value="League Install Folder", width=180, enabled=False)
+            dpg.add_input_text(tag=TAG_LEAGUE_PATH, default_value=dv, width=380, callback=self.save_config) # tkinter dialog does not work on mac with dearpygui https://github.com/hoffstadt/DearPyGui/issues/2338
 
     def add_game_mode_entry(self):
         with dpg.group(horizontal=True):
@@ -102,46 +85,56 @@ class ConfigTab:
                           width=380,
                           callback=self.save_config)
 
-    def add_language_support(self):
+    def add_font_settings(self):
         with dpg.group(horizontal=True):
-            dpg.add_input_text(default_value="CJK Language Support", width=180, enabled=False)
-            dpg.add_checkbox(tag=TAG_CJK_SUPPORT, default_value=self.config.cjk_support, callback=self.language_support)
-        with dpg.group(tag=TAG_FONT_SCALE_GROUP, horizontal=True):
-            dpg.add_input_text(default_value="Font Scaling", width=180, enabled=False)
-            dpg.add_input_float(tag=TAG_FONT_SCALE,
-                              default_value=self.config.font_scale,
-                              min_value=0,
-                              step=.1,
+            dpg.add_input_text(default_value="Font Path", width=180, enabled=False)
+            dpg.add_input_text(tag=TAG_FONT_PATH, default_value=self.config.font_path, width=380, callback=self.apply_font_settings)
+        with dpg.group(horizontal=True):
+            dpg.add_input_text(default_value="Font Size", width=180, enabled=False)
+            dpg.add_input_int(tag=TAG_FONT_SIZE,
+                              default_value=self.config.font_size,
+                              min_value=8,
+                              max_value=36,
+                              step=1,
                               width=380,
-                              callback=self.language_support)
+                              callback=self.on_font_size_change)
+        with dpg.group(horizontal=True):
+            dpg.add_input_text(default_value="Font Scale", width=180, enabled=False)
+            dpg.add_input_float(tag=TAG_FONT_SCALE,
+                                default_value=self.config.font_scale,
+                                min_value=0.4,
+                                max_value=1.0,
+                                step=0.05,
+                                width=380,
+                                callback=self.apply_font_settings)
+        dpg.add_text(tag=TAG_FONT_STATUS, default_value="", color=(255, 92, 92))
+        dpg.add_text(tag=TAG_FONT_RESTART_NOTICE, default_value="", color=(255, 200, 92))
 
-    def language_support(self):
-        if dpg.get_value(TAG_CJK_SUPPORT):
-            if not self.font:
-                with dpg.font_registry():
-                    with dpg.font(FONT_PATH, 30) as self.font:
-                        dpg.add_font_range_hint(dpg.mvFontRangeHint_Chinese_Full)
-                        dpg.add_font_range_hint(dpg.mvFontRangeHint_Japanese)
-                        dpg.add_font_range_hint(dpg.mvFontRangeHint_Korean)
-            dpg.bind_font(self.font)
-            dpg.show_item(TAG_FONT_SCALE_GROUP)
-            dpg.set_global_font_scale(dpg.get_value(TAG_FONT_SCALE))
-        else:
-            dpg.bind_font("ProggyClean.ttf")
-            dpg.set_global_font_scale(1)
-            dpg.hide_item(TAG_FONT_SCALE_GROUP)
+
+    def apply_font_settings(self):
+        font_path = dpg.get_value(TAG_FONT_PATH).strip()
+        font_scale = round(dpg.get_value(TAG_FONT_SCALE), 2)
+        try:
+            if font_path and os.path.exists(font_path):
+                dpg.set_global_font_scale(max(0.4, min(1.0, font_scale)))
+                dpg.set_value(TAG_FONT_STATUS, "")
+            else:
+                dpg.set_value(TAG_FONT_STATUS, "Font path not found. Please enter a valid file path.")
+        except Exception:
+            dpg.set_value(TAG_FONT_STATUS, "Font path not found. Please enter a valid file path.")
+        self.save_config()
+
+    def on_font_size_change(self):
+        dpg.set_value(TAG_FONT_RESTART_NOTICE, "Font size changes require app restart to take effect.")
         self.save_config()
 
     def save_config(self):
-        if OS == "Windows":
-            if os.path.exists(dpg.get_value(TAG_LEAGUE_PATH)):
-                self.config.windows_install_dir = dpg.get_value(TAG_LEAGUE_PATH)
-        else:
-            if os.path.exists(dpg.get_value(TAG_LEAGUE_PATH)):
-                self.config.macos_install_dir = dpg.get_value(TAG_LEAGUE_PATH)
+        if os.path.exists(dpg.get_value(TAG_LEAGUE_PATH)):
+            self.config.macos_install_dir = dpg.get_value(TAG_LEAGUE_PATH)
         self.config.lobby = config.BOT_LOBBIES.get(dpg.get_value(TAG_LOBBY))
         self.config.max_level = dpg.get_value(TAG_MAX_LEVEL)
         self.config.fps_type = config.FPS_OPTIONS.get(dpg.get_value(TAG_FPS))
-        self.config.cjk_support = dpg.get_value(TAG_CJK_SUPPORT)
-        self.config.font_scale = round(dpg.get_value(TAG_FONT_SCALE), 1)
+        self.config.font_path = dpg.get_value(TAG_FONT_PATH).strip()
+        self.config.font_size = dpg.get_value(TAG_FONT_SIZE)
+        self.config.font_scale = round(dpg.get_value(TAG_FONT_SCALE), 2)
         config.save_config(self.config)

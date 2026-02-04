@@ -10,7 +10,6 @@ from datetime import datetime
 import dearpygui.dearpygui as dpg
 
 import lolbot.common.config as config
-from lolbot.system import OS
 
 
 class LogsTab:
@@ -36,10 +35,7 @@ class LogsTab:
                 dpg.add_text(tag="LogUpdatedTime", default_value='Last Updated: {}'.format(datetime.now()))
                 dpg.add_button(label='Update', width=54, callback=self.create_log_table)
                 dpg.add_button(label='Clear', width=54, callback=lambda: dpg.configure_item("DeleteFiles", show=True))
-                if OS == "Windows":
-                    dpg.add_button(label='Show in File Explorer', callback=lambda: subprocess.Popen('explorer /select, {}'.format(config.LOG_DIR)))
-                else:
-                    dpg.add_button(label='Show in Finder', callback=lambda:  subprocess.Popen(['open', config.LOG_DIR]))
+                dpg.add_button(label='Show in Finder', callback=lambda: subprocess.Popen(['open', '-R', config.LOG_DIR]))
             dpg.add_spacer()
             dpg.add_separator()
             dpg.add_spacer()

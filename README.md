@@ -1,5 +1,5 @@
 >[!NOTE]
->Due the release of [Valorant's Vanguard anti-cheat for League of Legends](https://support-leagueoflegends.riotgames.com/hc/en-us/articles/24169857932435-Riot-Vanguard-FAQ-League-of-Legends), it is NOT recommended to run this bot on Windows.
+>This bot now supports macOS only.
 
 <p align="center">
   <a href="https://github.com/iholston/lol-bot">
@@ -25,13 +25,13 @@
 - End game, earn experience, collect rewards
 - Loop 🥡🧋
 
-## Usage (macOS or ~~Windows~~)
+## Usage (macOS)
 - Clone the repo or download the [latest release](https://github.com/iholston/lol-bot/releases)
 - Ensure [Python 3.10+](https://www.python.org/downloads/) is installed
 - Run ```pip install -r requirements.txt``` 
 - Run ```python main.pyw```
 
-NOTE: ~~On Windows, it may also be necessary to download [Microsoft C and C++ (MSVC) runtime libraries](https://learn.microsoft.com/en-GB/cpp/windows/latest-supported-vc-redist?view=msvc-170)~~
+NOTE: Windows support has been removed.
 
 ## League Account Requirements
 League accounts should have already completed:

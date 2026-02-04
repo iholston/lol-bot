@@ -2,6 +2,7 @@
 Main window that displays all the tabs.
 """
 
+import os
 import time
 
 import dearpygui.dearpygui as dpg
@@ -13,16 +14,17 @@ from lolbot.view.http_tab import HTTPTab
 from lolbot.view.logs_tab import LogsTab
 from lolbot.view.about_tab import AboutTab
 from lolbot.lcu.league_client import LeagueClient
-from lolbot.system import RESOLUTION
-from lolbot.common.config import ICON_PATH
+from lolbot.common.config import ICON_PATH, UI_RESOLUTION, load_config
 
 
 class MainWindow:
 
     def __init__(self) -> None:
         dpg.create_context()
-        self.width = RESOLUTION[0]
-        self.height = RESOLUTION[1]
+        self.width = UI_RESOLUTION[0]
+        self.height = UI_RESOLUTION[1]
+        self.font = None
+        self.config = load_config()
         self.tab_bar = None
         self.api = LeagueClient()
         self.bot_tab = BotTab(self.api)
@@ -34,6 +36,7 @@ class MainWindow:
         self.api.update_auth_timer()
 
     def show(self) -> None:
+        self.bind_default_font()
         with dpg.window(label='', tag='primary window', width=self.width, height=self.height, no_move=True, no_resize=True, no_title_bar=True):
             with dpg.theme(tag="__hyperlinkTheme"):
                 with dpg.theme_component(dpg.mvButton):
@@ -63,6 +66,20 @@ class MainWindow:
                 panel_update_time = current_time
             dpg.render_dearpygui_frame()
         dpg.destroy_context()
+
+    def bind_default_font(self) -> None:
+        if self.font:
+            return
+        font_path = self.config.font_path
+        if not font_path or not os.path.exists(font_path):
+            return
+        with dpg.font_registry():
+            with dpg.font(font_path, self.config.font_size) as self.font:
+                dpg.add_font_range_hint(dpg.mvFontRangeHint_Chinese_Full)
+                dpg.add_font_range_hint(dpg.mvFontRangeHint_Japanese)
+                dpg.add_font_range_hint(dpg.mvFontRangeHint_Korean)
+        dpg.bind_font(self.font)
+        dpg.set_global_font_scale(max(0.4, min(1.0, self.config.font_scale)))
 
     def on_exit(self):
         self.api.stop_timer()

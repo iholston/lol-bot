@@ -9,8 +9,6 @@ import subprocess
 import dearpygui.dearpygui as dpg
 
 from lolbot.lcu.league_client import LeagueClient
-from lolbot.system import OS
-
 class HTTPTab:
     """Class that displays the HTTPTab and sends custom HTTP requests to the LCU API"""
 
@@ -46,11 +44,7 @@ class HTTPTab:
             with dpg.group(horizontal=True):
                 dpg.add_text("Response:")
                 dpg.add_button(tag='StatusOutput', width=50)
-                if OS == "Windows":
-                    command = "clip"
-                else:
-                    command = "pbcopy"
-                dpg.add_button(label="Copy to Clipboard", callback=lambda: subprocess.run(command, text=True, input=dpg.get_value('ResponseOutput')))
+                dpg.add_button(label="Copy to Clipboard", callback=lambda: subprocess.run("pbcopy", text=True, input=dpg.get_value('ResponseOutput')))
             dpg.add_input_text(tag='ResponseOutput', width=568, height=124, multiline=True)
 
     @staticmethod

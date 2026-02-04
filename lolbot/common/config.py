@@ -7,13 +7,16 @@ import json
 from dataclasses import dataclass
 from pathlib import Path
 
-CONFIG_DIR = Path(__file__).resolve().parents[3] / 'lolbot-settings'
+ROOT_DIR = Path(__file__).resolve().parents[2]
+CONFIG_DIR = ROOT_DIR.parent / 'lolbot-settings'
 BAK_DIR = os.path.join(CONFIG_DIR, 'bak')
 LOG_DIR = os.path.join(CONFIG_DIR, 'logs')
 CONFIG_PATH = os.path.join(CONFIG_DIR, 'config.json')
 ACCOUNT_PATH = os.path.join(CONFIG_DIR, 'accounts.json')
-ICON_PATH = 'assets/logo.ico'
-FONT_PATH = 'assets/fonts/NotoSansMonoCJK-VF.otf.ttc'
+ICON_PATH = str(ROOT_DIR / 'assets' / 'logo.ico')
+DEFAULT_FONT_PATH = "/System/Library/Fonts/SFNS.ttf"
+DEFAULT_FONT_SIZE = 18
+UI_RESOLUTION = (584, 390)
 
 os.makedirs(CONFIG_DIR, exist_ok=True)
 os.makedirs(BAK_DIR, exist_ok=True)
@@ -55,13 +58,13 @@ FPS_OPTIONS = {
 
 @dataclass
 class Config:
-    windows_install_dir: str = "C:/Riot Games/League of Legends"
     macos_install_dir: str = "/Applications/League of Legends.app"
     lobby: int = 880
     max_level: int = 30
     fps_type: int = FPS_OPTIONS.get("60")
-    cjk_support: bool = False
-    font_scale: float = .7
+    font_path: str = DEFAULT_FONT_PATH
+    font_size: int = DEFAULT_FONT_SIZE
+    font_scale: float = 0.8
 
 
 def load_config() -> Config:
@@ -80,3 +83,5 @@ def load_config() -> Config:
 def save_config(config: Config) -> None:
     with open(CONFIG_PATH, 'w') as configfile:
         json.dump(config.__dict__, configfile, indent=4)
+
+

@@ -12,7 +12,7 @@ import textwrap
 import dearpygui.dearpygui as dpg
 
 from lolbot.common import config
-from lolbot.system import cmd
+from lolbot.system.macos import cmd
 from lolbot.lcu.league_client import LeagueClient, LCUError
 from lolbot.lcu import game_server
 from lolbot.bot.bot import Bot
@@ -45,18 +45,18 @@ class BotTab:
             with dpg.group(horizontal=True):
                 with dpg.group():
                     dpg.add_text(default_value="Info")
-                    dpg.add_input_text(tag="Info", readonly=True, multiline=True, default_value="Initializing...", height=72, width=280, tab_input=True)
+                    dpg.add_input_text(tag="Info", readonly=True, multiline=True, default_value="Initializing...", height=80, width=280, tab_input=True)
                 with dpg.group():
                     dpg.add_text(default_value="Bot")
-                    dpg.add_input_text(tag="Bot", readonly=True, multiline=True, default_value="Initializing...", height=72, width=280, tab_input=True)
+                    dpg.add_input_text(tag="Bot", readonly=True, multiline=True, default_value="Initializing...", height=80, width=280, tab_input=True)
             dpg.add_spacer()
             dpg.add_text(default_value="Output")
-            dpg.add_input_text(tag="Output", multiline=True, default_value="", height=162, width=568, enabled=False)
+            dpg.add_input_text(tag="Output", multiline=True, default_value="", height=155, width=568, enabled=False)
 
     def start_stop_bot(self) -> None:
         conf = config.load_config()
         if self.bot_thread is None:
-            if os.path.exists(conf.windows_install_dir) or os.path.exists(conf.macos_install_dir):
+            if os.path.exists(conf.macos_install_dir):
                 self.message_queue.put("Clear")
                 self.start_time = time.time()
                 self.bot_thread = multiprocessing.Process(target=Bot().run, args=(self.message_queue, self.games_played, self.bot_errors))

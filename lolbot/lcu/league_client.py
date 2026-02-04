@@ -7,7 +7,7 @@ import threading
 import requests
 import urllib3
 
-from lolbot.system import cmd
+from lolbot.system.macos import cmd
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
