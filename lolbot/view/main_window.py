@@ -12,6 +12,7 @@ from lolbot.view.accounts_tab import AccountsTab
 from lolbot.view.config_tab import ConfigTab
 from lolbot.view.http_tab import HTTPTab
 from lolbot.view.logs_tab import LogsTab
+from lolbot.view.coordinates_tab import CoordinatesTab
 from lolbot.view.about_tab import AboutTab
 from lolbot.lcu.league_client import LeagueClient
 from lolbot.common.config import ICON_PATH, UI_RESOLUTION, load_config
@@ -33,6 +34,7 @@ class MainWindow:
         self.https_tab = HTTPTab(self.api)
         self.logs_tab = LogsTab()
         self.about_tab = AboutTab()
+        self.coordinates_tab = CoordinatesTab()
         self.api.update_auth_timer()
 
     def show(self) -> None:
@@ -50,6 +52,7 @@ class MainWindow:
                 self.config_tab.create_tab(self.tab_bar)
                 self.https_tab.create_tab(self.tab_bar)
                 self.logs_tab.create_tab(self.tab_bar)
+                self.coordinates_tab.create_tab(self.tab_bar)
                 self.about_tab.create_tab(self.tab_bar)
         dpg.create_viewport(title='LoL Bot', width=self.width, height=self.height, small_icon=ICON_PATH, resizable=False)
         dpg.setup_dearpygui()
@@ -63,6 +66,7 @@ class MainWindow:
                 self.bot_tab.update_bot_panel()
                 self.bot_tab.update_info_panel()
                 self.bot_tab.update_output_panel()
+                self.coordinates_tab.update_panel()
                 panel_update_time = current_time
             dpg.render_dearpygui_frame()
         dpg.destroy_context()
