@@ -8,7 +8,7 @@ from time import sleep
 from datetime import datetime, timedelta
 
 from lolbot.lcu.game_server import GameServer, GameServerError
-from lolbot.system.macos import mouse, keys, window, cmd
+from lolbot.system import mouse, keys, window, cmd
 
 log = logging.getLogger(__name__)
 

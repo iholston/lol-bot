@@ -13,7 +13,7 @@ from datetime import datetime, timedelta
 from time import sleep
 
 from lolbot.bot import game, launcher
-from lolbot.system.macos import mouse, window, cmd
+from lolbot.system import mouse, window, cmd
 from lolbot.common import accounts, config, logger
 from lolbot.lcu.league_client import LeagueClient, LCUError
 
@@ -27,6 +27,8 @@ POPUP_SEND_EMAIL_X_RATIO = (0.6960, 0.1238)
 # Errors
 MAX_BOT_ERRORS = 5
 MAX_PHASE_ERRORS = 20
+SWIFTPLAY_PRIMARY_ROLE = "MIDDLE"
+SWIFTPLAY_FALLBACK_ROLES = ["TOP", "JUNGLE", "BOTTOM", "UTILITY"]
 
 
 class BotError(Exception):
@@ -148,6 +150,9 @@ class Bot:
         except LCUError:
             return
 
+        if self.is_swiftplay_lobby():
+            self.set_swiftplay_slots()
+
         # Start Matchmaking
         log.info("Starting queue")
         try:
@@ -202,14 +207,14 @@ class Bot:
             except LCUError:
                 return
             try:
-                for action in data["actions"][0]:
-                    if action["actorCellId"] == data["localPlayerCellId"]:
-                        if action["championId"] == 0:  # No champ hovered. Hover a champion.
+                for action in data.get("actions", [[]])[0]:
+                    if action.get("actorCellId") == data.get("localPlayerCellId"):
+                        if action.get("championId") == 0:
                             champ = random.choice(champ_list)
-                            self.api.hover_champion(action["id"], champ)
-                        elif not action["completed"]:  # Champ is hovered but not locked in.
-                            self.api.lock_in_champion(action["id"], action["championId"])
-                        else:  # Champ is locked in. Nothing left to do.
+                            self.api.hover_champion(action.get("id"), champ)
+                        elif not action.get("completed"):
+                            self.api.lock_in_champion(action.get("id"), action.get("championId"))
+                        else:
                             if not logged:
                                 log.info(f"Locked in: {champ}")
                                 log.info("Waiting for game to launch")
@@ -217,6 +222,114 @@ class Bot:
                             sleep(2)
             except LCUError:
                 pass
+
+    def set_swiftplay_slots(self) -> None:
+        """Sets quickplay slots (champion + position) for Swiftplay bot lobbies."""
+        try:
+            party = self.api.get_party_status()
+        except LCUError as e:
+            log.warning(f"Could not load party status: {e}")
+            return
+
+        scarce_positions = (
+            party.get("currentParty", {})
+            .get("gameMode", {})
+            .get("gameCustomization", {})
+            .get("scarcePositions", [])
+        )
+        if isinstance(scarce_positions, str):
+            try:
+                scarce_positions = json.loads(scarce_positions)
+            except json.JSONDecodeError:
+                scarce_positions = []
+        secondary_role = self.pick_secondary_role(scarce_positions)
+        try:
+            self.api.set_position_preferences(SWIFTPLAY_PRIMARY_ROLE, secondary_role)
+        except LCUError as e:
+            log.warning(f"Could not set position preferences: {e}")
+
+        champion_ids = self.pick_random_owned_champions(2)
+        if not champion_ids:
+            log.warning("No eligible champions available for Swiftplay slots")
+            return
+
+        try:
+            slots = self.api.get_quickplay_player_slots()
+        except LCUError:
+            slots = []
+
+        updated_slots = []
+        roles = [SWIFTPLAY_PRIMARY_ROLE, secondary_role]
+        for index, role in enumerate(roles):
+            champion_id = champion_ids[min(index, len(champion_ids) - 1)]
+            slot = dict(slots[index]) if index < len(slots) else {}
+            slot.update({"championId": champion_id, "positionPreference": role})
+            updated_slots.append(slot)
+
+        try:
+            self.api.set_quickplay_player_slots(updated_slots)
+            log.info(f"Swiftplay slots set: {roles} -> {champion_ids}")
+        except LCUError as e:
+            log.warning(f"Could not update Swiftplay slots: {e}")
+            minimal_slots = [
+                {"championId": slot["championId"], "positionPreference": slot["positionPreference"]}
+                for slot in updated_slots
+            ]
+            try:
+                self.api.set_quickplay_player_slots(minimal_slots)
+                log.info(f"Swiftplay slots set with minimal payload: {roles} -> {champion_ids}")
+            except LCUError as e2:
+                log.warning(f"Minimal payload update failed: {e2}")
+
+    def is_swiftplay_lobby(self) -> bool:
+        """Determines whether the current lobby is Swiftplay/quickplay enabled."""
+        try:
+            lobby = self.api.get_lobby()
+        except LCUError as e:
+            log.warning(f"Could not fetch lobby data: {e}")
+            return False
+
+        game_config = lobby.get("gameConfig", {})
+        game_mode = (game_config.get("gameMode") or "").upper()
+        if game_mode == "SWIFTPLAY":
+            return True
+        return bool(game_config.get("showQuickPlaySlotSelection"))
+
+    @staticmethod
+    def pick_secondary_role(scarce_positions: list) -> str:
+        """Chooses a priority role for the secondary slot."""
+        normalized = [pos.upper() for pos in scarce_positions if isinstance(pos, str)]
+        preferred = [pos for pos in normalized if pos != SWIFTPLAY_PRIMARY_ROLE]
+        if preferred:
+            return random.choice(preferred)
+        for role in SWIFTPLAY_FALLBACK_ROLES:
+            if role != SWIFTPLAY_PRIMARY_ROLE:
+                return role
+        log.warning("No scarce positions returned; defaulting secondary role to TOP")
+        return "TOP"
+
+    def pick_random_owned_champions(self, count: int) -> list:
+        """Selects random owned/free-to-play champions for Swiftplay slots."""
+        try:
+            champions = self.api.get_owned_champions_minimal()
+        except LCUError as e:
+            log.warning(f"Could not fetch owned champions: {e}")
+            return []
+
+        eligible = []
+        for champ in champions:
+            ownership = champ.get("ownership", {}) or {}
+            if champ.get("botEnabled") or champ.get("freeToPlay") or ownership.get("owned"):
+                champ_id = champ.get("id")
+                if champ_id:
+                    eligible.append(champ_id)
+
+        if not eligible:
+            return []
+
+        if len(eligible) >= count:
+            return random.sample(eligible, count)
+        return eligible + [random.choice(eligible) for _ in range(count - len(eligible))]
 
     def reconnect(self) -> None:
         """Attempts to reconnect to an ongoing League of Legends match."""

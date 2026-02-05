@@ -12,7 +12,7 @@ import textwrap
 import dearpygui.dearpygui as dpg
 
 from lolbot.common import config
-from lolbot.system.macos import cmd
+from lolbot.system import cmd
 from lolbot.lcu.league_client import LeagueClient, LCUError
 from lolbot.lcu import game_server
 from lolbot.bot.bot import Bot

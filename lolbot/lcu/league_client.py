@@ -7,7 +7,7 @@ import threading
 import requests
 import urllib3
 
-from lolbot.system.macos import cmd
+from lolbot.system import cmd
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -80,6 +80,57 @@ class LeagueClient:
         except Exception as e:
             raise e
 
+    def get_owned_champions_minimal(self) -> list:
+        """Gets a list of owned champions (minimal payload)."""
+        url = f"{self.endpoint}/lol-champions/v1/owned-champions-minimal"
+        try:
+            response = self.client.get(url)
+            response.raise_for_status()
+            return response.json()
+        except requests.RequestException as e:
+            raise LCUError(f"Error retrieving owned champions: {e}")
+
+    def get_quickplay_player_slots(self) -> list:
+        """Gets current quickplay player slots for the local member."""
+        url = f"{self.endpoint}/lol-lobby/v1/lobby/members/localMember/player-slots"
+        try:
+            response = self.client.get(url)
+            response.raise_for_status()
+            return response.json()
+        except requests.RequestException as e:
+            raise LCUError(f"Error retrieving player slots: {e}")
+
+    def set_quickplay_player_slots(self, player_slots: list) -> None:
+        """Updates quickplay player slots for the local member."""
+        url = f"{self.endpoint}/lol-lobby/v1/lobby/members/localMember/player-slots"
+        try:
+            response = self.client.put(url, json=player_slots)
+            response.raise_for_status()
+        except requests.RequestException as e:
+            details = getattr(e.response, "text", "") if hasattr(e, "response") else ""
+            raise LCUError(f"Error updating player slots: {e}. {details}")
+
+    def set_position_preferences(self, primary: str, secondary: str) -> None:
+        """Sets position preferences for the local member."""
+        url = f"{self.endpoint}/lol-lobby/v1/lobby/members/localMember/position-preferences"
+        body = {"firstPreference": primary, "secondPreference": secondary}
+        try:
+            response = self.client.put(url, json=body)
+            response.raise_for_status()
+        except requests.RequestException as e:
+            details = getattr(e.response, "text", "") if hasattr(e, "response") else ""
+            raise LCUError(f"Error setting position preferences: {e}. {details}")
+
+    def get_party_status(self) -> dict:
+        """Gets current party status, including game customization/priority roles."""
+        url = f"{self.endpoint}/lol-lobby/v1/parties/player"
+        try:
+            response = self.client.get(url)
+            response.raise_for_status()
+            return response.json()
+        except requests.RequestException as e:
+            raise LCUError(f"Error retrieving party status: {e}")
+
     def get_summoner_name(self) -> str:
         """Gets display name of logged in account"""
         url = f"{self.endpoint}/lol-summoner/v1/current-summoner"
@@ -122,6 +173,16 @@ class LeagueClient:
             return int(response.json()['gameConfig']['queueId'])
         except requests.RequestException as e:
             raise LCUError(f"Error retrieving lobby ID: {e}")
+
+    def get_lobby(self) -> dict:
+        """Gets the current lobby payload."""
+        url = f"{self.endpoint}/lol-lobby/v2/lobby"
+        try:
+            response = self.client.get(url)
+            response.raise_for_status()
+            return response.json()
+        except requests.RequestException as e:
+            raise LCUError(f"Error retrieving lobby data: {e}")
 
     def restart_ux(self) -> None:
         """Restarts league client ux"""

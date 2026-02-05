@@ -5,7 +5,7 @@ Handles launching League of Legends and logging into an account.
 import logging
 from time import sleep
 
-from lolbot.system.macos import cmd, keys
+from lolbot.system import cmd, keys
 from lolbot.lcu.league_client import LeagueClient, LCUError
 
 log = logging.getLogger(__name__)
