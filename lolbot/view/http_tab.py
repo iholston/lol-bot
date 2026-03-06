@@ -53,6 +53,8 @@ class HTTPTab:
         json_obj = None
         try:
             body = dpg.get_value('Body')
+            if not body:
+                return
             if body[0] == "'" or body[0] == '"':
                 body = body[1:]
             if body[len(body)-1] == "'" or body[len(body)-1] == '"':
@@ -66,22 +68,22 @@ class HTTPTab:
     def request(self) -> None:
         """Sends custom HTTP request to LCU API"""
         try:
-            response = None
+            dpg.configure_item('StatusOutput', label='...')
+            dpg.configure_item('ResponseOutput', default_value='')
+
             url = dpg.get_value('URL').strip()
             body = dpg.get_value('Body').strip()
-            match dpg.get_value('Method').lower():
-                case 'get':
-                    response = self.api.make_get_request(url)
-                case 'post':
-                    response = self.api.make_post_request(url, body)
-                case 'delete':
-                    response = self.api.make_delete_request(url, body)
-                case 'put':
-                    response = self.api.make_put_request(url, body)
-                case 'patch':
-                    response = self.api.make_patch_request(url, body)
+            method = dpg.get_value('Method').upper()
+            response = self.api.request_raw(method, url, body)
             dpg.configure_item('StatusOutput', label=response.status_code)
-            dpg.configure_item('ResponseOutput', default_value=json.dumps(response.json(), indent=4))
+
+            try:
+                payload = response.json()
+                response_text = json.dumps(payload, indent=4)
+            except Exception:
+                response_text = response.text or ""
+
+            dpg.configure_item('ResponseOutput', default_value=response_text)
         except Exception as e:
             dpg.configure_item('StatusOutput', label='418')
             dpg.configure_item('ResponseOutput', default_value=str(e))

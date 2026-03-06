@@ -54,7 +54,6 @@ class Bot:
     def run(self, message_queue: mp.Queue, games: mp.Value, errors: mp.Value) -> None:
         """Main loop, gets an account, launches league, monitors account level, and repeats."""
         logger.MultiProcessLogHandler(message_queue).set_logs()
-        self.api.update_auth_timer()
         self.print_ascii()
         while True:
             try:

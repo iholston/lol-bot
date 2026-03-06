@@ -35,8 +35,6 @@ class Launcher:
         raise LaunchError("Could not open League. Ensure there are no pending updates.")
 
     def launch_sequence(self):
-        self.api.update_auth()
-
         # League is Running
         if cmd.run(cmd.IS_CLIENT_RUNNING):
             if self.attempts == 0:
@@ -72,7 +70,6 @@ class Launcher:
             # self.lcu.login(self.username, self.password)
             self.manual_login()
             sleep(30)
-            self.api.update_auth()
             if not self.api.access_token_exists():
                 log.warning("Login attempt failed")
                 cmd.run(cmd.CLOSE_ALL)

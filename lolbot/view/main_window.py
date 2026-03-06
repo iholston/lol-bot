@@ -35,7 +35,6 @@ class MainWindow:
         self.logs_tab = LogsTab()
         self.about_tab = AboutTab()
         self.coordinates_tab = CoordinatesTab()
-        self.api.update_auth_timer()
 
     def show(self) -> None:
         self.bind_default_font()
@@ -86,5 +85,4 @@ class MainWindow:
         dpg.set_global_font_scale(max(0.4, min(1.0, self.config.font_scale)))
 
     def on_exit(self):
-        self.api.stop_timer()
         self.bot_tab.stop_bot()
