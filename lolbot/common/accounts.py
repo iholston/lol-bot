@@ -45,7 +45,7 @@ def save_or_add(account: dict) -> None:
         for acc in accounts:
             if acc['username'] == account['username']:
                 acc.update(account)
-            exists = True
+                exists = True
         if not exists:
             accounts.append(account)
         json.dump(accounts, account_file, indent=4)
