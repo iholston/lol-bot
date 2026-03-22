@@ -26,12 +26,40 @@
 - Loop 🥡🧋
 
 ## Usage (macOS)
+To get started:
 - Clone the repo or download the [latest release](https://github.com/iholston/lol-bot/releases)
 - Ensure [Python 3.10+](https://www.python.org/downloads/) is installed
-- Run ```pip install -r requirements.txt``` 
-- Run ```python main.pyw```
+- Run the one-step launcher script:
+  - In Terminal:
+    - ```bash scripts/setup_and_run.sh```
+  - Or from Finder:
+    - double-click ```scripts/setup_and_run.command```
 
-NOTE: Windows support has been removed.
+The launcher script will automatically:
+- create a local virtual environment in ```.venv``` (if missing)
+- upgrade pip
+- install/update dependencies from ```requirements.txt```
+- launch the bot
+
+## macOS Permissions Required
+
+This bot uses keyboard/mouse automation and requires macOS privacy permissions. Grant permissions to the app used to launch the bot:
+
+1. Open **System Settings → Privacy & Security → Accessibility**
+2. Add and enable:
+   - **Terminal** (if launching via `.sh` or `.command`)
+
+## Developer Setup 
+
+For local development and reliable test imports, use an editable install:
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+pip install -e .
+pytest -q
+```
 
 ## League Account Requirements
 League accounts should have already completed:
@@ -44,4 +72,4 @@ NOTE: The bot will automatically change your league settings/configuration and t
 ## Disclaimer
 Another LoL Bot isn’t endorsed by Riot Games and doesn’t reflect the views or opinions of Riot Games or anyone officially involved in producing or managing League of Legends. League of Legends and Riot Games are trademarks or registered trademarks of Riot Games, Inc. League of Legends © Riot Games, Inc.
 
-This software works with other programs/services (League of Legends) so you take full responsibility for breaking their Terms of Service and full responsibility for the accounts that you’re using with this bot and agree to use it at your own risk
+This software works with other programs/services (League of Legends) so you take full responsibility for breaking their Terms of Service and full responsibility for the accounts that you’re using with this bot and agree to use it at your own risk.
