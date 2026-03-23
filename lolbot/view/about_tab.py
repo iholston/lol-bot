@@ -3,11 +3,36 @@ View tab that displays information about the bot.
 """
 
 import webbrowser
+from pathlib import Path
 import requests
 
 import dearpygui.dearpygui as dpg
 
-VERSION = '4.0.8'
+
+def _load_project_version() -> str:
+    """Load version from pyproject.toml so version is maintained in one place."""
+    pyproject = Path(__file__).resolve().parents[2] / "pyproject.toml"
+    if not pyproject.exists():
+        return "0.0.0"
+
+    try:
+        content = pyproject.read_text(encoding="utf-8")
+    except OSError:
+        return "0.0.0"
+
+    in_project_section = False
+    for line in content.splitlines():
+        stripped = line.strip()
+        if stripped.startswith("[") and stripped.endswith("]"):
+            in_project_section = stripped == "[project]"
+            continue
+        if in_project_section and stripped.startswith("version") and "=" in stripped:
+            _, value = stripped.split("=", 1)
+            return value.strip().strip('"').strip("'")
+    return "0.0.0"
+
+
+VERSION = _load_project_version()
 
 
 class AboutTab:
